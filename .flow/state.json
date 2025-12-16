@@ -1,0 +1,28 @@
+{
+  "version": "2.0",
+  "project": {
+    "name": "SoloDevFlow 2.0",
+    "description": "为超级个体打造的自进化人机协作开发系统",
+    "createdAt": "2024-12-16"
+  },
+  "flow": {
+    "phase": "project_init",
+    "status": "pending_approval",
+    "iteration": 1,
+    "task": "等待审批产品PRD和迭代1-PRD"
+  },
+  "iterations": [
+    {
+      "id": 1,
+      "name": "核心流程可用",
+      "status": "planning",
+      "prd": "docs/iterations/迭代1-PRD.md"
+    }
+  ],
+  "sparks": [],
+  "recentChanges": [
+    {"date": "2024-12-16", "change": "创建迭代1-PRD"},
+    {"date": "2024-12-16", "change": "创建产品PRD"},
+    {"date": "2024-12-16", "change": "项目初始化"}
+  ]
+}
