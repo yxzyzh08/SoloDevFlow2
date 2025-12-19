@@ -9,20 +9,25 @@
     "phase": "project_init",
     "status": "pending_approval",
     "iteration": 1,
-    "task": "等待审批产品PRD和迭代1-PRD"
+    "task": "等待审批产品PRD和迭代1-PRD（v2.0重构版）"
   },
   "iterations": [
     {
       "id": 1,
-      "name": "核心流程可用",
+      "name": "规范定义 + 基础工具",
       "status": "planning",
       "prd": "docs/iterations/迭代1-PRD.md"
     }
   ],
   "sparks": [],
+  "pendingDocs": [],
   "recentChanges": [
+    {"date": "2024-12-19", "change": "移除status.md，state.json为唯一状态源"},
+    {"date": "2024-12-19", "change": "同步更新产品PRD v1.0、迭代1-PRD v2.1、CLAUDE.md v0.6"},
+    {"date": "2024-12-19", "change": "重构迭代1-PRD v2.0：明确区分规范定义与代码交付"},
+    {"date": "2024-12-17", "change": "重构产品描述：与三个核心原则直接对应"},
     {"date": "2024-12-16", "change": "创建迭代1-PRD"},
-    {"date": "2024-12-16", "change": "创建产品PRD"},
     {"date": "2024-12-16", "change": "项目初始化"}
-  ]
+  ],
+  "lastUpdated": "2024-12-19T10:00:00Z"
 }
