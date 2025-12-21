@@ -31,8 +31,13 @@
     │
     否
     ↓
-需求清晰 → 调用 /write-* 命令 → 输出文档 → 校验
+需求清晰 → 关联分析（与现有 Feature 的关系）→ 调用 /write-* → 输出文档 → 校验
 ```
+
+**关联分析**：新增 Feature 时，检查与现有 Feature 的关系：
+- 是否扩展现有 Feature？（如 auto-commit 扩展 state-management）
+- 是否依赖现有 Feature？
+- 是否影响现有 Feature 的行为？
 
 ### 3.2 功能咨询流程
 

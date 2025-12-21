@@ -123,9 +123,13 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 | Priority | Feature | Type | 说明 |
 |----------|---------|------|------|
 | P0 | state-management | document | 状态管理机制（state.json Schema） |
-| P0 | change-impact-tracking | document | 变更影响追踪（依赖图 + 子任务） |
+| P0 | change-impact-tracking | document | 影响分析机制（变更追踪 + 新增关联） |
 | P0 | input-capture | document | 输入捕获机制（input-log.md） |
 | P0 | spark-box | document | 灵光收集与处理机制（spark-box.md） |
+
+**change-impact-tracking**：解决变更或新增时遗漏关联影响的问题。核心能力：
+- 变更影响：修改规范/PRD/模板时分析影响范围
+- 新增关联：新增 Feature 时分析与现有 Feature 的关系
 
 **spark-box**：解决"灵光一闪"想法丢失或打断当前任务的问题。核心能力：
 - 灵光捕获：识别与当前任务无关的想法，记录到 spark-box.md

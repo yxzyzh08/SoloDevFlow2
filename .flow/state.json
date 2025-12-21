@@ -154,11 +154,11 @@
   "sparks": [],
   "pendingDocs": [],
   "metadata": {
-    "lastGitCommit": "584d7d8e6e22381be0440a771a755a0126183855",
-    "lastGitCommitMessage": "feat(state-management): 实现 record-commit 命令（auto-commit 功能）",
-    "lastGitCommitAt": "2025-12-21T09:13:43.434Z",
-    "stateFileVersion": 18,
-    "totalStateChanges": 18
+    "lastGitCommit": "1a42f1e7ff394bded84d77f6300bb38d3dcc7109",
+    "lastGitCommitMessage": "feat(spark-box): 添加灵光处理流程定义",
+    "lastGitCommitAt": "2025-12-21T09:20:08.860Z",
+    "stateFileVersion": 19,
+    "totalStateChanges": 19
   },
-  "lastUpdated": "2025-12-21T09:13:43.434Z"
+  "lastUpdated": "2025-12-21T09:20:08.860Z"
 }
