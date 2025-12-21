@@ -6,7 +6,8 @@
       "Bash(node scripts/state.js:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(node scripts/validate-state.js:*)"
+      "Bash(node scripts/validate-state.js:*)",
+      "Skill(requirements-expert)"
     ]
   }
 }
