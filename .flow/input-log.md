@@ -121,6 +121,58 @@
 
 ---
 
+### 2024-12-20 #9
+
+**原始输入**：
+> prd-validator 需求澄清：运行方式 npm run validate:prd + Skill 自动触发，失败时交互式修复，第一版仅校验 PRD，frontmatter 完整校验，引用文档+锚点校验
+
+**类型**：需求
+
+**阶段**：feature_requirements
+
+**归纳**：确认 prd-validator Feature 需求范围和校验规则
+
+---
+
+### 2024-12-20 #10
+
+**原始输入**：
+> 我们需要回到需求规范文档，还有claude.md 流程文档，我们面临一个重大问题，当前的方案都是基于自上而下，先确认domain在写feature的流程和结构，但我们现在的项目是 先feature，在确认domain，请你极致思考，看看如何修改规范文档和claude.md文档，能支持2种需求调研方法。命名用 Top-Down / Bottom-Up，用户手动指定方法，Bottom-Up 模式 Feature 放 _features/ 目录。
+
+**类型**：变更
+
+**阶段**：feature_requirements
+
+**归纳**：新增 Top-Down/Bottom-Up 两种需求调研方法，Bottom-Up 模式下独立 Feature 放入 `_features/` 目录
+
+---
+
+### 2024-12-20 #11
+
+**原始输入**：
+> 设置state.json格式，它是我们自举项目中最重要的环节，它的设计至关重要。参考 SoloDevFlow 原版和参考产品（cc-sdd、Spec-Kit、spec-workflow）的状态管理设计。选择：有审批跟踪、无 Constitution、中等复杂度（100-300行）、暂不需要历史分离。
+
+**类型**：决策
+
+**阶段**：feature_requirements
+
+**归纳**：state.json 升级到 v4.0，添加 Feature 审批状态追踪（requirements/design/implementation）、Schema 版本化、Git 集成、stateHistory 变更历史
+
+---
+
+### 2024-12-21 #12
+
+**原始输入**：
+> 我们需要增加一个feature，就是关于git commit的功能，AI完成一个feature或完成feature下的子任务时候就提交。全自动AI控制，支持subtask级别，提交范围是 git add -A，不需要精细控制。
+
+**类型**：需求
+
+**阶段**：feature_requirements
+
+**归纳**：新增 auto-commit 功能，AI 完成 feature/subtask 时自动执行 git add -A && git commit
+
+---
+
 <!--
 示例：
 ### 2024-01-01 10:00

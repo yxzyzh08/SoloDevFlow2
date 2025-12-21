@@ -1,0 +1,353 @@
+---
+type: feature-spec
+version: "1.1"
+---
+
+# Feature: Change Impact Tracking <!-- id: feat_change_impact_tracking -->
+
+> 变更影响追踪机制，自动分析文档变更影响、验证契约一致性、生成子任务
+
+---
+
+## 1. Intent <!-- id: feat_change_impact_tracking_intent -->
+
+### 1.1 Problem
+
+- 修改规范文档（requirements-doc.spec.md）或模板后，不知道哪些下游文档受影响
+- 修改 PRD 后，难以追踪对 Feature Spec 的影响
+- 影响分析依赖人工列举，容易遗漏
+- 生成的影响项无法在 state.json 中跟踪执行
+- 文档可能不符合规范定义的契约（缺少章节、锚点格式错误、引用失效）
+- 规范变更后，难以发现哪些文档"确实不符合"而非"可能需要检查"
+
+### 1.2 Value
+
+- **自动化分析**：基于依赖图自动计算影响范围
+- **契约验证**：验证文档是否符合规范定义的结构和引用
+- **精准定位**：不只是"可能需要检查"，而是"确实不符合"
+- **子任务追踪**：将影响项转为 state.json 中的 subtasks
+- **标准化输出**：与 CLAUDE.md 影响分析格式一致
+- **可追溯**：每个子任务记录来源，便于回溯
+
+---
+
+## 2. Scope <!-- id: feat_change_impact_tracking_scope -->
+
+### 2.1 In Scope (MVP)
+
+- 依赖图构建（按需扫描，不持久化）
+- 影响分析算法（直接 + 间接影响）
+- 子任务生成（写入 state.json）
+- 影响分析脚本（analyze-impact.js）
+- 契约验证（PRD 文档格式校验）
+- 文档验证脚本（validate-docs.js）
+
+### 2.2 Out of Scope
+
+- 变更检测（Git diff 集成）→ 后续迭代
+- 任务跟踪命令（list/complete/skip）→ 后续迭代
+- 依赖图持久化缓存 → 后续迭代
+- AI Skill 智能分析 → 后续迭代
+- 其他文档类型校验（Domain/Feature/Capability/Flow）→ 后续迭代
+- 内容质量校验（语法、描述清晰度）→ 不做
+- 自动修复功能（仅提供修复建议）→ 后续迭代
+
+---
+
+## 3. Core Capabilities <!-- id: feat_change_impact_tracking_capabilities -->
+
+| ID | Capability | 描述 |
+|----|------------|------|
+| C1 | 依赖图构建 | 扫描文档构建节点和边，支持多种依赖来源 |
+| C3 | 影响分析 | 基于依赖图计算变更影响范围 |
+| C4 | 子任务生成 | 将影响项转为 state.json 中的 subtasks |
+| C5 | 契约验证 | 验证文档是否符合规范定义的结构、章节、锚点、引用 |
+
+### 3.1 C1: 依赖图构建
+
+**输入**：docs/ 目录下的 Markdown 文件
+
+**输出**：内存中的依赖图（nodes + edges）
+
+**依赖来源**：
+1. Feature Spec Dependencies 章节（显式声明，`hard`/`soft` 类型）
+2. Markdown 链接引用（`[text](path#anchor)` 格式）
+3. PRD Roadmap → Feature 关系（defines 类型）
+
+**节点类型**：
+- `prd`：产品需求文档
+- `spec`：规范文档（如 requirements-doc.spec.md）
+- `feature-spec`：Feature 规范
+- `template`：文档模板
+
+**边类型**：
+- `defines`：A 定义 B（PRD 定义 Feature）
+- `implements`：A 实现 B（模板实现规范）
+- `depends`：A 依赖 B（Feature 依赖 Feature）
+- `references`：A 引用 B（软链接）
+
+### 3.2 C3: 影响分析
+
+**输入**：变更文件路径 + 依赖图
+
+**输出**：影响分析报告
+
+**算法**：
+```
+1. 在依赖图中找到变更节点
+2. 获取所有 from=变更节点 的边（谁依赖我）
+3. 对每条边：
+   a. 将 target 加入直接影响
+   b. 递归分析 target（深度限制：2）
+4. 分类：
+   - 直接影响：1 跳距离
+   - 间接影响：2+ 跳距离
+5. 按优先级排序：spec > template > feature-spec
+```
+
+**输出格式**：
+```
+【变更】：{文件路径}
+【直接影响】：
+  - {文档A}：{需要的操作}
+【间接影响】：
+  - {文档B}：因为依赖 {文档A}，需要 {操作}
+【建议子任务】：
+  1. {任务描述}
+【建议操作顺序】：{顺序}
+```
+
+### 3.3 C4: 子任务生成
+
+**输入**：影响分析结果 + 目标 Feature
+
+**输出**：state.json 中的 subtasks 数组
+
+**规则**：
+- 每个影响项生成一个 subtask
+- ID 格式：`st_{timestamp}_{index}`
+- 初始状态：`pending`
+- source：`impact-analysis`
+- 需人类确认后写入
+
+### 3.4 C5: 契约验证
+
+验证文档是否符合其声明依赖的规范，用于精确判断"确实不符合"而非"可能需要检查"。
+
+#### 验证类型
+
+| 类型 | 说明 | MVP 范围 |
+|------|------|----------|
+| Frontmatter Validation | 校验 YAML frontmatter 完整性和有效性 | PRD |
+| Section Validation | 校验必选章节是否存在 | PRD |
+| Anchor Validation | 校验锚点格式和存在性 | PRD |
+| Reference Validation | 校验引用文档和锚点存在性 | PRD |
+
+#### Frontmatter 校验规则
+
+**输入**：文档路径（默认 `docs/prd.md`）
+
+**输出**：校验结果（通过/失败 + 错误详情）
+
+**规则**：
+- WHEN frontmatter is missing THEN report "Missing frontmatter"
+- WHEN type field is missing THEN report "Missing required field: type"
+- WHEN type value is not in enum THEN report "Invalid type: {value}"
+- WHEN template field is missing THEN report "Missing required field: template"
+- WHEN template path does not exist THEN report "Template not found: {path}"
+- WHEN version field is missing THEN report "Missing required field: version"
+
+#### Section 校验规则
+
+**必选章节**（PRD）：
+
+| 章节 | 锚点 |
+|------|------|
+| Product Vision | `prod_vision` |
+| Target Users | `prod_users` |
+| Product Description | `prod_description` |
+| Feature Roadmap | `prod_roadmap` |
+| Success Criteria | `prod_success` |
+
+**规则**：
+- IF section is missing THEN report "Missing required section: {section_name}"
+
+#### Anchor 校验规则
+
+**规则**：
+- THE anchor format SHALL be `<!-- id: {prefix}_{name} -->`
+- THE prefix for PRD SHALL be `prod_`
+- WHEN anchor format is incorrect THEN report location and expected format
+
+#### Reference 校验规则
+
+**规则**：
+- WHEN referenced file does not exist THEN report "Referenced file not found: {path}"
+- WHEN referenced anchor does not exist THEN report "Referenced anchor not found: {file}#{anchor}"
+- THE system SHALL parse markdown links: `[text](path)` and `[text](path#anchor)`
+
+#### 与影响分析的集成
+
+```
+1. 影响分析找到"可能受影响的文档"
+       ↓
+2. 契约验证检查这些文档是否"确实不符合规范"
+       ↓
+3. 不符合的项目生成子任务（带具体错误信息）
+```
+
+---
+
+## 4. Acceptance Criteria <!-- id: feat_change_impact_tracking_acceptance -->
+
+| Item | Verification | Pass Criteria |
+|------|--------------|---------------|
+| Schema v7.0 | `npm run validate` | 输出 "state.json is valid!" |
+| subtasks 结构 | 检查 state.json | 活跃 Feature 有 subtasks 字段 |
+| 影响分析脚本 | `node scripts/analyze-impact.js docs/specs/requirements-doc.spec.md` | 输出标准格式报告 |
+| 依赖图构建 | 脚本输出 | 正确识别 Feature Dependencies |
+| 子任务生成 | 脚本输出 | 输出建议子任务列表 |
+| Frontmatter 检测 | 删除 PRD frontmatter 后运行验证 | 报告 "Missing frontmatter" |
+| 必选章节检测 | 删除 Product Vision 章节后运行 | 报告 "Missing required section: Product Vision" |
+| 锚点格式校验 | 修改锚点为错误格式 | 报告锚点位置和正确格式 |
+| 引用校验 | 添加不存在的文件引用 | 报告 "Referenced file not found: xxx" |
+
+---
+
+## Dependencies <!-- id: feat_change_impact_tracking_dependencies -->
+
+| Dependency | Type | 说明 |
+|------------|------|------|
+| state-management | hard | 需要扩展 state.json schema 到 v7.0 |
+| meta-spec | hard | 契约验证基于元规范定义的映射机制 |
+| requirements-doc | soft | 遵循 Feature Spec 结构规范 |
+
+---
+
+## 5. Design <!-- id: feat_change_impact_tracking_design -->
+
+### 5.1 state.json v7.0 Schema 扩展
+
+在 `features.{featureName}` 中新增 `subtasks` 字段：
+
+```json
+{
+  "schemaVersion": "7.0.0",
+  "features": {
+    "{featureName}": {
+      "type": "code|document",
+      "domain": "...",
+      "docPath": "...",
+      "phase": "...",
+      "status": "...",
+      "subtasks": [
+        {
+          "id": "st_1703145600000_001",
+          "description": "检查 feature.spec.md 模板是否需要更新",
+          "target": "docs/templates/backend/feature.spec.md",
+          "status": "pending",
+          "createdAt": "2024-12-21T12:00:00.000Z",
+          "source": "impact-analysis"
+        }
+      ]
+    }
+  }
+}
+```
+
+### 5.2 subtask 字段定义
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `id` | string | 是 | 唯一标识，格式 `st_{timestamp}_{index}` |
+| `description` | string | 是 | 任务描述 |
+| `target` | string | 否 | 目标文件路径或锚点 |
+| `status` | enum | 是 | `pending` / `in_progress` / `completed` / `skipped` |
+| `createdAt` | string | 是 | ISO 8601 时间戳 |
+| `source` | string | 是 | 来源：`impact-analysis` / `user` / `ai` |
+
+### 5.3 依赖图数据结构
+
+```typescript
+interface DependencyNode {
+  type: 'prd' | 'spec' | 'feature-spec' | 'template';
+  path: string;
+  anchors: string[];
+}
+
+interface DependencyEdge {
+  from: string;   // 被依赖方（文件路径或锚点）
+  to: string;     // 依赖方
+  type: 'defines' | 'implements' | 'depends' | 'references';
+  description?: string;
+}
+
+interface DependencyGraph {
+  nodes: Map<string, DependencyNode>;
+  edges: DependencyEdge[];
+}
+```
+
+### 5.4 依赖解析规则
+
+**1. Feature Spec Dependencies 章节**：
+```markdown
+| Dependency | Type | 说明 |
+|------------|------|------|
+| requirements-doc | hard | 依赖需求规范 |
+```
+解析为边：`requirements-doc --depends--> current-feature`
+
+**2. Markdown 链接引用**：
+```markdown
+参见 [requirements-doc.spec.md](./specs/requirements-doc.spec.md#spec_req_feature_spec)
+```
+解析为边：`requirements-doc.spec.md#spec_req_feature_spec --references--> current-doc`
+
+**3. PRD Roadmap Feature 列表**：
+Feature 名称出现在 PRD Feature Roadmap 表格中
+解析为边：`prd.md --defines--> feature-name`
+
+---
+
+## 6. Implementation Notes <!-- id: feat_change_impact_tracking_impl -->
+
+### 6.1 Related Files
+
+| 文件 | 用途 |
+|------|------|
+| `docs/specs/meta-spec.md` | 元规范文档（验证系统的公理层） |
+| `scripts/analyze-impact.js` | 影响分析脚本 |
+| `scripts/validate-docs.js` | 文档契约验证脚本（实现 meta-spec） |
+| `docs/process/state-management.spec.md` | v7.0 Schema 文档 |
+| `scripts/validate-state.js` | v7.0 校验规则 |
+
+### 6.2 Usage
+
+```bash
+# 分析某个文件变更的影响
+node scripts/analyze-impact.js docs/specs/requirements-doc.spec.md
+
+# 分析模板变更的影响
+node scripts/analyze-impact.js docs/templates/backend/feature.spec.md
+```
+
+### 6.3 Integration with CLAUDE.md
+
+当修改以下文件时，AI 必须运行影响分析：
+- 规范文档 (`docs/specs/*.spec.md`)
+- 文档模板 (`docs/templates/**`)
+- PRD (`docs/prd.md`)
+
+流程：
+1. 运行 `node scripts/analyze-impact.js {changed-file}`
+2. 展示影响分析报告
+3. 人类确认后，将建议子任务添加到 state.json
+4. 按优先级处理子任务
+
+---
+
+*Version: v1.1*
+*Created: 2024-12-21*
+*Updated: 2024-12-21*
+*Changes: v1.1 添加 meta-spec 依赖，契约验证基于元规范*

@@ -1,0 +1,102 @@
+{
+  "version": "3.0",
+  "project": {
+    "name": "SoloDevFlow 2.0",
+    "description": "为超级个体打造的自进化人机协作开发系统",
+    "createdAt": "2024-12-16"
+  },
+  "flow": {
+    "phase": "feature_design",
+    "status": "in_progress",
+    "currentFeature": "design-doc-spec",
+    "currentDomain": "specification",
+    "researchMethod": "bottom-up"
+  },
+  "domains": {
+    "specification": {
+      "features": {
+        "requirements-doc-spec": {
+          "phase": "done",
+          "status": "completed"
+        },
+        "design-doc-spec": {
+          "phase": "feature_design",
+          "status": "in_progress"
+        },
+        "development-spec": {
+          "phase": "pending",
+          "status": "not_started"
+        },
+        "testing-spec": {
+          "phase": "pending",
+          "status": "not_started"
+        }
+      }
+    },
+    "tooling": {
+      "features": {
+        "status-script": {
+          "phase": "done",
+          "status": "completed"
+        },
+        "validate-script": {
+          "phase": "done",
+          "status": "completed"
+        },
+        "prd-validator": {
+          "phase": "feature_requirements",
+          "status": "in_progress"
+        }
+      }
+    },
+    "process": {
+      "features": {
+        "state-management": {
+          "phase": "done",
+          "status": "completed"
+        },
+        "input-capture": {
+          "phase": "done",
+          "status": "completed"
+        },
+        "spark-box": {
+          "phase": "done",
+          "status": "completed"
+        }
+      }
+    },
+    "skills": {
+      "features": {
+        "requirements-expert": {
+          "phase": "feature_requirements",
+          "status": "in_progress"
+        }
+      }
+    }
+  },
+  "sparks": [],
+  "pendingDocs": [],
+  "recentChanges": [
+    {
+      "date": "2024-12-20",
+      "change": "新增 Top-Down/Bottom-Up 需求调研方法支持"
+    },
+    {
+      "date": "2024-12-20",
+      "change": "新增 _features/ 目录存放独立 Feature（Bottom-Up 模式）"
+    },
+    {
+      "date": "2024-12-20",
+      "change": "write-feature 命令支持单参数调用（独立 Feature）"
+    },
+    {
+      "date": "2024-12-20",
+      "change": "PRD 模板新增 frontmatter（type, template, version）"
+    },
+    {
+      "date": "2024-12-20",
+      "change": "新增 prd-validator Feature（待实现）"
+    }
+  ],
+  "lastUpdated": "2024-12-20T22:00:00Z"
+}

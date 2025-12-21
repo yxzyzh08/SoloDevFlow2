@@ -1,0 +1,19 @@
+{
+  "name": "solodevflow",
+  "version": "2.0.0",
+  "description": "为超级个体打造的自进化人机协作开发系统",
+  "scripts": {
+    "status": "node scripts/status.js",
+    "validate": "node scripts/validate.js",
+    "validate:state": "node scripts/validate-state.js",
+    "validate:docs": "node scripts/validate-docs.js"
+  },
+  "keywords": [
+    "ai",
+    "claude",
+    "development",
+    "workflow"
+  ],
+  "author": "",
+  "license": "MIT"
+}
