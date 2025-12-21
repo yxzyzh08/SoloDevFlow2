@@ -55,6 +55,28 @@
 2. 提供选项：切换阶段 / 记录到灵光收集箱
 3. 等待人类决定
 
+### 3.5 灵光处理流程
+
+**触发时机**（AI 主动提示）：
+- Feature 完成时
+- 阶段切换时
+- 人类主动要求
+
+**处理流程**：
+```
+读取 spark-box.md → 逐个展示待处理灵光 → 人类选择处理方式
+                                              ├── 转需求 → 触发需求交付流程
+                                              ├── 归档 → 移至"已处理灵光"
+                                              └── 丢弃 → 删除该灵光
+```
+
+**AI 提示模板**：
+```
+有 N 个待处理灵光，是否现在处理？
+1. 处理灵光
+2. 稍后处理
+```
+
 ## 4. 状态管理
 
 | 文件 | 用途 |
@@ -74,6 +96,8 @@
 | `/write-domain {name}` | 编写/更新 Domain Spec |
 | `/write-feature {name}` | 编写/更新独立 Feature Spec |
 | `/write-feature {domain} {name}` | 编写/更新 Domain 内 Feature Spec |
+| `/write-design {name}` | 编写/更新独立 Feature Design |
+| `/write-design {domain} {name}` | 编写/更新 Domain 内 Feature Design |
 | `/write-capability {name}` | 编写/更新 Capability Spec |
 | `/write-flow {name}` | 编写/更新 Flow Spec |
 | `/write-req-spec` | 编写/更新需求文档规范 |

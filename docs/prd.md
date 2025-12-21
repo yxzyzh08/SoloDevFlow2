@@ -125,7 +125,12 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 | P0 | state-management | document | 状态管理机制（state.json Schema） |
 | P0 | change-impact-tracking | document | 变更影响追踪（依赖图 + 子任务） |
 | P0 | input-capture | document | 输入捕获机制（input-log.md） |
-| P0 | spark-box | document | 灵光收集机制（spark-box.md） |
+| P0 | spark-box | document | 灵光收集与处理机制（spark-box.md） |
+
+**spark-box**：解决"灵光一闪"想法丢失或打断当前任务的问题。核心能力：
+- 灵光捕获：识别与当前任务无关的想法，记录到 spark-box.md
+- 灵光处理：在合适时机（任务完成/阶段切换/人类主动）提示处理
+- 灵光转化：评审后转为正式需求、归档、或丢弃
 
 ### 4.3 Domain: tooling
 

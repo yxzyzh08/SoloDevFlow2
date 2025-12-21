@@ -3,7 +3,9 @@
     "allow": [
       "WebSearch",
       "Bash(rm:*)",
-      "Bash(node scripts/state.js:*)"
+      "Bash(node scripts/state.js:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
