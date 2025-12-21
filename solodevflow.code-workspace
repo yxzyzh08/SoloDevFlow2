@@ -1,0 +1,13 @@
+{
+  "folders": [
+    {
+      "name": "SoloDevFlow2 (主项目)",
+      "path": "."
+    },
+    {
+      "name": "CVM_Demo",
+      "path": "../CVM_Demo2"
+    }
+  ],
+  "settings": {}
+}

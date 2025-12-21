@@ -95,7 +95,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 |--------|------|--------------|
 | **specification** | 规范文档（元规范/需求/设计/开发/测试） | 5 |
 | **process** | 协作流程（状态管理/输入捕获/灵光收集/影响追踪） | 4 |
-| **tooling** | 辅助工具（已整合至 process 域） | 0 |
+| **tooling** | 独立工具（项目初始化/分发安装） | 1 |
 | **ai-config** | AI 协作配置（CLAUDE.md/命令/技能） | 3 |
 
 ---
@@ -138,13 +138,23 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 
 ### 4.3 Domain: tooling
 
-辅助工具系统。
+独立工具系统，提供不依附于其他 Feature 的独立工具。
 
-> **注**：工具脚本已整合至对应 Feature：
+> **注**：与 Feature 强相关的工具脚本已整合至对应 Feature：
 > - `validate-state.js`、`migrate-state.js` → `state-management`
 > - `analyze-impact.js`、`validate-docs.js` → `change-impact-tracking`
 >
-> 不再作为独立 Feature 管理。
+> 本 Domain 管理**独立工具**（如项目初始化、分发安装等）。
+
+| Priority | Feature | Type | 说明 |
+|----------|---------|------|------|
+| P0 | project-init | code | 项目初始化工具（将 SoloDevFlow 安装到其他项目） |
+
+**project-init**：解决 SoloDevFlow 无法在其他项目中使用的问题。核心能力：
+- 初始化 `.flow/` 目录结构和状态文件
+- 安装 `.claude/commands/` 命令集
+- 复制规范文档和模板到目标项目
+- 生成 `CLAUDE.md` 骨架和 `package.json` scripts
 
 ### 4.4 Domain: ai-config
 
@@ -225,7 +235,7 @@ AI 协作配置系统，定义 Claude 的行为规范、命令和技能。
 
 ---
 
-*Version: v2.5*
+*Version: v2.6*
 *Created: 2024-12-16*
-*Updated: 2024-12-20*
-*Changes: v2.5 移除 Feature Roadmap 表格中的状态列（状态由 state.json 统一管理）*
+*Updated: 2025-12-21*
+*Changes: v2.5 移除状态列; v2.6 重新激活 tooling Domain，新增 project-init Feature（支持 SoloDevFlow 安装到其他项目）*

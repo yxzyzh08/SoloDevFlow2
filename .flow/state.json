@@ -174,11 +174,11 @@
   "sparks": [],
   "pendingDocs": [],
   "metadata": {
-    "lastGitCommit": "e650abfd650d93e9465ea71d93cf10e3c8f9d14d",
-    "lastGitCommitMessage": "feat(state-management): Schema v9.0 - 添加 artifacts 支持 code 类型 Feature 产物追踪",
-    "lastGitCommitAt": "2025-12-21T10:39:41.856Z",
-    "stateFileVersion": 23,
-    "totalStateChanges": 23
+    "lastGitCommit": "3b6c3501a1fcae1c092ef7c00c8df17055edf2a7",
+    "lastGitCommitMessage": "feat(project-init): 规范文档架构重构 - 规范文档集中管理",
+    "lastGitCommitAt": "2025-12-21T15:25:22.018Z",
+    "stateFileVersion": 24,
+    "totalStateChanges": 24
   },
-  "lastUpdated": "2025-12-21T13:10:18.469Z"
+  "lastUpdated": "2025-12-21T15:25:22.019Z"
 }
