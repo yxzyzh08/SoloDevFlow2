@@ -1,4 +1,4 @@
-# SoloDevFlow 2.0
+# {{projectName}}
 
 > 1人 + Claude Code 的人机协作流程控制器
 
@@ -78,37 +78,20 @@ Feature Spec 完成 → 评估 Design Depth → L0? ─是→ 直接进入实现
                                   L1/L2/L3 → 调用 /write-design → 输出设计文档
 ```
 
-**Design Depth 判断标准**：
-
-| 级别 | 条件 | 产出 |
-|------|------|------|
-| L0 | 极简单，半天内完成，无需架构决策 | 无设计文档 |
-| L1 | 简单，1-2 天，边界清晰 | 轻量设计 |
-| L2 | 中等，3-7 天，涉及多模块 | 标准设计 |
-| L3 | 复杂，高风险，核心架构 | 详细设计 |
-
 ### 4.3 功能咨询流程
 
 ```
 加载 PRD → 定位 Feature → 查 state.json 获取 docPath → 读取文档 → 回答
 ```
 
-### 4.4 变更影响流程
-
-修改规范文档/PRD/模板时**必须**执行：
-
-```
-运行 analyze-impact.js → 展示影响报告 → 人类确认 → 生成 subtasks → 逐个处理
-```
-
-### 4.5 阶段引导
+### 4.4 阶段引导
 
 当输入与当前阶段不符：
 1. 说明当前阶段
 2. 提供选项：切换阶段 / 记录到灵光收集箱
 3. 等待人类决定
 
-### 4.6 灵光处理流程
+### 4.5 灵光处理流程
 
 **触发时机**（AI 主动提示）：
 - Feature 完成时
@@ -130,16 +113,23 @@ Feature Spec 完成 → 评估 Design Depth → L0? ─是→ 直接进入实现
 2. 稍后处理
 ```
 
-## 5. 状态管理
+## 5. 注意事项
+
+**规范文档是只读的**：
+- 所有规范文档位于 SoloDevFlow 源目录（`.flow/state.json` 中的 `solodevflow.sourcePath`）
+- `/write-*` 命令会自动从源目录读取规范
+- 新项目不应修改规范，如需修改请在 SoloDevFlow 主项目中进行
+
+## 6. 状态管理
 
 | 文件 | 用途 |
 |------|------|
-| `.flow/state.json` | **唯一状态源**（Schema v8.0，详见 `docs/process/state-management.spec.md`） |
+| `.flow/state.json` | **唯一状态源**（Schema v9.0） |
 | `.flow/input-log.md` | 关键输入记录（需求/决策/反馈/变更） |
 | `.flow/spark-box.md` | 灵光收集箱 |
 | `.flow/pending-docs.md` | 文档债务追踪 |
 
-## 6. 工具索引
+## 7. 工具索引
 
 ### 命令（用户 `/命令` 调用）
 
@@ -153,7 +143,6 @@ Feature Spec 完成 → 评估 Design Depth → L0? ─是→ 直接进入实现
 | `/write-design {domain} {name}` | 编写/更新 Domain 内 Feature Design |
 | `/write-capability {name}` | 编写/更新 Capability Spec |
 | `/write-flow {name}` | 编写/更新 Flow Spec |
-| `/write-req-spec` | 编写/更新需求文档规范 |
 
 ### 技能（AI 自动触发）
 
@@ -190,13 +179,12 @@ node scripts/state.js complete-subtask <feature> <subtaskId>
 node scripts/state.js record-commit              # 记录最新 commit 到 metadata
 ```
 
-## 7. 约束规则
+## 8. 约束规则
 
 ### 始终做
 
 - 关键输入 → 记录到 `input-log.md`
 - 灵光想法 → 记录到 `spark-box.md`，不打断当前任务
-- 变更前 → 先做影响分析
 - 输出 → 总分结构（先结论后细节）
 - 编写文档前 → 加载对应规范
 - **完成 subtask/feature 后 → 自动提交**（见下方规则）
@@ -217,7 +205,6 @@ node scripts/state.js record-commit
 ### 绝不做
 
 - 需求阶段写代码
-- 跳过影响分析直接执行变更
 - 丢失人类的关键输入
 
 ### 双语规范
@@ -226,16 +213,7 @@ node scripts/state.js record-commit
 - **标题/术语**：英文
 - **描述/逻辑**：中文
 
-### 规范管理（仅 SoloDevFlow 主项目）
-
-本项目是所有规范的源头，修改规范时：
-1. **必须**运行影响分析：`node scripts/analyze-impact.js <file>`
-2. 检查影响范围（所有引用此规范的项目）
-3. 生成升级 subtasks
-4. 使用 `/write-req-spec` 或 `/write-design-spec` 更新规范
-5. 提交后，所有使用此规范的项目将自动获取更新（通过 `solodevflow.sourcePath`）
-
-## 8. 文件结构
+## 9. 文件结构
 
 ```
 项目根目录/
@@ -245,7 +223,6 @@ node scripts/state.js record-commit
 │   └── skills/            # 智能技能
 ├── docs/
 │   ├── prd.md             # 产品 PRD
-│   ├── specs/             # 规范文档
 │   ├── templates/         # 模板文件
 │   ├── {domain}/          # Domain 目录
 │   ├── _features/         # 独立 Feature
@@ -257,4 +234,5 @@ node scripts/state.js record-commit
 
 ---
 
-*v3.0 - 重构为流程控制器，突出意图识别与流程路由*
+*Powered by SoloDevFlow {{version}}*
+*Installed: {{installedAt}}*

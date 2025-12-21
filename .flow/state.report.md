@@ -7,9 +7,9 @@
 | 属性 | 值 |
 |------|-----|
 | Name | SoloDevFlow 2.0 |
-| Schema | v8.0.0 |
+| Schema | v9.0.0 |
 | Method | bottom-up |
-| Updated | 2025-12-21T09:31:28.544Z |
+| Updated | 2025-12-21T13:10:18.469Z |
 
 ## Active Features
 
@@ -17,6 +17,7 @@
 |---------|--------|-------|--------|
 | requirements-expert | ai-config | drafting | 🔄 in_progress |
 | design-expert | ai-config | pending | 🔄 in_progress |
+| project-init | tooling | feature_design | 🔄 in_progress |
 
 ## Domain Tree
 
@@ -49,17 +50,23 @@
 - 🔄 **design-expert** [pending] **[ACTIVE]**
   - 设计专家技能（根据产品远景提供合适设计，避免过度设计）
 
+### 📁 tooling (0/1)
+> 独立工具（项目初始化/分发安装）
+
+- 🔄 **project-init** [feature_design] **[ACTIVE]**
+  - 项目初始化工具（将 SoloDevFlow 安装到其他项目）
+
 ## Stats
 
 | 指标 | 值 |
 |------|-----|
-| Total Features | 13 |
-| Completed | 9 (69%) |
-| In Progress | 2 |
+| Total Features | 14 |
+| Completed | 9 (64%) |
+| In Progress | 3 |
 | Not Started | 2 |
-| Domains | 3 |
+| Domains | 4 |
 | Sparks | 0 |
 | Pending Docs | 0 |
 
 ---
-*Generated at 2025-12-21T09:31:28.544Z*
+*Generated at 2025-12-21T13:10:18.469Z*

@@ -23,16 +23,30 @@
 
 ## 加载文件
 
-1. 规范文档：`docs/specs/requirements-doc.spec.md`
-2. Feature 模板：`docs/templates/backend/feature.spec.md`
-3. Domain Spec：`docs/{domain}/_domain.spec.md`（仅双参数调用时，如存在）
+### 步骤0: 获取规范路径
+
+1. 读取 `.flow/state.json` 获取:
+   - `project.type`（项目类型：`backend` | `web-app` | `mobile-app`）
+   - `solodevflow.sourcePath`（SoloDevFlow 源路径）
+
+### 步骤1: 加载规范和模板
+
+1. 规范文档：`{sourcePath}/docs/specs/requirements-doc.spec.md`
+2. Feature 模板：`docs/templates/{projectType}/feature.spec.md`
+3. Domain Spec：`docs/{domain}/_domain.spec.md`（仅双参数调用时）
 4. 现有 Feature Spec：目标路径文件（如存在）
 
+**注意**: 规范文档来自 SoloDevFlow 源目录，为只读文件。
+
 ## 执行步骤
+
+### 2. 参数解析
 
 1. 判断参数数量，确定调用模式和输出路径
 2. 检测目标文件是否存在
 3. 读取规范文档，了解 Feature Spec 结构要求（Section 5）
+
+### 3. 文档编写
 
 **如果不存在（新建模式）**：
 4. 读取 Feature 模板，作为文档骨架

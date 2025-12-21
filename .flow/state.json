@@ -11,7 +11,8 @@
     "researchMethod": "bottom-up",
     "activeFeatures": [
       "requirements-expert",
-      "design-expert"
+      "design-expert",
+      "project-init"
     ]
   },
   "features": {
@@ -144,21 +145,40 @@
       "phase": "pending",
       "status": "in_progress",
       "description": "设计专家技能（根据产品远景提供合适设计，避免过度设计）"
+    },
+    "project-init": {
+      "type": "code",
+      "domain": "tooling",
+      "docPath": "docs/tooling/project-init.spec.md",
+      "phase": "feature_design",
+      "status": "in_progress",
+      "description": "项目初始化工具（将 SoloDevFlow 安装到其他项目）",
+      "designDepth": "L2",
+      "artifacts": {
+        "design": "docs/tooling/project-init.design.md",
+        "code": [
+          "scripts/init.js"
+        ],
+        "tests": [
+          "tests/e2e/project-init.test.js"
+        ]
+      }
     }
   },
   "domains": {
     "specification": "规范文档（元规范/需求/设计/开发/测试）",
     "process": "协作流程（状态/输入/灵光/影响追踪）",
+    "tooling": "独立工具（项目初始化/分发安装）",
     "ai-config": "AI 协作配置（CLAUDE.md/命令/技能）"
   },
   "sparks": [],
   "pendingDocs": [],
   "metadata": {
-    "lastGitCommit": "20b9af125f8d96e74d9d2c2197abc3c3574219d0",
-    "lastGitCommitMessage": "feat(change-impact-tracking): 扩展覆盖范围，支持新增 Feature 关联分析",
-    "lastGitCommitAt": "2025-12-21T09:31:28.544Z",
-    "stateFileVersion": 20,
-    "totalStateChanges": 20
+    "lastGitCommit": "e650abfd650d93e9465ea71d93cf10e3c8f9d14d",
+    "lastGitCommitMessage": "feat(state-management): Schema v9.0 - 添加 artifacts 支持 code 类型 Feature 产物追踪",
+    "lastGitCommitAt": "2025-12-21T10:39:41.856Z",
+    "stateFileVersion": 23,
+    "totalStateChanges": 23
   },
-  "lastUpdated": "2025-12-21T09:31:28.544Z"
+  "lastUpdated": "2025-12-21T13:10:18.469Z"
 }

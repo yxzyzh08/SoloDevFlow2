@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "9.0.0",
+  "project": {
+    "name": "{{projectName}}",
+    "description": "",
+    "type": "{{projectType}}",
+    "createdAt": "{{createdAt}}",
+    "updatedAt": "{{createdAt}}"
+  },
+  "flow": {
+    "researchMethod": "bottom-up",
+    "activeFeatures": []
+  },
+  "features": {},
+  "domains": {},
+  "sparks": [],
+  "pendingDocs": [],
+  "solodevflow": {
+    "version": "{{version}}",
+    "installedAt": "{{installedAt}}",
+    "sourcePath": "{{sourcePath}}"
+  },
+  "metadata": {
+    "stateFileVersion": 1,
+    "totalStateChanges": 1
+  },
+  "lastUpdated": "{{createdAt}}"
+}

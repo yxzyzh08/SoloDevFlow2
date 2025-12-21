@@ -25,21 +25,31 @@
 
 ## 加载文件
 
-1. 设计规范：`docs/specs/design-doc-spec.md`
-2. 设计模板：`docs/templates/backend/feature.design.md`
+### 步骤0: 获取规范路径
+
+1. 读取 `.flow/state.json` 获取:
+   - `project.type`（项目类型：`backend` | `web-app` | `mobile-app`）
+   - `solodevflow.sourcePath`（SoloDevFlow 源路径）
+
+### 步骤1: 加载规范和模板
+
+1. 设计规范：`{sourcePath}/docs/specs/design-doc-spec.md`
+2. 设计模板：`docs/templates/{projectType}/feature.design.md`
 3. Feature Spec：对应的 `{name}.spec.md`（必须存在）
 4. 现有 Design Doc：目标路径文件（如存在）
 
+**注意**: 规范文档来自 SoloDevFlow 源目录，为只读文件。
+
 ## 执行步骤
 
-### 1. 前置检查
+### 2. 前置检查
 
 1. 判断参数数量，确定调用模式和输出路径
 2. **检查 Feature Spec 是否存在**（必须先有需求才能设计）
 3. 检测目标设计文档是否存在
 4. 读取设计规范，了解结构要求
 
-### 2. 确定设计深度
+### 3. 确定设计深度
 
 根据功能复杂度选择设计深度：
 

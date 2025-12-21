@@ -8,11 +8,23 @@
 
 ## 加载文件
 
-1. 规范文档：`docs/specs/requirements-doc.spec.md`
-2. Flow 模板：`docs/templates/backend/flow.spec.md`
+### 步骤0: 获取规范路径
+
+1. 读取 `.flow/state.json` 获取:
+   - `project.type`（项目类型：`backend` | `web-app` | `mobile-app`）
+   - `solodevflow.sourcePath`（SoloDevFlow 源路径）
+
+### 步骤1: 加载规范和模板
+
+1. 规范文档：`{sourcePath}/docs/specs/requirements-doc.spec.md`
+2. Flow 模板：`docs/templates/{projectType}/flow.spec.md`
 3. 现有 Flow Spec：`docs/_flows/{name}.spec.md`（如存在）
 
+**注意**: 规范文档来自 SoloDevFlow 源目录，为只读文件。
+
 ## 执行步骤
+
+### 2. 前置检查
 
 1. 检测 `docs/_flows/{name}.spec.md` 是否存在
 2. 读取规范文档，了解 Flow Spec 结构要求（Section 7）

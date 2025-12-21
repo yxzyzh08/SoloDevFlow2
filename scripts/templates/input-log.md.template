@@ -1,0 +1,17 @@
+# Input Log
+
+> 关键输入记录（需求/决策/反馈/变更）
+
+---
+
+## {{createdAt}}
+
+### 项目初始化
+
+- 项目名称：{{projectName}}
+- 项目类型：{{projectType}}
+- SoloDevFlow 版本：{{version}}
+
+---
+
+<!-- 后续输入记录在此添加 -->

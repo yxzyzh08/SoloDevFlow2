@@ -263,10 +263,120 @@ docs/
 - [ ] 是否评估了替代方案？
 - [ ] 是否识别了技术风险？
 
+## 6. 项目类型特定设计规范
+
+### 6.1 Backend 项目
+
+#### 架构设计要求
+- **分层架构**：Controller → Service → Repository
+- **数据库设计**：ER图、索引策略、查询优化
+- **API 设计**：RESTful 规范、请求/响应格式
+- **缓存策略**：缓存层级、失效策略
+
+#### 性能要求
+- **响应时间指标**：API 响应时间 < 200ms (P95)
+- **并发处理能力**：QPS 要求、负载评估
+- **数据库查询优化**：索引设计、查询计划分析
+
+#### 安全设计
+- **认证授权**：JWT/Session 机制
+- **数据验证**：输入校验、SQL 注入防护
+- **敏感数据**：加密存储、传输安全
+
+### 6.2 Web App 项目
+
+#### 前端架构设计
+- **组件层级**：遵循 Atomic Design（Atomic → Molecular → Organism → Template）
+- **状态管理**：
+  - Local State：组件内部状态
+  - Global State：跨组件共享状态（Context/Redux）
+  - Server State：API 数据缓存
+- **路由设计**：路由结构、权限控制、懒加载
+- **API 集成**：接口定义、错误处理、重试机制
+
+#### UI 组件设计
+**前置要求**: 设计前必须查询 `docs/ui/component-registry.md`
+
+| UI 需求 | 现有组件 | 决策 | 说明 |
+|---------|----------|------|------|
+| 用户输入 | Input (Atomic) | 复用 | 支持 validation |
+| 表单提交 | Form (Molecular) | 复用 | 包含错误处理 |
+| 新功能X | - | 新建 | 需求独特，无法复用 |
+
+**组件分类**:
+- **Atomic**: Button, Input, Icon, Label
+- **Molecular**: Form, Card, Modal, Dropdown
+- **Organism**: Header, Sidebar, DataTable
+- **Template**: PageLayout, FormLayout
+
+**设计决策流程**:
+1. 查询组件注册表
+2. 评估现有组件是否满足需求
+3. 优先复用，必要时新建
+4. 新建组件需在 Design Doc 中声明
+
+#### 响应式设计
+- **断点定义**：
+  - Mobile: < 768px
+  - Tablet: 768px - 1024px
+  - Desktop: > 1024px
+- **布局适配策略**：Flexbox/Grid 布局、媒体查询
+- **性能优化**：懒加载、代码分割、图片优化
+
+#### 样式规范
+- **设计系统**：使用 CSS 变量 / 主题 token
+- **统一性**：遵循项目的设计语言
+- **可访问性**：WCAG 2.1 AA 标准（颜色对比度、键盘导航、ARIA 标签）
+
+### 6.3 Mobile App 项目
+
+#### 平台适配设计
+- **iOS/Android 差异处理**：平台特定 UI 模式、导航方式
+- **原生 API 集成**：权限管理、推送通知、后台任务
+- **平台特定组件**：选择器、日期选择、导航栏
+
+#### 屏幕适配
+- **安全区域处理**：刘海屏、底部手势条、状态栏
+- **横竖屏支持**：布局自适应、方向锁定
+- **不同屏幕尺寸适配**：
+  - 小屏（< 5.5"）：单列布局
+  - 中屏（5.5" - 6.5"）：标准布局
+  - 大屏（> 6.5"）：利用额外空间
+
+#### 性能设计
+- **启动时间优化**：< 2s 冷启动、< 1s 热启动
+- **内存管理**：
+  - 图片懒加载
+  - 列表虚拟化
+  - 组件卸载时清理
+- **电池消耗控制**：
+  - 限制后台任务
+  - 优化网络请求
+  - 合理使用定位服务
+- **离线数据策略**：本地缓存、同步机制、冲突解决
+
+#### 原生集成
+
+| 功能 | iOS API | Android API | 设计考量 |
+|------|---------|-------------|---------|
+| 权限管理 | Info.plist | AndroidManifest | 运行时请求、降级策略 |
+| 推送通知 | APNs | FCM | 统一接口封装、消息格式 |
+| 后台任务 | Background Modes | WorkManager | 平台限制、执行时机 |
+| 生物识别 | Face ID/Touch ID | BiometricPrompt | 回退机制、安全存储 |
+
+## 7. 设计深度与项目类型映射
+
+| 设计深度 | Backend | Web App | Mobile App |
+|---------|---------|---------|------------|
+| L0 | 简单CRUD | 静态页面 | 单屏展示 |
+| L1 | 基础API、单表操作 | 简单交互、无状态管理 | 基础导航、本地数据 |
+| L2 | 多模块API、复杂查询 | 状态管理、多组件交互 | 原生集成、网络数据 |
+| L3 | 分布式系统、微服务 | 复杂状态、实时数据 | 跨平台架构、复杂同步 |
+
 ---
 
-*Version: v2.2*
+*Version: v3.0*
 *Created: 2024-12-20*
 *Updated: 2025-12-21*
-*Changes: v2.1 新增 L0 级别; v2.2 新增 Flow Design 类型（与 flow-spec 对应），保持与 requirements-doc.spec.md 一致*
+*Changes: v2.1 新增 L0 级别; v2.2 新增 Flow Design 类型; v3.0 新增项目类型特定设计规范（Backend/Web App/Mobile App）*
 *Applies to: SoloDevFlow 2.0*
