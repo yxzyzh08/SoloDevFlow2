@@ -118,11 +118,20 @@ PRD（总）
 
 | 级别 | 名称 | 适用场景 | 文档内容 |
 |------|------|----------|----------|
+| L0 | **无设计** | 极简单功能、直接实现 | 无设计文档 |
 | L1 | **轻量设计** | 简单功能、低风险、可快速验证 | Overview + 关键接口 |
 | L2 | **标准设计** | 一般功能、中等复杂度 | 完整必选章节 |
 | L3 | **详细设计** | 复杂功能、高风险、核心模块 | 完整必选 + 可选章节 |
 
 ### 2.2 Depth Selection Criteria
+
+**选择 L0（无设计）当**：
+- 功能极其简单，实现路径明确
+- 不需要架构决策或技术选型
+- 可在半天内完成实现
+- 失败可即时重做，无需文档追溯
+
+> **L0 说明**：L0 不需要创建设计文档。在 Feature Spec 的 Artifacts 章节中标记 `Design Depth: L0` 即可。
 
 **选择 L1（轻量设计）当**：
 - 功能逻辑简单、边界清晰
@@ -163,6 +172,7 @@ PRD（总）
 | **Domain Design** | 领域级（可选） | 领域内的技术设计 |
 | **Feature Design** | Feature级 | Feature 的技术设计 |
 | **Capability Design** | 能力级（可选） | Capability 的技术设计 |
+| **Flow Design** | 流程级（可选） | 跨域业务流程的技术设计 |
 
 ### 3.2 Directory Structure
 
@@ -210,7 +220,33 @@ docs/
 
 ---
 
-## 5. Design Review Checklist <!-- id: spec_design_checklist -->
+## 5. Flow Design Structure <!-- id: spec_design_flow -->
+
+> 跨域业务流程的技术设计，与 Flow Spec 对应。
+
+### 5.1 Required Sections
+
+| 章节 | 锚点 | 内容 | L1 | L2 | L3 |
+|------|------|------|:--:|:--:|:--:|
+| **Overview** | `design_{name}_overview` | 设计目标、流程概述 | ✓ | ✓ | ✓ |
+| **Flow Architecture** | `design_{name}_architecture` | 流程架构、参与组件 | - | ✓ | ✓ |
+| **Interface Design** | `design_{name}_interface` | 组件间接口定义 | ✓ | ✓ | ✓ |
+| **Implementation Plan** | `design_{name}_impl` | 实现步骤、时序图 | - | ✓ | ✓ |
+
+### 5.2 Optional Sections
+
+| 章节 | 锚点 | 适用场景 | L1 | L2 | L3 |
+|------|------|----------|:--:|:--:|:--:|
+| **Error Handling** | `design_{name}_errors` | 复杂异常处理 | - | - | ✓ |
+| **Performance** | `design_{name}_performance` | 有性能/时序要求 | - | - | ✓ |
+
+### 5.3 Template
+
+**模板位置**：`docs/templates/{project-type}/flow.design.md`
+
+---
+
+## 6. Design Review Checklist <!-- id: spec_design_checklist -->
 
 **通用检查项**：
 - [ ] 设计深度是否匹配功能复杂度？（避免过度设计）
@@ -229,8 +265,8 @@ docs/
 
 ---
 
-*Version: v2.0*
+*Version: v2.2*
 *Created: 2024-12-20*
 *Updated: 2025-12-21*
-*Changes: v2.0 新增设计深度分级（L1/L2/L3），避免过度设计*
+*Changes: v2.1 新增 L0 级别; v2.2 新增 Flow Design 类型（与 flow-spec 对应），保持与 requirements-doc.spec.md 一致*
 *Applies to: SoloDevFlow 2.0*

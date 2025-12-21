@@ -1,6 +1,6 @@
 ---
 type: feature-spec
-version: "1.1"
+version: "1.2"
 ---
 
 # Feature: Change Impact Tracking <!-- id: feat_change_impact_tracking -->
@@ -79,12 +79,17 @@ version: "1.1"
 - `spec`：规范文档（如 requirements-doc.spec.md）
 - `feature-spec`：Feature 规范
 - `template`：文档模板
+- `design-doc`：设计文档（v1.2 新增）
+- `code`：代码文件/目录（v1.2 新增）
+- `test`：测试文件（v1.2 新增）
 
 **边类型**：
 - `defines`：A 定义 B（PRD 定义 Feature）
 - `implements`：A 实现 B（模板实现规范）
 - `depends`：A 依赖 B（Feature 依赖 Feature）
 - `references`：A 引用 B（软链接）
+- `produces`：A 产出 B（Feature 产出 Artifact，v1.2 新增）
+- `tests`：A 测试 B（Test 测试 Code，v1.2 新增）
 
 ### 3.2 C3: 影响分析
 
@@ -270,15 +275,16 @@ version: "1.1"
 
 ```typescript
 interface DependencyNode {
-  type: 'prd' | 'spec' | 'feature-spec' | 'template';
+  type: 'prd' | 'spec' | 'feature-spec' | 'template' | 'design-doc' | 'code' | 'test';
   path: string;
   anchors: string[];
+  featureName?: string;  // 关联的 Feature 名称（用于反向查找）
 }
 
 interface DependencyEdge {
   from: string;   // 被依赖方（文件路径或锚点）
   to: string;     // 依赖方
-  type: 'defines' | 'implements' | 'depends' | 'references';
+  type: 'defines' | 'implements' | 'depends' | 'references' | 'produces' | 'tests';
   description?: string;
 }
 
@@ -307,6 +313,23 @@ interface DependencyGraph {
 **3. PRD Roadmap Feature 列表**：
 Feature 名称出现在 PRD Feature Roadmap 表格中
 解析为边：`prd.md --defines--> feature-name`
+
+**4. state.json Artifacts**（v1.2 新增）：
+从 `state.json` 读取 code 类型 Feature 的 `artifacts` 字段：
+```json
+{
+  "artifacts": {
+    "design": "docs/_features/xxx.design.md",
+    "code": ["src/xxx.js"],
+    "tests": ["tests/xxx.test.ts"]
+  }
+}
+```
+解析为边：
+- `feature-spec --produces--> design-doc`
+- `feature-spec --produces--> code`
+- `feature-spec --produces--> test`
+- `test --tests--> code`
 
 ---
 
@@ -347,7 +370,7 @@ node scripts/analyze-impact.js docs/templates/backend/feature.spec.md
 
 ---
 
-*Version: v1.1*
+*Version: v1.2*
 *Created: 2024-12-21*
 *Updated: 2024-12-21*
-*Changes: v1.1 添加 meta-spec 依赖，契约验证基于元规范*
+*Changes: v1.2 扩展支持代码文件级别依赖（design-doc/code/test 节点类型，produces/tests 边类型）*

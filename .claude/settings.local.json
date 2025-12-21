@@ -5,7 +5,8 @@
       "Bash(rm:*)",
       "Bash(node scripts/state.js:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(node scripts/validate-state.js:*)"
     ]
   }
 }

@@ -51,9 +51,46 @@
 **最后**：
 - 运行校验：`npm run validate:docs {输出文件路径}`，确保符合规范
 
+## Feature 类型与 Artifacts
+
+### Feature 类型判断
+
+在编写前确认 Feature 类型：
+
+| 类型 | 判断标准 | Artifacts 章节 |
+|------|----------|----------------|
+| `code` | 产出为代码 + 测试 | **必选** |
+| `document` | 产出为 Markdown 文档 | 可选 |
+
+### Artifacts 章节（code 类型必选）
+
+```markdown
+## Artifacts <!-- feat_{name}_artifacts -->
+
+| Type | Path | Required | Description |
+|------|------|----------|-------------|
+| Design | docs/{domain}/{name}.design.md | L1+ | 设计文档 |
+| Code | src/{module}/ | Yes | 代码目录 |
+| E2E Test | tests/e2e/{name}.test.ts | Yes | E2E 测试 |
+
+**Design Depth**: L{0|1|2|3}
+```
+
+### Design Depth 初步评估
+
+在编写 Feature Spec 时，根据功能复杂度初步评估 Design Depth：
+
+| 级别 | 条件 |
+|------|------|
+| L0 | 极简单，半天内完成，无需架构决策 |
+| L1 | 简单，1-2 天，边界清晰 |
+| L2 | 中等，3-7 天，涉及多模块 |
+| L3 | 复杂，高风险，核心架构 |
+
 ## 注意事项
 
 - 必须包含：Intent、Core Capabilities、Acceptance Criteria
+- **code 类型必须包含 Artifacts 章节**
 - User Stories 为可选章节，需要详细描述用户场景时添加
 - 参考 Appendix E 了解 User Story 与 User Scenario 的区别
 - 独立 Feature 后续可迁移到 Domain 目录（当 Domain 确定时）

@@ -49,6 +49,39 @@
 
 ---
 
+## 4. Artifacts <!-- id: feat_{name}_artifacts -->
+
+> 记录 Feature 的下游产物，用于影响分析和变更追踪。
+> **注意**：此章节对于 code 类型 Feature 为必选，document 类型为可选。
+> **与 state.json 同步**：此处定义的产物路径需同步到 `state.json` 的 `artifacts` 字段。
+
+| Type | Path | Required | Description |
+|------|------|----------|-------------|
+| Design | docs/{domain}/{name}.design.md | L1+ | 设计文档（对应 `artifacts.design`） |
+| Code | src/{module}/ | Yes | 代码目录（对应 `artifacts.code[]`） |
+| E2E Test | tests/e2e/{name}.test.ts | Yes | E2E 测试（对应 `artifacts.tests[]`） |
+
+**Design Depth**: L{0|1|2|3}（对应 `state.json` 的 `designDepth` 字段）
+
+- L0: 无需设计文档，直接实现
+- L1: 轻量设计（Overview + Interface）
+- L2: 标准设计（+ Approach + Implementation）
+- L3: 详细设计（+ Alternatives + Risks）
+
+**state.json 示例**：
+```json
+{
+  "designDepth": "L1",
+  "artifacts": {
+    "design": "docs/{domain}/{name}.design.md",
+    "code": ["src/{module}/"],
+    "tests": ["tests/e2e/{name}.test.ts"]
+  }
+}
+```
+
+---
+
 <!-- Optional Sections -->
 
 ## User Stories <!-- id: feat_{name}_stories -->

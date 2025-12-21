@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "8.0.0",
+  "schemaVersion": "9.0.0",
   "project": {
     "name": "SoloDevFlow 2.0",
     "description": "为超级个体打造的自进化人机协作开发系统",
@@ -154,11 +154,11 @@
   "sparks": [],
   "pendingDocs": [],
   "metadata": {
-    "lastGitCommit": "1a42f1e7ff394bded84d77f6300bb38d3dcc7109",
-    "lastGitCommitMessage": "feat(spark-box): 添加灵光处理流程定义",
-    "lastGitCommitAt": "2025-12-21T09:20:08.860Z",
-    "stateFileVersion": 19,
-    "totalStateChanges": 19
+    "lastGitCommit": "20b9af125f8d96e74d9d2c2197abc3c3574219d0",
+    "lastGitCommitMessage": "feat(change-impact-tracking): 扩展覆盖范围，支持新增 Feature 关联分析",
+    "lastGitCommitAt": "2025-12-21T09:31:28.544Z",
+    "stateFileVersion": 20,
+    "totalStateChanges": 20
   },
-  "lastUpdated": "2025-12-21T09:20:08.860Z"
+  "lastUpdated": "2025-12-21T09:31:28.544Z"
 }

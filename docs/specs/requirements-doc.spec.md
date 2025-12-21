@@ -239,7 +239,28 @@ version: {doc-version}
 
 ## 5. Feature Spec Structure <!-- id: spec_req_feature_spec --> <!-- defines: feature-spec -->
 
-### 5.1 Required Sections
+### 5.1 Feature Types
+
+Feature 分为两种类型，工作流和产出物不同：
+
+| 类型 | 说明 | 产出物 | 工作流 |
+|------|------|--------|--------|
+| `code` | 代码型 | 代码 + 测试 + 设计文档（可选） | 需求 → 设计（可选） → 实现 → 验证 |
+| `document` | 文档型 | Markdown 文档（可选脚本） | 起草 → 完成 |
+
+**code 类型**：
+- 必须有代码产出
+- 必须有 E2E 测试验证
+- 设计文档可选（通过 Design Depth 控制）
+
+**document 类型**：
+- 产出为 Markdown 文档
+- 可包含辅助脚本
+- 无需 E2E 测试
+
+### 5.2 Required Sections
+
+**通用必选章节**（所有 Feature）：
 
 | 章节 | 锚点 | 内容 |
 |------|------|------|
@@ -247,33 +268,74 @@ version: {doc-version}
 | **Core Capabilities** | `feat_{name}_capabilities` | 提供什么能力（What） |
 | **Acceptance Criteria** | `feat_{name}_acceptance` | 可验证的完成条件 |
 
-### 5.2 Optional Sections
+**code 类型额外必选章节**：
+
+| 章节 | 锚点 | 内容 |
+|------|------|------|
+| **Artifacts** | `feat_{name}_artifacts` | 产物记录（设计/代码/测试路径） |
+
+### 5.3 Optional Sections
 
 | 章节 | 锚点 | 适用场景 |
 |------|------|----------|
 | **User Stories** | `feat_{name}_stories` | 需要详细描述用户场景 |
 | **Boundaries** | `feat_{name}_boundaries` | 需要明确排除项 |
 | **Dependencies** | `feat_{name}_dependencies` | 有前置依赖 |
+| **Artifacts** | `feat_{name}_artifacts` | document 类型记录产物（可选） |
 
-### 5.3 Template
+### 5.4 Artifacts Section（产物记录）
+
+**用途**：记录 Feature 的下游产物位置，支持影响分析和变更追踪。
+
+**结构**：
+
+```markdown
+## Artifacts <!-- feat_{name}_artifacts -->
+
+| Type | Path | Required | Description |
+|------|------|----------|-------------|
+| Design | docs/{domain}/{name}.design.md | L1+ | 设计文档 |
+| Code | src/{module}/ | Yes | 代码目录 |
+| E2E Test | tests/e2e/{name}.test.ts | Yes | E2E 测试 |
+
+**Design Depth**: L0 / L1 / L2 / L3
+```
+
+**Design Depth 说明**：
+
+| 级别 | 名称 | 设计文档 | 适用场景 |
+|------|------|----------|----------|
+| L0 | 无设计 | 不需要 | 极简单功能，直接实现 |
+| L1 | 轻量设计 | 需要 | 简单功能，低风险 |
+| L2 | 标准设计 | 需要 | 一般功能，中等复杂度 |
+| L3 | 详细设计 | 需要 | 复杂功能，高风险 |
+
+**L0 适用条件**（满足全部）：
+- 功能逻辑简单、边界清晰
+- 不涉及外部依赖或新技术
+- 可在 1 天内完成实现
+- 失败成本低，可快速重做
+
+### 5.5 Template
 
 **模板位置**：`docs/templates/{project-type}/feature.spec.md`
 
 当前项目模板：`docs/templates/backend/feature.spec.md`
 
-### 5.4 Simple Feature Spec（含设计）
+### 5.6 Simple Feature Spec（含设计）
 
 对于简单、独立的 Feature，可将需求和设计合并到一个文档中。
 
 **适用条件**（满足全部）：
 - Feature 边界清晰，不依赖其他 Feature
-- 设计方案明确，无需单独设计文档
+- 设计方案明确，无需单独设计文档（L0 或 L1）
 - 技术实现相对简单
 
 **文档结构**：
 - 保留标准 Feature Spec 章节（Intent、Core Capabilities、Acceptance Criteria）
 - 新增 Scope 章节，明确边界
-- 新增 Design 章节，包含技术设计内容
+- 新增 Design 章节，包含技术设计内容（L1 内联）
+- 新增 Artifacts 章节，记录产物位置
 - 可选：Implementation Notes（实现说明、辅助脚本等）
 
 **模板位置**：`docs/templates/{project-type}/simple-feature.spec.md`
@@ -476,11 +538,16 @@ minor: 内容更新（修改描述）
 
 ### D. Feature Driven Workflow
 
+**code 类型 Feature**（设计可选）：
 ```
-Feature A: 需求 → 设计 → 实现 → 验证 ✓
-Feature B: 需求 → 设计 → 实现 → 验证 ← 当前
-Capability X: 需求 → 设计 → 实现 → 验证 (并行)
+Feature A (L0): 需求 → 实现 → 验证 ✓
+Feature B (L2): 需求 → 设计 → 实现 → 验证 ← 当前
 Feature C: 待开始
+```
+
+**document 类型 Feature**：
+```
+Feature X: 起草 → 完成 ✓
 ```
 
 ### E. User Story vs User Scenario vs Flow Spec
@@ -536,8 +603,8 @@ Flow Spec: 订单处理流程
 
 ---
 
-*Version: v2.9*
+*Version: v3.0*
 *Created: 2024-12-20*
-*Updated: 2024-12-21*
-*Changes: v2.9 添加 defines 声明，支持规范映射（遵循 meta-spec.md）*
+*Updated: 2025-12-21*
+*Changes: v3.0 Feature Spec 增加 Artifacts 章节（产物记录），增加 Design Depth（L0-L3），code 类型必须有 E2E 测试*
 *Applies to: SoloDevFlow 2.0*

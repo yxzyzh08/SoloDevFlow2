@@ -2,7 +2,7 @@
 
 /**
  * state.json Validation Script
- * Validates state.json against v6.0 schema
+ * Validates state.json against v9.0 schema
  *
  * Usage: node scripts/validate-state.js
  */
@@ -13,7 +13,7 @@ const path = require('path');
 const STATE_FILE = path.join(__dirname, '..', '.flow', 'state.json');
 
 // Schema version
-const EXPECTED_SCHEMA_VERSION = "8.0.0";
+const EXPECTED_SCHEMA_VERSION = "9.0.0";
 
 // Enums
 const PROJECT_TYPES = ['web-app', 'cli-tool', 'backend', 'library', 'api-service', 'mobile-app'];
@@ -24,6 +24,7 @@ const DOCUMENT_PHASES = ['pending', 'drafting', 'done'];
 const FEATURE_STATUSES = ['not_started', 'in_progress', 'blocked', 'completed'];
 const SUBTASK_STATUSES = ['pending', 'in_progress', 'completed', 'skipped'];
 const SUBTASK_SOURCES = ['impact-analysis', 'user', 'ai'];
+const DESIGN_DEPTHS = ['L0', 'L1', 'L2', 'L3'];
 
 let errors = [];
 let warnings = [];
@@ -183,6 +184,85 @@ function validateState(state) {
         }
       }
 
+      // designDepth and artifacts (v9.0+, required for code type)
+      if (isCode) {
+        // designDepth is required for code type
+        if (!feature.designDepth) {
+          error(`${featurePath}.designDepth is required for code type feature`);
+        } else if (!DESIGN_DEPTHS.includes(feature.designDepth)) {
+          error(`${featurePath}.designDepth "${feature.designDepth}" is invalid. Expected: ${DESIGN_DEPTHS.join(', ')}`);
+        }
+
+        // artifacts is required for code type
+        if (!feature.artifacts) {
+          error(`${featurePath}.artifacts is required for code type feature`);
+        } else if (typeof feature.artifacts !== 'object' || Array.isArray(feature.artifacts)) {
+          error(`${featurePath}.artifacts must be an object`);
+        } else {
+          const artifacts = feature.artifacts;
+          const artifactsPath = `${featurePath}.artifacts`;
+
+          // design: required for L1+ or can be null for L0
+          if (feature.designDepth && feature.designDepth !== 'L0') {
+            if (!artifacts.design) {
+              error(`${artifactsPath}.design is required when designDepth is ${feature.designDepth}`);
+            } else if (typeof artifacts.design !== 'string') {
+              error(`${artifactsPath}.design must be a string`);
+            } else {
+              // Check if design file exists (warning level)
+              const designPath = path.join(__dirname, '..', artifacts.design);
+              if (!fs.existsSync(designPath)) {
+                warn(`${artifactsPath}.design: file not found "${artifacts.design}"`);
+              }
+            }
+          } else if (artifacts.design !== undefined && artifacts.design !== null && typeof artifacts.design !== 'string') {
+            error(`${artifactsPath}.design must be a string or null`);
+          }
+
+          // code: required, must be non-empty array
+          if (!artifacts.code) {
+            error(`${artifactsPath}.code is required`);
+          } else if (!Array.isArray(artifacts.code)) {
+            error(`${artifactsPath}.code must be an array`);
+          } else if (artifacts.code.length === 0) {
+            error(`${artifactsPath}.code cannot be empty`);
+          } else {
+            artifacts.code.forEach((codePath, index) => {
+              if (typeof codePath !== 'string') {
+                error(`${artifactsPath}.code[${index}] must be a string`);
+              } else {
+                // Check if code path exists (warning level)
+                const fullPath = path.join(__dirname, '..', codePath);
+                if (!fs.existsSync(fullPath)) {
+                  warn(`${artifactsPath}.code[${index}]: path not found "${codePath}"`);
+                }
+              }
+            });
+          }
+
+          // tests: required, must be non-empty array
+          if (!artifacts.tests) {
+            error(`${artifactsPath}.tests is required`);
+          } else if (!Array.isArray(artifacts.tests)) {
+            error(`${artifactsPath}.tests must be an array`);
+          } else if (artifacts.tests.length === 0) {
+            error(`${artifactsPath}.tests cannot be empty`);
+          } else {
+            artifacts.tests.forEach((testPath, index) => {
+              if (typeof testPath !== 'string') {
+                error(`${artifactsPath}.tests[${index}] must be a string`);
+              } else {
+                // Check if test path exists (warning level)
+                const fullPath = path.join(__dirname, '..', testPath);
+                if (!fs.existsSync(fullPath)) {
+                  warn(`${artifactsPath}.tests[${index}]: path not found "${testPath}"`);
+                }
+              }
+            });
+          }
+        }
+      }
+
       // Phase - validate based on type
       if (validateRequired(feature, 'phase', featurePath)) {
         const validPhases = isCode ? CODE_PHASES : DOCUMENT_PHASES;
@@ -270,11 +350,17 @@ function main() {
     console.log(`Schema version: ${state.schemaVersion}`);
     console.log(`Active features: ${state.flow.activeFeatures.length} (${state.flow.activeFeatures.join(', ')})`);
     console.log(`Features: ${Object.keys(state.features).length}`);
-    console.log(`  - Code: ${Object.values(state.features).filter(f => f.type === 'code').length}`);
-    console.log(`  - Document: ${Object.values(state.features).filter(f => f.type === 'document').length}`);
-    const withScripts = Object.values(state.features).filter(f => f.scripts && f.scripts.length > 0).length;
+    const codeFeatures = Object.values(state.features).filter(f => f.type === 'code');
+    const docFeatures = Object.values(state.features).filter(f => f.type === 'document');
+    console.log(`  - Code: ${codeFeatures.length}`);
+    console.log(`  - Document: ${docFeatures.length}`);
+    const withScripts = docFeatures.filter(f => f.scripts && f.scripts.length > 0).length;
     if (withScripts > 0) {
       console.log(`  - With scripts: ${withScripts}`);
+    }
+    const withArtifacts = codeFeatures.filter(f => f.artifacts).length;
+    if (withArtifacts > 0) {
+      console.log(`  - With artifacts: ${withArtifacts}`);
     }
     console.log(`Domains: ${Object.keys(state.domains).length}`);
     process.exit(0);

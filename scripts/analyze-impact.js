@@ -19,7 +19,14 @@ function getDocType(filePath) {
   if (filePath.includes('/templates/')) return 'template';
   if (filePath.endsWith('.spec.md') && filePath.includes('/specs/')) return 'spec';
   if (filePath.endsWith('.spec.md')) return 'feature-spec';
+  if (filePath.endsWith('.design.md')) return 'design-doc';
   if (filePath.includes('prd.md')) return 'prd';
+  if (filePath.startsWith('src/') || filePath.includes('/src/')) return 'code';
+  if (filePath.startsWith('tests/') || filePath.includes('/tests/')) return 'test';
+  if (filePath.endsWith('.js') || filePath.endsWith('.ts') || filePath.endsWith('.tsx')) {
+    if (filePath.includes('test') || filePath.includes('spec')) return 'test';
+    return 'code';
+  }
   return 'document';
 }
 
@@ -153,6 +160,85 @@ function buildDependencyGraph() {
           featureName
         });
       }
+
+      // Add artifacts edges for code type features (v1.2)
+      if (feature.type === 'code' && feature.artifacts) {
+        const featureDocPath = feature.docPath;
+
+        // Design doc edge
+        if (feature.artifacts.design) {
+          const designPath = feature.artifacts.design;
+          // Add design doc node if not exists
+          if (!nodes.has(designPath)) {
+            nodes.set(designPath, {
+              type: 'design-doc',
+              path: designPath,
+              anchors: [],
+              featureName
+            });
+          }
+          edges.push({
+            from: featureDocPath,
+            to: designPath,
+            type: 'produces',
+            featureName
+          });
+        }
+
+        // Code edges
+        if (feature.artifacts.code) {
+          for (const codePath of feature.artifacts.code) {
+            // Add code node if not exists
+            if (!nodes.has(codePath)) {
+              nodes.set(codePath, {
+                type: 'code',
+                path: codePath,
+                anchors: [],
+                featureName
+              });
+            }
+            edges.push({
+              from: featureDocPath,
+              to: codePath,
+              type: 'produces',
+              featureName
+            });
+          }
+        }
+
+        // Test edges
+        if (feature.artifacts.tests) {
+          for (const testPath of feature.artifacts.tests) {
+            // Add test node if not exists
+            if (!nodes.has(testPath)) {
+              nodes.set(testPath, {
+                type: 'test',
+                path: testPath,
+                anchors: [],
+                featureName
+              });
+            }
+            edges.push({
+              from: featureDocPath,
+              to: testPath,
+              type: 'produces',
+              featureName
+            });
+
+            // Test -> Code edges
+            if (feature.artifacts.code) {
+              for (const codePath of feature.artifacts.code) {
+                edges.push({
+                  from: testPath,
+                  to: codePath,
+                  type: 'tests',
+                  featureName
+                });
+              }
+            }
+          }
+        }
+      }
     }
   }
 
@@ -225,6 +311,10 @@ function getImpactReason(edge, sourceFile) {
       return `由 PRD 定义`;
     case 'implements':
       return `实现了规范`;
+    case 'produces':
+      return `由 Feature Spec 产出`;
+    case 'tests':
+      return `测试覆盖`;
     default:
       return `关联于 ${edge.from}`;
   }
@@ -301,10 +391,24 @@ function formatOutput(changedFile, directImpacts, indirectImpacts, subtasks) {
     const order = [];
     const specs = directImpacts.filter(i => i.path.includes('/specs/'));
     const templates = directImpacts.filter(i => i.path.includes('/templates/'));
-    const others = directImpacts.filter(i => !i.path.includes('/specs/') && !i.path.includes('/templates/'));
+    const designDocs = directImpacts.filter(i => i.path.endsWith('.design.md'));
+    const code = directImpacts.filter(i => i.path.startsWith('src/') || i.path.includes('/src/'));
+    const tests = directImpacts.filter(i => i.path.startsWith('tests/') || i.path.includes('/tests/'));
+    const others = directImpacts.filter(i =>
+      !i.path.includes('/specs/') &&
+      !i.path.includes('/templates/') &&
+      !i.path.endsWith('.design.md') &&
+      !i.path.startsWith('src/') &&
+      !i.path.includes('/src/') &&
+      !i.path.startsWith('tests/') &&
+      !i.path.includes('/tests/')
+    );
 
     if (templates.length > 0) order.push('模板');
     if (specs.length > 0) order.push('规范');
+    if (designDocs.length > 0) order.push('设计文档');
+    if (code.length > 0) order.push('代码');
+    if (tests.length > 0) order.push('测试');
     if (others.length > 0) order.push('其他文档');
     if (indirectImpacts.length > 0) order.push('间接影响项');
 

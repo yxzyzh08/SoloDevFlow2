@@ -401,6 +401,16 @@ function addFeature(name, options) {
       state.features[name].description = options.description;
     }
 
+    // For code type, initialize designDepth and artifacts
+    if (type === 'code') {
+      state.features[name].designDepth = options.designDepth || 'L1';
+      state.features[name].artifacts = {
+        design: null,
+        code: [],
+        tests: []
+      };
+    }
+
     writeState(state);
     console.log(JSON.stringify({ success: true, feature: { name, ...state.features[name] } }, null, 2));
   } finally {
@@ -605,6 +615,105 @@ function recordCommit() {
   }
 }
 
+function setArtifacts(featureName, options) {
+  acquireLock();
+  try {
+    const state = readState();
+
+    if (!state.features[featureName]) {
+      console.error(`Error: Feature "${featureName}" not found`);
+      process.exit(1);
+    }
+
+    const feature = state.features[featureName];
+
+    if (feature.type !== 'code') {
+      console.error(`Error: Feature "${featureName}" is not a code type feature`);
+      process.exit(1);
+    }
+
+    // Update designDepth if provided
+    if (options.designDepth) {
+      const validDepths = ['L0', 'L1', 'L2', 'L3'];
+      if (!validDepths.includes(options.designDepth)) {
+        console.error(`Error: Invalid designDepth. Expected: ${validDepths.join(', ')}`);
+        process.exit(1);
+      }
+      feature.designDepth = options.designDepth;
+    }
+
+    // Initialize artifacts if not exists
+    if (!feature.artifacts) {
+      feature.artifacts = { design: null, code: [], tests: [] };
+    }
+
+    // Update design path
+    if (options.design !== undefined) {
+      feature.artifacts.design = options.design || null;
+    }
+
+    // Update code paths (comma-separated)
+    if (options.code) {
+      feature.artifacts.code = options.code.split(',').map(s => s.trim());
+    }
+
+    // Update test paths (comma-separated)
+    if (options.tests) {
+      feature.artifacts.tests = options.tests.split(',').map(s => s.trim());
+    }
+
+    writeState(state);
+    console.log(JSON.stringify({
+      success: true,
+      feature: {
+        name: featureName,
+        designDepth: feature.designDepth,
+        artifacts: feature.artifacts
+      }
+    }, null, 2));
+  } finally {
+    releaseLock();
+  }
+}
+
+function getArtifacts(featureName) {
+  const state = readState();
+
+  if (!state.features[featureName]) {
+    console.error(`Error: Feature "${featureName}" not found`);
+    process.exit(1);
+  }
+
+  const feature = state.features[featureName];
+
+  if (feature.type !== 'code') {
+    console.error(`Error: Feature "${featureName}" is not a code type feature`);
+    process.exit(1);
+  }
+
+  console.log(JSON.stringify({
+    name: featureName,
+    designDepth: feature.designDepth || null,
+    artifacts: feature.artifacts || null
+  }, null, 2));
+}
+
+function listArtifacts() {
+  const state = readState();
+
+  const codeFeatures = Object.entries(state.features)
+    .filter(([_, f]) => f.type === 'code')
+    .map(([name, f]) => ({
+      name,
+      designDepth: f.designDepth || null,
+      artifacts: f.artifacts || null,
+      phase: f.phase,
+      status: f.status
+    }));
+
+  console.log(JSON.stringify(codeFeatures, null, 2));
+}
+
 // ============ CLI Parser ============
 
 function parseArgs(args) {
@@ -637,11 +746,13 @@ QUERY COMMANDS:
   get-project                  Get project info
   get-flow                     Get flow info
   summary                      Get state summary
+  get-artifacts <name>         Get artifacts for a code type feature
+  list-artifacts               List all code type features with artifacts
 
 UPDATE COMMANDS:
   update-feature <name> --phase <phase> [--status <status>]
   complete-feature <name>      Mark feature as done
-  add-feature <name> --domain <domain> [--type code|document] [--description ...]
+  add-feature <name> --domain <domain> [--type code|document] [--description ...] [--designDepth L0|L1|L2|L3]
   remove-feature <name>        Remove feature
   activate-feature <name>      Add to activeFeatures
   deactivate-feature <name>    Remove from activeFeatures
@@ -649,6 +760,7 @@ UPDATE COMMANDS:
   complete-subtask <feature> <subtask-id>
   add-domain <name> --description <desc>
   record-commit                Record latest git commit to metadata
+  set-artifacts <name> [--designDepth L0|L1|L2|L3] [--design <path>] [--code <paths>] [--tests <paths>]
 
 OPTIONS:
   --help                       Show this help
@@ -659,6 +771,7 @@ EXAMPLES:
   node scripts/state.js update-feature xxx --phase done --status completed
   node scripts/state.js complete-feature xxx
   node scripts/state.js add-subtask xxx --description "Check dependencies"
+  node scripts/state.js set-artifacts xxx --designDepth L1 --design "docs/xxx.design.md" --code "src/xxx.js" --tests "tests/xxx.test.ts"
 `);
 }
 
@@ -793,6 +906,26 @@ function main() {
 
     case 'record-commit':
       recordCommit();
+      break;
+
+    case 'set-artifacts':
+      if (!restArgs[0] || restArgs[0].startsWith('--')) {
+        console.error('Error: Feature name required');
+        process.exit(1);
+      }
+      setArtifacts(restArgs[0], options);
+      break;
+
+    case 'get-artifacts':
+      if (!restArgs[0] || restArgs[0].startsWith('--')) {
+        console.error('Error: Feature name required');
+        process.exit(1);
+      }
+      getArtifacts(restArgs[0]);
+      break;
+
+    case 'list-artifacts':
+      listArtifacts();
       break;
 
     case 'help':
