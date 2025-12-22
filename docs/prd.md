@@ -134,8 +134,9 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 - 交付流程：结构化的需求澄清、设计、实现、验收流程
 
 **change-impact-tracking**：解决变更或新增时遗漏关联影响的问题。核心能力：
-- 变更影响：修改规范/PRD/模板时分析影响范围
+- 变更影响：修改规范/PRD/模板/Feature 时分析影响范围
 - 新增关联：新增 Feature 时分析与现有 Feature 的关系
+
 
 **spark-box**：解决"灵光一闪"想法丢失或打断当前任务的问题。核心能力：
 - 灵光捕获：识别与当前任务无关的想法，记录到 spark-box.md
@@ -168,14 +169,13 @@ AI 协作配置系统，定义 Claude 的行为规范、命令和技能。
 
 | Priority | Feature | Type | 说明 |
 |----------|---------|------|------|
-| P0 | claude-md | document | AI 行为入口（状态恢复/流程索引/工具索引） |
+| P0 | claude-md | document | AI 行为入口（状态恢复/流程索引） |
 | P0 | write-commands | document | 文档编写命令（/write-prd, /write-feature 等） |
 | P0 | requirements-expert | document | 需求专家技能（需求澄清/文档分类/调研方法） |
 
 **claude-md**：解决 AI 对话启动时缺乏上下文和导航的问题。核心能力：
 - 状态恢复：对话开始时读取 state.json，汇报当前状态
 - 流程索引：指向 core-collaboration.spec.md 获取具体流程定义
-- 工具索引：命令、技能、脚本的快速查找入口
 
 **write-commands**：解决文档编写效率和规范一致性问题。提供结构化的文档编写指令（/write-prd, /write-feature 等），自动加载规范和模板，输出后触发校验。
 
@@ -199,18 +199,6 @@ AI 协作配置系统，定义 Claude 的行为规范、命令和技能。
 - **不做 IDE 插件**：当前阶段聚焦规范和 CLI 工具
 - **不做多人协作**：专为 Solo 开发者设计
 - **不做强制执行**：规范是引导而非强制，AI 行为依赖 Prompt
-
----
-
-## Core Flow <!-- id: prod_flow -->
-
-```
-项目启动 → Feature 循环（需求 ←→ 设计 ←→ 实现 → 验证）
-                         ↑__________↑__________↑
-                              (可回退)
-```
-
-详细流程定义：[core-collaboration.spec.md](./_flows/core-collaboration.spec.md)
 
 ---
 
