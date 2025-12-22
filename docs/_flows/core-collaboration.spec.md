@@ -229,7 +229,61 @@ Feature Spec 完成 → 评估 Design Depth → none? ─是→ 直接进入实�
 
 ---
 
-## 5. Auto-Commit Flow <!-- id: flow_auto_commit -->
+## 5. Tools Reference <!-- id: flow_tools_reference -->
+
+流程执行中使用的工具索引。
+
+### 5.1 Commands
+
+| 命令 | 用途 |
+|------|------|
+| `/write-prd` | 编写/更新 PRD |
+| `/write-domain {name}` | 编写/更新 Domain Spec |
+| `/write-feature {name}` | 编写/更新独立 Feature Spec |
+| `/write-feature {domain} {name}` | 编写/更新 Domain 内 Feature Spec |
+| `/write-design {name}` | 编写/更新独立 Feature Design |
+| `/write-design {domain} {name}` | 编写/更新 Domain 内 Feature Design |
+| `/write-capability {name}` | 编写/更新 Capability Spec |
+| `/write-flow {name}` | 编写/更新 Flow Spec |
+| `/write-req-spec` | 编写/更新需求文档规范 |
+| `/write-design-spec` | 编写/更新设计文档规范 |
+
+### 5.2 Skills
+
+| 技能 | 触发场景 |
+|------|----------|
+| `requirements-expert` | 需求模糊、需要澄清、不确定文档类型 |
+
+### 5.3 Scripts
+
+```bash
+npm run status           # 状态摘要
+npm run validate         # 校验 .flow/ 格式
+npm run validate:state   # 校验 state.json Schema
+npm run validate:docs    # 校验文档规范
+node scripts/analyze-impact.js <file>  # 影响分析
+```
+
+### 5.4 State CLI
+
+```bash
+# 查询
+node scripts/state.js summary
+node scripts/state.js get-feature <name>
+node scripts/state.js list-active
+node scripts/state.js get-domain <name>
+
+# 更新（带并发锁）
+node scripts/state.js update-feature <name> --phase=<phase> --status=<status>
+node scripts/state.js complete-feature <name>
+node scripts/state.js add-subtask <feature> --desc="描述" --source=ai
+node scripts/state.js complete-subtask <feature> <subtaskId>
+node scripts/state.js record-commit
+```
+
+---
+
+## 6. Auto-Commit Flow <!-- id: flow_auto_commit -->
 
 完成 subtask 或 feature 后，立即执行：
 
@@ -244,7 +298,7 @@ node scripts/state.js record-commit
 
 ---
 
-## 6. Acceptance Criteria <!-- id: flow_core_collaboration_acceptance -->
+## 7. Acceptance Criteria <!-- id: flow_core_collaboration_acceptance -->
 
 | Item | Verification | Pass Criteria |
 |------|--------------|---------------|
@@ -258,7 +312,7 @@ node scripts/state.js record-commit
 
 ---
 
-## 7. Flow Diagram <!-- id: flow_core_collaboration_diagram -->
+## 8. Flow Diagram <!-- id: flow_core_collaboration_diagram -->
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -290,7 +344,7 @@ node scripts/state.js record-commit
 
 ---
 
-## 8. Constraints <!-- id: flow_core_collaboration_constraints -->
+## 9. Constraints <!-- id: flow_core_collaboration_constraints -->
 
 | Type | Constraint | 说明 |
 |------|------------|------|
@@ -301,7 +355,34 @@ node scripts/state.js record-commit
 
 ---
 
-## 9. Do's and Don'ts <!-- id: flow_core_collaboration_rules -->
+## 10. Project Configuration <!-- id: flow_project_config -->
+
+### 10.1 Linked Projects
+
+使用 SoloDevFlow 的关联项目，AI 可在人类询问时查看其状态（只读）。
+
+| 项目 | 路径 | 说明 |
+|------|------|------|
+| CVM_Demo2 | `d:\github_projects\CVM_Demo2` | SoloDevFlow 验证项目 |
+
+### 10.2 Bilingual Convention
+
+- **文件名**：英文 kebab-case
+- **标题/术语**：英文
+- **描述/逻辑**：中文
+
+### 10.3 Spec Management (SoloDevFlow Only)
+
+本项目是所有规范的源头，修改规范时：
+1. **必须**运行影响分析：`node scripts/analyze-impact.js <file>`
+2. 检查影响范围
+3. 生成升级 subtasks
+4. 更新规范文档
+5. 提交变更
+
+---
+
+## 11. Do's and Don'ts <!-- id: flow_core_collaboration_rules -->
 
 ### 始终做
 
@@ -321,7 +402,7 @@ node scripts/state.js record-commit
 
 ---
 
-*Version: v2.0*
+*Version: v3.0*
 *Created: 2024-12-20*
 *Updated: 2024-12-22*
-*Changes: v2.0 整合 CLAUDE.md 中的所有流程定义，新增意图识别、需求交付、设计阶段、功能咨询、灵光处理、关联项目查看等流程*
+*Changes: v3.0 完全整合 CLAUDE.md 内容，新增 Tools Reference 和 Project Configuration，成为唯一完整流程文档*

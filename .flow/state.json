@@ -16,6 +16,14 @@
     ]
   },
   "features": {
+    "core-collaboration": {
+      "type": "document",
+      "description": "核心协作流程（意图路由/阶段流转/交付流程）",
+      "domain": "process",
+      "docPath": "docs/_flows/core-collaboration.spec.md",
+      "phase": "done",
+      "status": "completed"
+    },
     "meta-spec": {
       "type": "document",
       "description": "文档系统元规范（文档身份/锚点/规范映射）",

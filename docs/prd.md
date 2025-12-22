@@ -94,7 +94,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 | Domain | 说明 | Feature 数量 |
 |--------|------|--------------|
 | **specification** | 规范文档（元规范/需求/设计/开发/测试） | 5 |
-| **process** | 协作流程（状态管理/输入捕获/灵光收集/影响追踪） | 4 |
+| **process** | 协作流程（核心流程/状态管理/输入捕获/灵光收集/影响追踪） | 5 |
 | **tooling** | 独立工具（项目初始化/分发安装） | 1 |
 | **ai-config** | AI 协作配置（CLAUDE.md/命令/技能） | 3 |
 
@@ -122,10 +122,16 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 
 | Priority | Feature | Type | 说明 |
 |----------|---------|------|------|
+| P0 | core-collaboration | document | 核心协作流程（意图路由/阶段流转/交付流程） |
 | P0 | state-management | document | 状态管理机制（state.json Schema） |
 | P0 | change-impact-tracking | document | 影响分析机制（变更追踪 + 新增关联） |
 | P0 | input-capture | document | 输入捕获机制（input-log.md） |
 | P0 | spark-box | document | 灵光收集与处理机制（spark-box.md） |
+
+**core-collaboration**：解决 AI 不按流程执行、直接响应字面需求的问题。核心能力：
+- 意图路由：识别人类输入类型（需求/咨询/灵光/变更），分发到对应流程
+- 阶段流转：定义 Feature 从需求到验收的完整生命周期
+- 交付流程：结构化的需求澄清、设计、实现、验收流程
 
 **change-impact-tracking**：解决变更或新增时遗漏关联影响的问题。核心能力：
 - 变更影响：修改规范/PRD/模板时分析影响范围
@@ -162,15 +168,14 @@ AI 协作配置系统，定义 Claude 的行为规范、命令和技能。
 
 | Priority | Feature | Type | 说明 |
 |----------|---------|------|------|
-| P0 | claude-md | document | AI 流程控制器（意图识别/流程路由/状态管理） |
+| P0 | claude-md | document | AI 行为入口（状态恢复/流程索引/工具索引） |
 | P0 | write-commands | document | 文档编写命令（/write-prd, /write-feature 等） |
 | P0 | requirements-expert | document | 需求专家技能（需求澄清/文档分类/调研方法） |
 
-**claude-md**：解决 AI 无法识别人类意图和执行正确流程的问题。核心能力：
-- 意图识别：判断输入类型（需求/咨询/灵光）
-- 流程路由：需求 → 需求交付流程；咨询 → 功能咨询流程
-- 状态管理：对话开始恢复状态，过程中记录关键输入
-- 阶段引导：输入与阶段不符时，引导人类选择
+**claude-md**：解决 AI 对话启动时缺乏上下文和导航的问题。核心能力：
+- 状态恢复：对话开始时读取 state.json，汇报当前状态
+- 流程索引：指向 core-collaboration.spec.md 获取具体流程定义
+- 工具索引：命令、技能、脚本的快速查找入口
 
 **write-commands**：解决文档编写效率和规范一致性问题。提供结构化的文档编写指令（/write-prd, /write-feature 等），自动加载规范和模板，输出后触发校验。
 
@@ -235,7 +240,7 @@ AI 协作配置系统，定义 Claude 的行为规范、命令和技能。
 
 ---
 
-*Version: v2.6*
+*Version: v2.7*
 *Created: 2024-12-16*
-*Updated: 2025-12-21*
-*Changes: v2.5 移除状态列; v2.6 重新激活 tooling Domain，新增 project-init Feature（支持 SoloDevFlow 安装到其他项目）*
+*Updated: 2025-12-22*
+*Changes: v2.7 process domain 新增 core-collaboration Feature，修正 claude-md 描述为索引入口*
