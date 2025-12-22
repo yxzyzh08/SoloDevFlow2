@@ -12,7 +12,7 @@
 
 ## 核心流程
 
-**所有人类输入按此流程处理**：[docs/_flows/core-collaboration.spec.md](docs/_flows/core-collaboration.spec.md)
+**所有人类输入按此流程处理**：[docs/requirements/_flows/core-collaboration.spec.md](docs/requirements/_flows/core-collaboration.spec.md)
 
 ---
 
