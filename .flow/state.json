@@ -174,11 +174,11 @@
   "sparks": [],
   "pendingDocs": [],
   "metadata": {
-    "lastGitCommit": "06a0d3049d2ebcaa8cbe2a8281d03f8542818e42",
-    "lastGitCommitMessage": "feat(claude-md): 新增关联项目查看流程",
-    "lastGitCommitAt": "2025-12-21T23:31:08.961Z",
-    "stateFileVersion": 25,
-    "totalStateChanges": 25
+    "lastGitCommit": "42155260a92010c7e43e94dda5cbc91d8d3b2fa9",
+    "lastGitCommitMessage": "feat(state-management): Schema v10.0 - 简化 designDepth 为 2 级",
+    "lastGitCommitAt": "2025-12-22T00:37:19.956Z",
+    "stateFileVersion": 26,
+    "totalStateChanges": 26
   },
-  "lastUpdated": "2025-12-21T23:31:08.964Z"
+  "lastUpdated": "2025-12-22T00:37:19.957Z"
 }

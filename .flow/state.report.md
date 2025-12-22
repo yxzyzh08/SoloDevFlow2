@@ -7,9 +7,9 @@
 | 属性 | 值 |
 |------|-----|
 | Name | SoloDevFlow 2.0 |
-| Schema | v9.0.0 |
+| Schema | v10.0.0 |
 | Method | bottom-up |
-| Updated | 2025-12-21T23:31:08.964Z |
+| Updated | 2025-12-22T00:37:19.957Z |
 
 ## Active Features
 
@@ -69,4 +69,4 @@
 | Pending Docs | 0 |
 
 ---
-*Generated at 2025-12-21T23:31:08.964Z*
+*Generated at 2025-12-22T00:37:19.957Z*
