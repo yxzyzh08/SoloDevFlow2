@@ -70,7 +70,6 @@ target-project/
 └── .claude/
     └── commands/
         ├── write-prd.md
-        ├── write-domain.md
         ├── write-feature.md
         ├── write-design.md
         ├── write-capability.md

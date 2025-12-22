@@ -11,7 +11,6 @@
 | 文档类型 | 层级 | 说明 |
 |----------|------|------|
 | **PRD** | 产品级 | 定义产品愿景、用户、领域划分、Feature/Capability 路线图 |
-| **Domain Spec** | 领域级（可选） | 定义领域的业务规则、用户场景、Feature 清单 |
 | **Feature Spec** | Feature级 | 定义纵向业务功能的完整需求、验收标准 |
 | **Capability Spec** | 能力级（可选） | 定义横向功能的需求（日志、权限、缓存等） |
 | **Flow Spec** | 流程级（可选） | 定义跨 Domain/Feature 的复杂业务流程 |
@@ -20,11 +19,15 @@
 
 ```
 PRD (1个)
-  ├── Domain Spec (可选，按领域)
-  │     └── Feature Spec (该领域的 Feature)
+  ├── Feature Spec (按 Domain 组织)
   ├── Capability Spec (横向功能，可选)
   └── Flow Spec (跨域业务流程，可选)
 ```
+
+**Domain 组织方式**：
+- Domain 作为 PRD 中的组织概念，在 Feature Roadmap 章节下按 Domain 分组
+- 每个 Domain 可选择性添加 "Domain Collaboration" 子章节（见 3.5）
+- Domain 不需要独立的规格文档
 
 **纵向 vs 横向**：
 | 类型 | 特点 | 文档 |
@@ -32,11 +35,6 @@ PRD (1个)
 | **纵向 Feature** | 独立业务功能 | Feature Spec |
 | **横向 Capability** | 跨 Feature 的公共能力 | Capability Spec |
 | **横向 Flow** | 跨 Domain/Feature 的业务流程 | Flow Spec |
-
-**Domain Spec 创建时机**：
-- 领域包含 3 个以上 Feature
-- 领域有复杂业务规则需要统一定义
-- 领域需要跨 Feature 复用规则
 
 **Capability Spec 创建时机**：
 - 横向功能被 2 个以上 Feature 使用
@@ -60,13 +58,11 @@ docs/
 │   ├── prd-validator.spec.md       # 尚未归入 Domain 的 Feature
 │   └── status-script.spec.md
 │
-├── payment/                        # Domain 目录（已确定领域）
-│   ├── _domain.spec.md             # Domain Spec（下划线前缀表示元信息）
+├── payment/                        # Domain 目录（仅作为文件组织）
 │   ├── checkout.spec.md            # Feature Spec
 │   └── refund.spec.md
 │
 ├── user/                           # Domain 目录
-│   ├── _domain.spec.md
 │   ├── login.spec.md
 │   └── register.spec.md
 │
@@ -79,10 +75,14 @@ docs/
     └── payment-process.spec.md
 ```
 
+**Domain 目录说明**：
+- Domain 目录仅作为文件组织手段，将相关 Feature 归档在一起
+- 不再需要 `_domain.spec.md` 文件
+- Domain 的业务规则、共享概念等信息在 PRD 的 Domain Collaboration 子章节中描述（可选）
+
 **Naming Convention**：
 - PRD：`prd.md`（固定名称）
 - 独立 Feature Spec：`_features/{feature}.spec.md`（下划线前缀目录，Bottom-Up 模式）
-- Domain Spec：`{domain}/_domain.spec.md`（下划线前缀）
 - Domain 内 Feature Spec：`{domain}/{feature}.spec.md`（在 Domain 目录下）
 - Capability Spec：`_capabilities/{name}.spec.md`（下划线前缀目录）
 - Flow Spec：`_flows/{name}.spec.md`（下划线前缀目录）
@@ -105,8 +105,10 @@ docs/
 **Bottom-Up 工作流程**：
 1. 编写 PRD（领域划分可为空或待定）
 2. Feature 放入 `_features/` 目录（独立 Feature）
-3. 当 3+ 个 Feature 可归入同一领域时，创建 Domain Spec
-4. 将相关 Feature 迁移到 Domain 目录下
+3. 当 3+ 个 Feature 可归入同一领域时：
+   - 在 PRD 中新增 Domain 章节
+   - 可选：添加 Domain Collaboration 子章节（如有共享业务规则）
+   - 将相关 Feature 迁移到 Domain 目录下
 
 **方法选择**：由用户在项目启动时指定，记录在 `.flow/state.json` 的 `flow.researchMethod` 字段中（值为 `top-down` 或 `bottom-up`）。
 
@@ -114,7 +116,8 @@ docs/
 当独立 Feature 归入 Domain 时：
 1. 将 `_features/{feature}.spec.md` 移动到 `{domain}/{feature}.spec.md`
 2. 更新文档内的引用路径
-3. 在 Domain Spec 的 Feature List 中添加该 Feature
+3. 在 PRD 的对应 Domain 章节下添加该 Feature 引用
+4. 如需要，在 PRD Domain Collaboration 子章节中描述共享规则
 
 ---
 
@@ -186,7 +189,7 @@ version: {doc-version}
 | **Product Vision** | `prod_vision` | 一句话定义 + 核心价值 |
 | **Target Users** | `prod_users` | 用户画像、痛点 |
 | **Product Description** | `prod_description` | High Level 功能概述 + 领域划分（可选） |
-| **Feature Roadmap** | `prod_roadmap` | 按 Domain 分层的 Feature 优先级排序、依赖关系 |
+| **Feature Roadmap** | `prod_roadmap` | 按 Domain 分层的 Feature 子章节，每个 Feature 有独立锚点 |
 | **Success Criteria** | `prod_success` | 可验证的成功指标 |
 
 ### 3.2 Optional Sections
@@ -197,49 +200,159 @@ version: {doc-version}
 | **Core Flow** | `prod_flow` | 有复杂业务流程时 |
 | **Appendix** | `prod_appendix` | 速查表、术语表 |
 
-### 3.3 Template
+### 3.3 Feature Roadmap Structure
+
+Feature Roadmap 章节按 Domain 组织，每个 Domain 下的 Feature 以**子章节**形式呈现。
+
+**结构层级**：
+```
+## 4. Feature Roadmap <!-- id: prod_roadmap -->
+
+### 4.1 Domain: {domain-name} <!-- id: domain_{domain_name} -->
+
+{Domain 简述}
+
+#### {feature-name} <!-- id: feat_ref_{feature_name} -->
+
+{Feature 高层次描述（2-3 句话）}
+
+**元信息**：
+- **Priority**: P0/P1/P2
+- **Type**: code / document
+- **Feature Spec**: [链接到 Feature Spec 文档]
+
+#### {另一个 feature-name} <!-- id: feat_ref_{another_feature} -->
+...
+```
+
+**锚点规范**：
+- Domain 锚点：`domain_{domain_name}`（全小写，下划线分隔）
+- Feature 引用锚点：`feat_ref_{feature_name}`（前缀 `feat_ref_` 区分 PRD 引用和 Feature Spec 本体）
+
+**内容原则**：
+- Feature 描述：仅 2-3 句话的 high level 总结，解释核心价值
+- 详细内容：见对应的 Feature Spec 文档
+- 元信息：提供 Priority、Type、Feature Spec 链接，便于快速索引
+
+**示例**：
+
+```markdown
+### 4.2 Domain: process <!-- id: domain_process -->
+
+协作流程系统，定义人机协作的机制和状态管理。
+
+#### core-collaboration <!-- id: feat_ref_core_collaboration -->
+
+核心协作流程，解决 AI 不按流程执行、直接响应字面需求的问题。提供意图路由、阶段流转、交付流程三大能力。
+
+**元信息**：
+- **Priority**: P0
+- **Type**: document
+- **Feature Spec**: [core-collaboration.spec.md](docs/_flows/core-collaboration.spec.md)
+
+#### state-management <!-- id: feat_ref_state_management -->
+
+状态管理机制，解决跨 Session 状态丢失、无法掌控全局的问题。定义 state.json 作为唯一状态源。
+
+**元信息**：
+- **Priority**: P0
+- **Type**: document
+- **Feature Spec**: [state-management.spec.md](docs/process/state-management.spec.md)
+```
+
+**影响分析支持**：
+- 修改某个 Feature 子章节时，`analyze-impact.js` 可通过锚点精确定位影响范围
+- 只影响对应的 Feature Spec，而非所有 Features
+
+### 3.4 Template
 
 **模板位置**：`docs/templates/{project-type}/prd.md`
 
 当前项目模板：`docs/templates/backend/prd.md`
 
+### 3.5 Domain Collaboration Subsection (Optional) <!-- id: spec_req_domain_collaboration -->
+
+**Purpose**: When a Domain has complex inter-feature interactions, shared concepts, or business rules, add a "Domain Collaboration" subsection under the Domain heading in PRD Feature Roadmap.
+
+**Creation Criteria** (any of):
+- Domain has 3+ Features with shared business rules
+- Domain has cross-feature concepts that need unified definition
+- Domain has complex feature interactions that need documentation
+
+**Standard Structure**:
+
+```markdown
+### 4.X Domain: {domain-name} <!-- id: domain_{domain_name} -->
+
+{Domain 简述}
+
+#### Domain Collaboration <!-- id: domain_{domain_name}_collaboration -->
+
+**Feature Interactions**:
+- Feature A ↔ Feature B: {交互说明}
+- Feature C → Feature D: {依赖说明}
+
+**Shared Concepts**:
+| Concept | Definition | Used by |
+|---------|------------|---------|
+| {概念} | {定义} | Feature A, Feature B |
+
+**Business Rules**:
+1. **Rule Name**: {规则描述}
+   - Applicable: Feature A, Feature C
+   - Constraints: {约束条件}
+
+#### {feature-name} <!-- id: feat_ref_{feature_name} -->
+[...Feature 描述...]
+```
+
+**When to Split into Sub-Product**:
+
+If a Domain grows beyond **10 Features**, consider splitting it into a separate product with its own PRD. Indicators:
+- Domain has independent business value and can be deployed separately
+- Domain has dedicated team or ownership
+- Domain complexity justifies separate planning and roadmap
+
+**Migration Path** (when splitting):
+1. Create new project repository
+2. Extract Domain Features to new PRD
+3. Update original PRD to reference external dependency
+4. Document integration points in Flow Spec
+
+**Example** (from SoloDevFlow):
+
+```markdown
+### 4.2 Domain: process <!-- id: domain_process -->
+
+协作流程系统，定义人机协作的机制和状态管理。
+
+#### Domain Collaboration <!-- id: domain_process_collaboration -->
+
+**Feature Interactions**:
+- core-collaboration ↔ state-management: 核心流程依赖状态管理提供持久化
+- state-management → input-capture: 状态变更触发关键输入记录
+- change-impact-tracking ↔ state-management: 影响分析生成 subtasks 写入 state
+
+**Shared Concepts**:
+| Concept | Definition | Used by |
+|---------|------------|---------|
+| Session | AI 对话会话，从启动到结束 | core-collaboration, state-management |
+| Phase | Feature 生命周期阶段 | core-collaboration, state-management |
+
+**Business Rules**:
+1. **唯一状态源原则**: 所有状态必须通过 state.json 维护，不允许分散存储
+   - Applicable: 所有 process domain Features
+   - Constraints: 修改状态必须验证 Schema
+
+#### core-collaboration <!-- id: feat_ref_core_collaboration -->
+[...Feature 描述...]
+```
+
 ---
 
-## 4. Domain Spec Structure <!-- id: spec_req_domain_spec --> <!-- defines: domain-spec -->
+## 4. Feature Spec Structure <!-- id: spec_req_feature_spec --> <!-- defines: feature-spec -->
 
-### 4.1 Creation Criteria
-
-满足以下任一条件时创建 Domain Spec：
-- 领域包含 3 个以上 Feature
-- 领域有复杂业务规则需要统一定义
-- 领域有跨 Feature 的公共概念
-
-### 4.2 Required Sections
-
-| 章节 | 锚点 | 内容 |
-|------|------|------|
-| **Domain Overview** | `domain_{name}_overview` | 领域职责、边界 |
-| **Feature List** | `domain_{name}_features` | 该领域的 Feature 清单 |
-
-### 4.3 Optional Sections
-
-| 章节 | 锚点 | 适用场景 |
-|------|------|----------|
-| **Business Rules** | `domain_{name}_rules` | 有跨 Feature 的业务规则 |
-| **User Scenarios** | `domain_{name}_scenarios` | 有典型用户场景 |
-| **Glossary** | `domain_{name}_glossary` | 有领域特定术语 |
-
-### 4.4 Template
-
-**模板位置**：`docs/templates/{project-type}/_domain.spec.md`
-
-当前项目模板：`docs/templates/backend/_domain.spec.md`
-
----
-
-## 5. Feature Spec Structure <!-- id: spec_req_feature_spec --> <!-- defines: feature-spec -->
-
-### 5.1 Feature Types
+### 4.1 Feature Types
 
 Feature 分为两种类型，工作流和产出物不同：
 
@@ -258,7 +371,7 @@ Feature 分为两种类型，工作流和产出物不同：
 - 可包含辅助脚本
 - 无需 E2E 测试
 
-### 5.2 Required Sections
+### 4.2 Required Sections
 
 **通用必选章节**（所有 Feature）：
 
@@ -274,7 +387,7 @@ Feature 分为两种类型，工作流和产出物不同：
 |------|------|------|
 | **Artifacts** | `feat_{name}_artifacts` | 产物记录（设计/代码/测试路径） |
 
-### 5.3 Optional Sections
+### 4.3 Optional Sections
 
 | 章节 | 锚点 | 适用场景 |
 |------|------|----------|
@@ -283,7 +396,7 @@ Feature 分为两种类型，工作流和产出物不同：
 | **Dependencies** | `feat_{name}_dependencies` | 有前置依赖 |
 | **Artifacts** | `feat_{name}_artifacts` | document 类型记录产物（可选） |
 
-### 5.4 Artifacts Section（产物记录）
+### 4.4 Artifacts Section（产物记录）
 
 **用途**：记录 Feature 的下游产物位置，支持影响分析和变更追踪。
 
@@ -316,13 +429,13 @@ Feature 分为两种类型，工作流和产出物不同：
 - 可在 1 天内完成实现
 - 失败成本低，可快速重做
 
-### 5.5 Template
+### 4.5 Template
 
 **模板位置**：`docs/templates/{project-type}/feature.spec.md`
 
 当前项目模板：`docs/templates/backend/feature.spec.md`
 
-### 5.6 Simple Feature Spec（含设计）
+### 4.6 Simple Feature Spec（含设计）
 
 对于简单、独立的 Feature，可将需求和设计合并到一个文档中。
 
@@ -346,9 +459,9 @@ Feature 分为两种类型，工作流和产出物不同：
 
 ---
 
-## 6. Capability Spec Structure <!-- id: spec_req_capability_spec --> <!-- defines: capability-spec -->
+## 5. Capability Spec Structure <!-- id: spec_req_capability_spec --> <!-- defines: capability-spec -->
 
-### 6.1 Creation Criteria
+### 5.1 Creation Criteria
 
 满足以下任一条件时创建 Capability Spec：
 - 横向功能被 2 个以上 Feature 使用
@@ -357,7 +470,7 @@ Feature 分为两种类型，工作流和产出物不同：
 
 **简单横向功能**：可在 PRD 的 Capability Roadmap 中一句话描述，不需要独立文档。
 
-### 6.2 Required Sections
+### 5.2 Required Sections
 
 | 章节 | 锚点 | 内容 |
 |------|------|------|
@@ -366,14 +479,14 @@ Feature 分为两种类型，工作流和产出物不同：
 | **Requirements** | `cap_{name}_requirements` | 功能需求（不涉及实现） |
 | **Acceptance Criteria** | `cap_{name}_acceptance` | 可验证的完成条件 |
 
-### 6.3 Optional Sections
+### 5.3 Optional Sections
 
 | 章节 | 锚点 | 适用场景 |
 |------|------|----------|
 | **Boundaries** | `cap_{name}_boundaries` | 需要明确排除项 |
 | **Constraints** | `cap_{name}_constraints` | 有性能/安全等约束 |
 
-### 6.4 Template
+### 5.4 Template
 
 **模板位置**：`docs/templates/{project-type}/capability.spec.md`
 
@@ -381,9 +494,9 @@ Feature 分为两种类型，工作流和产出物不同：
 
 ---
 
-## 7. Flow Spec Structure <!-- id: spec_req_flow_spec --> <!-- defines: flow-spec -->
+## 6. Flow Spec Structure <!-- id: spec_req_flow_spec --> <!-- defines: flow-spec -->
 
-### 7.1 Creation Criteria
+### 6.1 Creation Criteria
 
 满足以下任一条件时创建 Flow Spec：
 - 业务流程跨越 2 个以上 Domain/Feature
@@ -392,7 +505,7 @@ Feature 分为两种类型，工作流和产出物不同：
 
 **简单流程**：可在 PRD 的 Core Flow 章节描述，不需要独立文档。
 
-### 7.2 Required Sections
+### 6.2 Required Sections
 
 | 章节 | 锚点 | 内容 |
 |------|------|------|
@@ -401,7 +514,7 @@ Feature 分为两种类型，工作流和产出物不同：
 | **Participants** | `flow_{name}_participants` | 涉及的 Domain/Feature/外部系统 |
 | **Acceptance Criteria** | `flow_{name}_acceptance` | 可验证的完成条件 |
 
-### 7.3 Optional Sections
+### 6.3 Optional Sections
 
 | 章节 | 锚点 | 适用场景 |
 |------|------|----------|
@@ -409,7 +522,7 @@ Feature 分为两种类型，工作流和产出物不同：
 | **Error Handling** | `flow_{name}_errors` | 有复杂异常场景 |
 | **Constraints** | `flow_{name}_constraints` | 有性能/时序等约束 |
 
-### 7.4 Template
+### 6.4 Template
 
 **模板位置**：`docs/templates/{project-type}/flow.spec.md`
 
@@ -417,15 +530,15 @@ Feature 分为两种类型，工作流和产出物不同：
 
 ---
 
-## 8. Acceptance Criteria Guide <!-- id: spec_req_acceptance -->
+## 7. Acceptance Criteria Guide <!-- id: spec_req_acceptance -->
 
-### 8.1 Principles
+### 7.1 Principles
 
 - **Verifiable**: 必须能通过测试或检查确认
 - **Specific**: 避免模糊表述（"用户体验好"）
 - **Independent**: 每条标准独立可验证
 
-### 8.2 Formats
+### 7.2 Formats
 
 **Format A: Checklist**（推荐）
 
@@ -446,7 +559,7 @@ Feature 分为两种类型，工作流和产出物不同：
 - **Then**: 跳转到首页，显示用户名
 ```
 
-### 8.3 Anti-patterns
+### 7.3 Anti-patterns
 
 | Bad | Problem | Improvement |
 |-----|---------|-------------|
@@ -456,9 +569,9 @@ Feature 分为两种类型，工作流和产出物不同：
 
 ---
 
-## 9. Change Management <!-- id: spec_req_change -->
+## 8. Change Management <!-- id: spec_req_change -->
 
-### 9.1 Version Number
+### 8.1 Version Number
 
 ```
 v{major}.{minor}
@@ -469,7 +582,7 @@ minor: 内容更新（修改描述）
 
 示例：`v1.0` → `v1.1`（内容更新） → `v2.0`（结构变更）
 
-### 9.2 Change Log Format
+### 8.2 Change Log Format
 
 在文档末尾维护变更记录：
 
@@ -482,7 +595,7 @@ minor: 内容更新（修改描述）
 *Changes: v1.1 added XX section; v1.2 modified XX content*
 ```
 
-### 9.3 Major Change Handling
+### 8.3 Major Change Handling
 
 重大变更（影响已实现功能）需要：
 1. 在 input-log 记录变更原因
@@ -498,7 +611,7 @@ minor: 内容更新（修改描述）
 | Question | Answer |
 |----------|--------|
 | 产品愿景变了？ | 改 PRD |
-| 这个领域有哪些 Feature？ | 看 Domain Spec |
+| 这个领域有哪些 Feature？ | 看 PRD Feature Roadmap |
 | 这个 Feature 要做什么？ | 看 Feature Spec |
 | 这个横向功能要做什么？ | 看 Capability Spec |
 | 这个业务流程怎么运转？ | 看 Flow Spec |
@@ -556,7 +669,7 @@ Feature X: 起草 → 完成 ✓
 
 | 维度 | User Story | User Scenario | Flow Spec |
 |------|------------|---------------|-----------|
-| **所属文档** | Feature Spec | Domain Spec | 独立文档 |
+| **所属文档** | Feature Spec | PRD Domain Collaboration | 独立文档 |
 | **范围** | 单个 Feature 内 | 单个 Domain 内（可跨 Feature） | 跨多个 Domain |
 | **视角** | 用户视角 | 用户视角 | 系统视角 |
 | **粒度** | 细（单一功能点） | 中（业务场景） | 粗（端到端流程） |
@@ -587,7 +700,7 @@ Flow Spec: 订单处理流程
 | 场景 | 使用 |
 |------|------|
 | 描述单个功能的用户需求 | User Story（Feature Spec） |
-| 描述领域内多个 Feature 如何协作 | User Scenario（Domain Spec） |
+| 描述领域内多个 Feature 如何协作 | User Scenario（PRD Domain Collaboration） |
 | 描述跨域的复杂业务流程，需详细步骤/异常/约束 | Flow Spec（独立文档） |
 | 简单跨域流程，无需详细定义 | PRD Core Flow 章节 |
 
@@ -596,15 +709,15 @@ Flow Spec: 订单处理流程
 ```
 单 Feature 内的用户需求 → User Story
         ↓ 涉及多个 Feature
-单 Domain 内的业务场景 → User Scenario
+单 Domain 内的业务场景 → User Scenario（PRD Domain Collaboration）
         ↓ 跨多个 Domain 或需要详细定义
 跨域复杂流程 → Flow Spec
 ```
 
 ---
 
-*Version: v3.0*
+*Version: v4.0*
 *Created: 2024-12-20*
-*Updated: 2025-12-21*
-*Changes: v3.0 Feature Spec 增加 Artifacts 章节（产物记录），增加 Design Depth（L0-L3），code 类型必须有 E2E 测试*
+*Updated: 2025-12-22*
+*Changes: v3.0 Feature Spec 增加 Artifacts 章节（产物记录），增加 Design Depth（L0-L3），code 类型必须有 E2E 测试; v3.1 PRD Feature Roadmap 改为子章节形式，每个 Feature 有独立锚点（feat_ref_前缀）; v4.0 移除 Domain Spec 作为独立文档类型，Domain 作为 PRD 组织概念，新增 Domain Collaboration 子章节（可选），更新文档层级和引用*
 *Applies to: SoloDevFlow 2.0*

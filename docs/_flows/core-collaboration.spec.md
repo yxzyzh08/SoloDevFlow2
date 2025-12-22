@@ -238,7 +238,6 @@ Feature Spec 完成 → 评估 Design Depth → none? ─是→ 直接进入实�
 | 命令 | 用途 |
 |------|------|
 | `/write-prd` | 编写/更新 PRD |
-| `/write-domain {name}` | 编写/更新 Domain Spec |
 | `/write-feature {name}` | 编写/更新独立 Feature Spec |
 | `/write-feature {domain} {name}` | 编写/更新 Domain 内 Feature Spec |
 | `/write-design {name}` | 编写/更新独立 Feature Design |

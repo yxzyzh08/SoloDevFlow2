@@ -9,11 +9,12 @@
 | 层级 | 文档类型 | 说明 |
 |------|----------|------|
 | **产品级** | PRD | Product Requirements Document，产品需求文档，定义产品愿景、目标用户、功能路线图 |
-| **领域级** | Domain Spec | 领域规格，组织相关 Feature 的业务领域（如 `user-management`、`payment`） |
 | **功能级** | Feature Spec | 功能规格，定义单个功能的意图、能力、验收标准 |
 | **横向能力** | Capability Spec | 跨多个 Feature 的通用能力（如 `logging`、`auth`） |
 | **跨域流程** | Flow Spec | 跨多个 Domain/Feature 的业务流程 |
 | **设计级** | Design Doc | 技术设计文档，定义实现方案（仅 code 类型 Feature） |
+
+**注**：Domain 作为组织概念存在于 PRD、state.json 和物理目录中，不需要独立的 Domain Spec 文档。跨 Feature 的 Domain 协作场景可在 PRD 的 Domain Collaboration 子章节描述。
 
 ### Feature 类型
 
@@ -134,7 +135,6 @@ Feature Spec 完成 → 评估 Design Depth → none? ─是→ 直接进入实�
 | 命令 | 用途 |
 |------|------|
 | `/write-prd` | 编写/更新 PRD |
-| `/write-domain {name}` | 编写/更新 Domain Spec |
 | `/write-feature {name}` | 编写/更新独立 Feature Spec |
 | `/write-feature {domain} {name}` | 编写/更新 Domain 内 Feature Spec |
 | `/write-design {name}` | 编写/更新独立 Feature Design |

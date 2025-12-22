@@ -77,22 +77,46 @@ Project Types (项目类型枚举):
 
 ## 4. Feature Roadmap <!-- id: prod_roadmap -->
 
-<!-- 注意：Feature 状态由 state.json 统一管理，PRD 不记录状态 -->
+> Feature 状态由 state.json 统一管理，PRD 不记录状态。Feature 之间的依赖关系定义在各 Feature Spec 的 Dependencies 章节。
 
-### 4.1 Domain: {domain-name}
+### 4.1 Domain: {domain-name} <!-- id: domain_{domain_name} -->
 
-| Priority | Feature | Type | 说明 |
-|----------|---------|------|------|
-| P0 | {feature-name} | code/document | {功能描述} |
-| P1 | {feature-name} | code/document | {功能描述} |
+{Domain 简述（1-2 句话）}
 
-### 4.2 Domain: {domain-name}
+#### {feature-name} <!-- id: feat_ref_{feature_name} -->
 
-| Priority | Feature | Type | 说明 |
-|----------|---------|------|------|
-| P0 | {feature-name} | code/document | {功能描述} |
+{Feature 高层次描述（2-3 句话），解释核心价值和解决的问题}
+
+**元信息**：
+- **Priority**: P0/P1/P2
+- **Type**: code / document
+- **Feature Spec**: [{feature-name}.spec.md](docs/{domain}/{feature-name}.spec.md)
+
+#### {another-feature} <!-- id: feat_ref_{another_feature} -->
+
+{Feature 高层次描述}
+
+**元信息**：
+- **Priority**: P0/P1/P2
+- **Type**: code / document
+- **Feature Spec**: [{another-feature}.spec.md](docs/{domain}/{another-feature}.spec.md)
+
+### 4.2 Domain: {domain-name} <!-- id: domain_{another_domain} -->
+
+{Domain 简述}
+
+#### {feature-name} <!-- id: feat_ref_{feature_name} -->
+
+{Feature 高层次描述}
+
+**元信息**：
+- **Priority**: P0
+- **Type**: code / document
+- **Feature Spec**: [{feature-name}.spec.md](docs/{domain}/{feature-name}.spec.md)
 
 ### 4.3 Capabilities
+
+横向能力，跨多个 Feature 的公共功能。
 
 | Capability | 说明 | 使用者 |
 |------------|------|--------|
@@ -134,7 +158,7 @@ Project Types (项目类型枚举):
 
 ---
 
-*Version: v1.1*
+*Version: v1.2*
 *Created: {date}*
 *Updated: {date}*
-*Changes: v1.1 移除状态列，添加 Type 列（状态由 state.json 管理）*
+*Changes: v1.1 移除状态列，添加 Type 列（状态由 state.json 管理）; v1.2 Feature Roadmap 改为子章节形式，每个 Feature 有独立锚点（feat_ref_前缀）*

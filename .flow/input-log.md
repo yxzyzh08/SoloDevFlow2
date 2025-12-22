@@ -212,6 +212,19 @@
 
 ---
 
+### 2024-12-22 #16
+
+**原始输入**：
+> 关于 requirements-doc.spec.md ，有个核心变动，我们不需要domain spec，domain 的内容只是high level的描述，所有细节都在feature spec里详细描述，至于domain内的feature 存在协作的场景，也在 PRD下domain 描述，可以新增一个子章节， 这样大大简化了需求文档结构。避免超出单个人类掌控的极限，同时如果产品的确非常复杂，需要domain spec，这种场景，我们是建议新增子产品
+
+**类型**：变更
+
+**阶段**：requirements_phase
+
+**归纳**：移除 Domain Spec 作为独立文档类型，Domain 作为 PRD 组织概念，新增 Domain Collaboration 子章节（可选），复杂度阈值 10 Features 时拆分子产品
+
+---
+
 <!--
 示例：
 ### 2024-01-01 10:00

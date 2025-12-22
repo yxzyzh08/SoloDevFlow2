@@ -102,84 +102,151 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 
 ## 4. Feature Roadmap <!-- id: prod_roadmap -->
 
-> Feature 之间的依赖关系定义在各 Feature Spec 的 Dependencies 章节，参见 [requirements-doc.spec.md](./specs/requirements-doc.spec.md#spec_req_optional_sections)。
+> Feature 状态由 state.json 统一管理，PRD 不记录状态。Feature 之间的依赖关系定义在各 Feature Spec 的 Dependencies 章节，参见 [requirements-doc.spec.md](./specs/requirements-doc.spec.md#spec_req_optional_sections)。
 
-### 4.1 Domain: specification
+### 4.1 Domain: specification <!-- id: domain_specification -->
 
 规范文档系统，定义各阶段的文档结构和编写标准。
 
-| Priority | Feature | Type | 说明 |
-|----------|---------|------|------|
-| P0 | meta-spec | document | 文档系统元规范（文档身份/锚点/规范映射） |
-| P0 | requirements-doc | document | 需求文档规范（PRD/Domain/Feature/Capability/Flow） |
-| P0 | design-doc-spec | document | 设计文档规范（架构/接口/数据模型） |
-| P1 | development-spec | document | 开发规范（代码结构/命名/注释） |
-| P1 | testing-spec | document | 测试规范（单元/集成/验收测试） |
+#### meta-spec <!-- id: feat_ref_meta_spec -->
 
-### 4.2 Domain: process
+文档系统元规范，定义文档身份识别、锚点系统、规范映射机制，为文档验证和影响分析提供元数据支持。
+
+**元信息**：
+- **Priority**: P0
+- **Type**: document
+- **Feature Spec**: [meta-spec.md](specs/meta-spec.md)
+
+#### requirements-doc <!-- id: feat_ref_requirements_doc -->
+
+需求文档规范，定义 PRD、Domain Spec、Feature Spec、Capability Spec、Flow Spec 的结构、内容要素、编写标准。
+
+**元信息**：
+- **Priority**: P0
+- **Type**: document
+- **Feature Spec**: [requirements-doc.spec.md](specs/requirements-doc.spec.md)
+
+#### design-doc-spec <!-- id: feat_ref_design_doc_spec -->
+
+设计文档规范，定义架构设计、接口设计、数据模型的文档结构和编写标准。
+
+**元信息**：
+- **Priority**: P0
+- **Type**: document
+- **Feature Spec**: [design-doc-spec.md](specs/design-doc-spec.md)
+
+#### development-spec <!-- id: feat_ref_development_spec -->
+
+开发规范，定义代码结构、命名约定、注释标准，保证代码质量和一致性。
+
+**元信息**：
+- **Priority**: P1
+- **Type**: document
+- **Feature Spec**: [development-spec.md](specs/development-spec.md)
+
+#### testing-spec <!-- id: feat_ref_testing_spec -->
+
+测试规范，定义单元测试、集成测试、验收测试的编写标准和覆盖率要求。
+
+**元信息**：
+- **Priority**: P1
+- **Type**: document
+- **Feature Spec**: [testing-spec.md](specs/testing-spec.md)
+
+### 4.2 Domain: process <!-- id: domain_process -->
 
 协作流程系统，定义人机协作的机制和状态管理。
 
-| Priority | Feature | Type | 说明 |
-|----------|---------|------|------|
-| P0 | core-collaboration | document | 核心协作流程（意图路由/阶段流转/交付流程） |
-| P0 | state-management | document | 状态管理机制（state.json Schema） |
-| P0 | change-impact-tracking | document | 影响分析机制（变更追踪 + 新增关联） |
-| P0 | input-capture | document | 输入捕获机制（input-log.md） |
-| P0 | spark-box | document | 灵光收集与处理机制（spark-box.md） |
+#### core-collaboration <!-- id: feat_ref_core_collaboration -->
 
-**core-collaboration**：解决 AI 不按流程执行、直接响应字面需求的问题。核心能力：
-- 意图路由：识别人类输入类型（需求/咨询/灵光/变更），分发到对应流程
-- 阶段流转：定义 Feature 从需求到验收的完整生命周期
-- 交付流程：结构化的需求澄清、设计、实现、验收流程
+核心协作流程，解决 AI 不按流程执行、直接响应字面需求的问题。提供意图路由（识别输入类型）、阶段流转（Feature 生命周期）、交付流程（结构化需求澄清/设计/实现/验收）三大能力。
 
-**change-impact-tracking**：解决变更或新增时遗漏关联影响的问题。核心能力：
-- 变更影响：修改规范/PRD/模板/Feature 时分析影响范围
-- 新增关联：新增 Feature 时分析与现有 Feature 的关系
+**元信息**：
+- **Priority**: P0
+- **Type**: document
+- **Feature Spec**: [core-collaboration.spec.md](_flows/core-collaboration.spec.md)
 
+#### state-management <!-- id: feat_ref_state_management -->
 
-**spark-box**：解决"灵光一闪"想法丢失或打断当前任务的问题。核心能力：
-- 灵光捕获：识别与当前任务无关的想法，记录到 spark-box.md
-- 灵光处理：在合适时机（任务完成/阶段切换/人类主动）提示处理
-- 灵光转化：评审后转为正式需求、归档、或丢弃
+状态管理机制，解决跨 Session 状态丢失、无法掌控全局的问题。定义 state.json 作为唯一状态源，记录 Feature 状态、subtasks、灵光想法、文档债务等。
 
-### 4.3 Domain: tooling
+**元信息**：
+- **Priority**: P0
+- **Type**: document
+- **Feature Spec**: [state-management.spec.md](process/state-management.spec.md)
+
+#### change-impact-tracking <!-- id: feat_ref_change_impact_tracking -->
+
+变更影响追踪机制，解决修改规范/PRD/Feature 时遗漏关联影响的问题。基于依赖图分析变更影响范围，通过锚点精确定位到具体 Feature。
+
+**元信息**：
+- **Priority**: P0
+- **Type**: document
+- **Feature Spec**: [change-impact-tracking.spec.md](process/change-impact-tracking.spec.md)
+
+#### input-capture <!-- id: feat_ref_input_capture -->
+
+输入捕获机制，记录人类的关键输入和决策到 input-log.md，防止需求变更时丢失上下文。
+
+**元信息**：
+- **Priority**: P0
+- **Type**: document
+- **Feature Spec**: [input-log.md](../.flow/input-log.md)
+
+#### spark-box <!-- id: feat_ref_spark_box -->
+
+灵光收集与处理机制，解决"灵光一闪"想法丢失或打断当前任务的问题。在合适时机提示处理，评审后转为正式需求、归档、或丢弃。
+
+**元信息**：
+- **Priority**: P0
+- **Type**: document
+- **Feature Spec**: [spark-box.md](../.flow/spark-box.md)
+
+### 4.3 Domain: tooling <!-- id: domain_tooling -->
 
 独立工具系统，提供不依附于其他 Feature 的独立工具。
 
-> **注**：与 Feature 强相关的工具脚本已整合至对应 Feature：
-> - `validate-state.js`、`migrate-state.js` → `state-management`
-> - `analyze-impact.js`、`validate-docs.js` → `change-impact-tracking`
->
-> 本 Domain 管理**独立工具**（如项目初始化、分发安装等）。
+> **注**：与 Feature 强相关的工具脚本已整合至对应 Feature（如 validate-state.js → state-management，analyze-impact.js → change-impact-tracking）。本 Domain 管理**独立工具**。
 
-| Priority | Feature | Type | 说明 |
-|----------|---------|------|------|
-| P0 | project-init | code | 项目初始化工具（将 SoloDevFlow 安装到其他项目） |
+#### project-init <!-- id: feat_ref_project_init -->
 
-**project-init**：解决 SoloDevFlow 无法在其他项目中使用的问题。核心能力：
-- 初始化 `.flow/` 目录结构和状态文件
-- 安装 `.claude/commands/` 命令集
-- 复制规范文档和模板到目标项目
-- 生成 `CLAUDE.md` 骨架和 `package.json` scripts
+项目初始化工具，解决 SoloDevFlow 无法在其他项目中使用的问题。初始化 .flow/ 目录、安装命令集、复制规范文档和模板、生成 CLAUDE.md 骨架。
 
-### 4.4 Domain: ai-config
+**元信息**：
+- **Priority**: P0
+- **Type**: code
+- **Feature Spec**: [project-init.spec.md](tooling/project-init.spec.md)
+
+### 4.4 Domain: ai-config <!-- id: domain_ai_config -->
 
 AI 协作配置系统，定义 Claude 的行为规范、命令和技能。
 
-| Priority | Feature | Type | 说明 |
-|----------|---------|------|------|
-| P0 | claude-md | document | AI 行为入口（状态恢复/流程索引） |
-| P0 | write-commands | document | 文档编写命令（/write-prd, /write-feature 等） |
-| P0 | requirements-expert | document | 需求专家技能（需求澄清/文档分类/调研方法） |
+#### claude-md <!-- id: feat_ref_claude_md -->
 
-**claude-md**：解决 AI 对话启动时缺乏上下文和导航的问题。核心能力：
-- 状态恢复：对话开始时读取 state.json，汇报当前状态
-- 流程索引：指向 core-collaboration.spec.md 获取具体流程定义
+AI 行为入口，解决 AI 对话启动时缺乏上下文和导航的问题。对话开始时读取 state.json 汇报状态，指向 core-collaboration.spec.md 获取具体流程定义。
 
-**write-commands**：解决文档编写效率和规范一致性问题。提供结构化的文档编写指令（/write-prd, /write-feature 等），自动加载规范和模板，输出后触发校验。
+**元信息**：
+- **Priority**: P0
+- **Type**: document
+- **Feature Spec**: [CLAUDE.md](../CLAUDE.md)
 
-**requirements-expert**：解决需求模糊导致文档质量低的问题。通过 3-5 轮结构化对话澄清需求，自动判断文档类型，将模糊想法转化为符合规范的规格文档。
+#### write-commands <!-- id: feat_ref_write_commands -->
+
+文档编写命令，解决文档编写效率和规范一致性问题。提供结构化的文档编写指令（/write-prd, /write-feature 等），自动加载规范和模板，输出后触发校验。
+
+**元信息**：
+- **Priority**: P0
+- **Type**: document
+- **Feature Spec**: [.claude/commands/](../.claude/commands/)
+
+#### requirements-expert <!-- id: feat_ref_requirements_expert -->
+
+需求专家技能，解决需求模糊导致文档质量低的问题。通过 3-5 轮结构化对话澄清需求，自动判断文档类型，将模糊想法转化为符合规范的规格文档。
+
+**元信息**：
+- **Priority**: P0
+- **Type**: document
+- **Feature Spec**: [.claude/skills/requirements-expert/](../.claude/skills/requirements-expert/)
 
 ---
 
@@ -228,7 +295,7 @@ AI 协作配置系统，定义 Claude 的行为规范、命令和技能。
 
 ---
 
-*Version: v2.7*
+*Version: v2.8*
 *Created: 2024-12-16*
 *Updated: 2025-12-22*
-*Changes: v2.7 process domain 新增 core-collaboration Feature，修正 claude-md 描述为索引入口*
+*Changes: v2.7 process domain 新增 core-collaboration Feature，修正 claude-md 描述为索引入口; v2.8 Feature Roadmap 改为子章节形式，每个 Feature 有独立锚点（feat_ref_前缀），便于精确影响分析*

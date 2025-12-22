@@ -213,11 +213,6 @@ function inferDocType(filePath, frontmatterType) {
     return 'prd';
   }
 
-  // Domain Spec
-  if (basename === '_domain.spec.md') {
-    return 'domain-spec';
-  }
-
   // Feature Spec (in domain directory or _features)
   if (basename.endsWith('.spec.md') && !basename.startsWith('_')) {
     if (relativePath.includes('_capabilities/')) {

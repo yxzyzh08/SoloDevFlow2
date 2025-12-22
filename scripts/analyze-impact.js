@@ -149,19 +149,63 @@ function buildDependencyGraph() {
 
   scanDir(DOCS_DIR);
 
-  // Add PRD -> Feature defines edges from state.json
+  // Add PRD Feature reference edges from state.json
+  // Parse feat_ref_ anchors in PRD to create precise relationships
   if (state && state.features) {
-    for (const [featureName, feature] of Object.entries(state.features)) {
-      if (feature.docPath) {
-        edges.push({
-          from: 'docs/prd.md',
-          to: feature.docPath,
-          type: 'defines',
-          featureName
-        });
-      }
+    const prdPath = 'docs/prd.md';
+    const prdNode = nodes.get(prdPath);
 
-      // Add artifacts edges for code type features (v1.2)
+    if (prdNode && prdNode.anchors) {
+      // Create edges from feat_ref_ anchors to Feature Specs
+      for (const [featureName, feature] of Object.entries(state.features)) {
+        if (feature.docPath) {
+          // Look for matching feat_ref_ anchor
+          const featureRefAnchor = `feat_ref_${featureName.replace(/-/g, '_')}`;
+          const anchorPath = `${prdPath}#${featureRefAnchor}`;
+
+          if (prdNode.anchors.includes(featureRefAnchor)) {
+            // Create a virtual node for the feature reference
+            nodes.set(anchorPath, {
+              type: 'prd-feature-ref',
+              path: anchorPath,
+              anchors: [featureRefAnchor],
+              featureName
+            });
+
+            // Edge: feat_ref anchor -> Feature Spec
+            edges.push({
+              from: anchorPath,
+              to: feature.docPath,
+              type: 'defines',
+              featureName
+            });
+          } else {
+            // Fallback: if no feat_ref_ anchor found, use whole PRD
+            edges.push({
+              from: prdPath,
+              to: feature.docPath,
+              type: 'defines',
+              featureName
+            });
+          }
+        }
+      }
+    } else {
+      // Fallback: if PRD not parsed, create edges from whole PRD
+      for (const [featureName, feature] of Object.entries(state.features)) {
+        if (feature.docPath) {
+          edges.push({
+            from: 'docs/prd.md',
+            to: feature.docPath,
+            type: 'defines',
+            featureName
+          });
+        }
+      }
+    }
+
+    // Add artifacts edges for code type features (v1.2)
+    for (const [featureName, feature] of Object.entries(state.features)) {
       if (feature.type === 'code' && feature.artifacts) {
         const featureDocPath = feature.docPath;
 
@@ -423,20 +467,30 @@ function main() {
   const args = process.argv.slice(2);
 
   if (args.length === 0) {
-    console.log('Usage: node scripts/analyze-impact.js <changed-file>');
+    console.log('Usage: node scripts/analyze-impact.js <changed-file>[#anchor]');
     console.log('');
     console.log('Examples:');
     console.log('  node scripts/analyze-impact.js docs/specs/requirements-doc.spec.md');
     console.log('  node scripts/analyze-impact.js docs/templates/backend/feature.spec.md');
+    console.log('  node scripts/analyze-impact.js "docs/prd.md#feat_ref_change_impact_tracking"');
     process.exit(0);
   }
 
   const changedFile = args[0];
+  let changedPath = changedFile;
+  let changedAnchor = null;
+
+  // Parse anchor if provided
+  if (changedFile.includes('#')) {
+    const parts = changedFile.split('#');
+    changedPath = parts[0];
+    changedAnchor = parts[1];
+  }
 
   // Check if file exists
-  const fullPath = path.join(__dirname, '..', changedFile);
+  const fullPath = path.join(__dirname, '..', changedPath);
   if (!fs.existsSync(fullPath)) {
-    console.error(`Error: File not found: ${changedFile}`);
+    console.error(`Error: File not found: ${changedPath}`);
     process.exit(1);
   }
 
@@ -446,7 +500,10 @@ function main() {
   const graph = buildDependencyGraph();
   console.log(`Found ${graph.nodes.size} documents, ${graph.edges.length} dependencies\n`);
 
-  const { directImpacts, indirectImpacts } = findImpactedDocuments(graph, changedFile);
+  // If anchor is specified, use the anchor path for analysis
+  const analysisTarget = changedAnchor ? `${changedPath}#${changedAnchor}` : changedPath;
+
+  const { directImpacts, indirectImpacts } = findImpactedDocuments(graph, analysisTarget);
   const subtasks = generateSubtasks(directImpacts, indirectImpacts, changedFile);
 
   console.log('=== Analysis Result ===\n');

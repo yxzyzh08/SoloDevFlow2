@@ -117,9 +117,9 @@ description: >
                     ├─ 是 → Capability Spec
                     └─ 否 → 使用哪种调研方法？
                              │
-                             ├─ Top-Down → 该 Domain 是否已有 Domain Spec？
+                             ├─ Top-Down → 该需求是否明确属于某个已有 Domain？
                              │              ├─ 是 → Feature Spec（在 Domain 下）
-                             │              └─ 否 → 先 Domain Spec，再 Feature Spec
+                             │              └─ 否 → 独立 Feature Spec（在 _features/ 下）
                              │
                              └─ Bottom-Up → 该需求是否明确属于某个已有 Domain？
                                             ├─ 是 → Feature Spec（在 Domain 下）
@@ -129,7 +129,6 @@ description: >
 | 方法 | 信号 | 文档类型 | 命令 | 输出位置 |
 |------|------|----------|------|----------|
 | - | 产品愿景、路线图 | PRD | /write-prd | docs/prd.md |
-| - | 领域业务规则、3+ 个 Feature | Domain Spec | /write-domain | docs/{domain}/_domain.spec.md |
 | - | 跨 Feature 的公共能力 | Capability Spec | /write-capability | docs/_capabilities/{name}.spec.md |
 | - | 跨域业务流程 | Flow Spec | /write-flow | docs/_flows/{name}.spec.md |
 | Top-Down | 单一功能需求（Domain 已存在） | Feature Spec | /write-feature {domain} {name} | docs/{domain}/{feature}.spec.md |
@@ -194,7 +193,7 @@ Then {期望结果}
 | ... | ... | ... |
 
 ### 推荐文档类型
-{PRD / Domain Spec / Feature Spec / Capability Spec / Flow Spec}
+{PRD / Feature Spec / Capability Spec / Flow Spec}
 
 ### 置信度
 {高 / 中 / 低} - {原因}
@@ -266,4 +265,4 @@ Then {期望结果}
 | Top-Down | 先 Domain 后 Feature | `docs/{domain}/{feature}.spec.md` |
 | Bottom-Up | 先 Feature 后 Domain | 无 Domain 时放 `docs/_features/{feature}.spec.md` |
 
-**Bottom-Up 迁移**：当 3+ 个独立 Feature 可归入同一领域时，创建 Domain Spec 并迁移 Feature 文件。
+**Bottom-Up 迁移**：当 3+ 个独立 Feature 可归入同一领域时，在 PRD 中新增 Domain 章节（可选添加 Domain Collaboration 子章节），并迁移 Feature 文件到对应 Domain 目录。
