@@ -11,16 +11,27 @@
 const fs = require('fs');
 const path = require('path');
 
-const DOCS_DIR = path.join(__dirname, '..', 'docs');
+const REQUIREMENTS_DIR = path.join(__dirname, '..', 'docs', 'requirements');
+const DESIGNS_DIR = path.join(__dirname, '..', 'docs', 'designs');
 const STATE_FILE = path.join(__dirname, '..', '.flow', 'state.json');
 
 // Document type detection
 function getDocType(filePath) {
+  // Detect which directory tree
+  const inRequirements = filePath.includes('/requirements/') || filePath.includes('\\requirements\\');
+  const inDesigns = filePath.includes('/designs/') || filePath.includes('\\designs\\');
+
   if (filePath.includes('/templates/')) return 'template';
   if (filePath.endsWith('.spec.md') && filePath.includes('/specs/')) return 'spec';
-  if (filePath.endsWith('.spec.md')) return 'feature-spec';
-  if (filePath.endsWith('.design.md')) return 'design-doc';
-  if (filePath.includes('prd.md')) return 'prd';
+
+  // Requirements documents
+  if (inRequirements && filePath.endsWith('.spec.md')) return 'feature-spec';
+  if (inRequirements && filePath.includes('prd.md')) return 'prd';
+
+  // Design documents
+  if (inDesigns || filePath.endsWith('.design.md')) return 'design-doc';
+
+  // Code and tests
   if (filePath.startsWith('src/') || filePath.includes('/src/')) return 'code';
   if (filePath.startsWith('tests/') || filePath.includes('/tests/')) return 'test';
   if (filePath.endsWith('.js') || filePath.endsWith('.ts') || filePath.endsWith('.tsx')) {
@@ -147,12 +158,14 @@ function buildDependencyGraph() {
     }
   }
 
-  scanDir(DOCS_DIR);
+  // Scan both requirements and designs directories
+  scanDir(REQUIREMENTS_DIR);
+  scanDir(DESIGNS_DIR);
 
   // Add PRD Feature reference edges from state.json
   // Parse feat_ref_ anchors in PRD to create precise relationships
   if (state && state.features) {
-    const prdPath = 'docs/prd.md';
+    const prdPath = 'docs/requirements/prd.md';
     const prdNode = nodes.get(prdPath);
 
     if (prdNode && prdNode.anchors) {

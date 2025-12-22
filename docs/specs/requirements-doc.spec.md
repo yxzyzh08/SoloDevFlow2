@@ -46,46 +46,77 @@ PRD (1个)
 - 流程复杂度超出 PRD Core Flow 章节承载范围
 - 简单流程可在 PRD 的 Core Flow 章节描述
 
-**说明**：设计文档（Design Doc）属于设计阶段产出，见设计文档规范。需求目录只存放需求文档。
+**说明**：设计文档（Design Doc）存放于 `docs/designs/` 目录，与需求文档完全分离。需求文档统一存放于 `docs/requirements/` 目录。
 
 ### 1.3 Directory Structure & Naming
 
 ```
 docs/
-├── prd.md                          # 产品 PRD（唯一）
+├── requirements/                    # 需求文档根目录
+│   ├── prd.md                       # 产品 PRD（唯一）
+│   │
+│   ├── specs/                       # 规范文档
+│   │   ├── requirements-doc.spec.md # 需求文档规范
+│   │   ├── design-doc-spec.md       # 设计文档规范
+│   │   └── meta-spec.md             # 元规范
+│   │
+│   ├── templates/                   # 文档模板
+│   │   ├── backend/                 # 后端项目模板
+│   │   ├── web-app/                 # Web应用模板
+│   │   └── mobile-app/              # 移动应用模板
+│   │
+│   ├── _features/                   # 独立 Feature（Bottom-Up 模式）
+│   │   ├── prd-validator.spec.md    # 尚未归入 Domain 的 Feature
+│   │   └── status-script.spec.md
+│   │
+│   ├── payment/                     # Domain 目录（仅作为文件组织）
+│   │   ├── checkout.spec.md         # Feature Spec
+│   │   └── refund.spec.md
+│   │
+│   ├── user/                        # Domain 目录
+│   │   ├── login.spec.md
+│   │   └── register.spec.md
+│   │
+│   ├── _capabilities/               # Capability 目录（下划线前缀表示横向）
+│   │   ├── logging.spec.md
+│   │   └── permission.spec.md
+│   │
+│   └── _flows/                      # Flow 目录（下划线前缀表示横向）
+│       ├── order-process.spec.md
+│       └── payment-process.spec.md
 │
-├── _features/                      # 独立 Feature（Bottom-Up 模式）
-│   ├── prd-validator.spec.md       # 尚未归入 Domain 的 Feature
-│   └── status-script.spec.md
-│
-├── payment/                        # Domain 目录（仅作为文件组织）
-│   ├── checkout.spec.md            # Feature Spec
-│   └── refund.spec.md
-│
-├── user/                           # Domain 目录
-│   ├── login.spec.md
-│   └── register.spec.md
-│
-├── _capabilities/                  # Capability 目录（下划线前缀表示横向）
-│   ├── logging.spec.md
-│   └── permission.spec.md
-│
-└── _flows/                         # Flow 目录（下划线前缀表示横向）
-    ├── order-process.spec.md
-    └── payment-process.spec.md
+└── designs/                         # 设计文档根目录
+    ├── _features/                   # 独立 Feature 设计
+    │   └── {feature}.design.md
+    │
+    ├── payment/                     # Domain 设计
+    │   ├── checkout.design.md
+    │   └── refund.design.md
+    │
+    ├── _capabilities/               # Capability 设计
+    │   └── {name}.design.md
+    │
+    └── _flows/                      # Flow 设计
+        └── {name}.design.md
 ```
 
-**Domain 目录说明**：
-- Domain 目录仅作为文件组织手段，将相关 Feature 归档在一起
+**目录结构说明**：
+- **requirements/** - 所有需求文档的根目录，包含 PRD、规范、模板和各类需求文档
+- **designs/** - 所有设计文档的根目录，与需求文档完全分离
+- **Domain 目录** - 仅作为文件组织手段，在两个根目录下都可能存在
 - 不再需要 `_domain.spec.md` 文件
 - Domain 的业务规则、共享概念等信息在 PRD 的 Domain Collaboration 子章节中描述（可选）
 
 **Naming Convention**：
-- PRD：`prd.md`（固定名称）
-- 独立 Feature Spec：`_features/{feature}.spec.md`（下划线前缀目录，Bottom-Up 模式）
-- Domain 内 Feature Spec：`{domain}/{feature}.spec.md`（在 Domain 目录下）
-- Capability Spec：`_capabilities/{name}.spec.md`（下划线前缀目录）
-- Flow Spec：`_flows/{name}.spec.md`（下划线前缀目录）
+- PRD：`docs/requirements/prd.md`（固定路径）
+- 独立 Feature Spec：`docs/requirements/_features/{feature}.spec.md`（Bottom-Up 模式）
+- Domain 内 Feature Spec：`docs/requirements/{domain}/{feature}.spec.md`
+- Capability Spec：`docs/requirements/_capabilities/{name}.spec.md`
+- Flow Spec：`docs/requirements/_flows/{name}.spec.md`
+- 独立 Feature Design：`docs/designs/_features/{feature}.design.md`
+- Domain 内 Feature Design：`docs/designs/{domain}/{feature}.design.md`
+- Capability Design：`docs/designs/_capabilities/{name}.design.md`
+- Flow Design：`docs/designs/_flows/{name}.design.md`
 - 目录名/文件名：kebab-case
 
 ### 1.4 Requirements Research Methods
@@ -716,8 +747,8 @@ Flow Spec: 订单处理流程
 
 ---
 
-*Version: v4.0*
+*Version: v4.1*
 *Created: 2024-12-20*
-*Updated: 2025-12-22*
-*Changes: v3.0 Feature Spec 增加 Artifacts 章节（产物记录），增加 Design Depth（L0-L3），code 类型必须有 E2E 测试; v3.1 PRD Feature Roadmap 改为子章节形式，每个 Feature 有独立锚点（feat_ref_前缀）; v4.0 移除 Domain Spec 作为独立文档类型，Domain 作为 PRD 组织概念，新增 Domain Collaboration 子章节（可选），更新文档层级和引用*
+*Updated: 2025-01-22*
+*Changes: v3.0 Feature Spec 增加 Artifacts 章节（产物记录），增加 Design Depth（L0-L3），code 类型必须有 E2E 测试; v3.1 PRD Feature Roadmap 改为子章节形式，每个 Feature 有独立锚点（feat_ref_前缀）; v4.0 移除 Domain Spec 作为独立文档类型，Domain 作为 PRD 组织概念，新增 Domain Collaboration 子章节（可选），更新文档层级和引用; v4.1 需求文档和设计文档完全分离到 docs/requirements/ 和 docs/designs/ 两个独立目录*
 *Applies to: SoloDevFlow 2.0*

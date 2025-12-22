@@ -18,8 +18,8 @@
 
 | 调用方式 | 输出位置 |
 |----------|----------|
-| `/write-feature {name}` | `docs/_features/{feature}.spec.md` |
-| `/write-feature {domain} {name}` | `docs/{domain}/{feature}.spec.md` |
+| `/write-feature {name}` | `docs/requirements/_features/{feature}.spec.md` |
+| `/write-feature {domain} {name}` | `docs/requirements/{domain}/{feature}.spec.md` |
 
 ## 加载文件
 
@@ -31,10 +31,9 @@
 
 ### 步骤1: 加载规范和模板
 
-1. 规范文档：`{sourcePath}/docs/specs/requirements-doc.spec.md`
-2. Feature 模板：`docs/templates/{projectType}/feature.spec.md`
-3. Domain Spec：`docs/{domain}/_domain.spec.md`（仅双参数调用时）
-4. 现有 Feature Spec：目标路径文件（如存在）
+1. 规范文档：`{sourcePath}/docs/requirements/specs/requirements-doc.spec.md`
+2. Feature 模板：`docs/requirements/templates/{projectType}/feature.spec.md`
+3. 现有 Feature Spec：目标路径文件（如存在）
 
 **注意**: 规范文档来自 SoloDevFlow 源目录，为只读文件。
 
@@ -50,10 +49,9 @@
 
 **如果不存在（新建模式）**：
 4. 读取 Feature 模板，作为文档骨架
-5. 如为双参数调用且存在 Domain Spec，读取了解领域上下文
-6. 根据用户提供的功能信息，填充模板内容
-7. 按模板中的锚点要求添加锚点（替换 `{name}` 为实际功能名）
-8. 输出到对应位置
+5. 根据用户提供的功能信息，填充模板内容
+6. 按模板中的锚点要求添加锚点（替换 `{name}` 为实际功能名）
+7. 输出到对应位置
 
 **如果存在（更新模式）**：
 4. 读取现有 Feature Spec 内容
@@ -83,7 +81,7 @@
 
 | Type | Path | Required | Description |
 |------|------|----------|-------------|
-| Design | docs/{domain}/{name}.design.md | required 时必填 | 设计文档 |
+| Design | docs/designs/{domain}/{name}.design.md | required 时必填 | 设计文档 |
 | Code | src/{module}/ | Yes | 代码目录 |
 | E2E Test | tests/e2e/{name}.test.ts | Yes | E2E 测试 |
 

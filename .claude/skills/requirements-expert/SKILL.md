@@ -128,12 +128,12 @@ description: >
 
 | 方法 | 信号 | 文档类型 | 命令 | 输出位置 |
 |------|------|----------|------|----------|
-| - | 产品愿景、路线图 | PRD | /write-prd | docs/prd.md |
-| - | 跨 Feature 的公共能力 | Capability Spec | /write-capability | docs/_capabilities/{name}.spec.md |
-| - | 跨域业务流程 | Flow Spec | /write-flow | docs/_flows/{name}.spec.md |
-| Top-Down | 单一功能需求（Domain 已存在） | Feature Spec | /write-feature {domain} {name} | docs/{domain}/{feature}.spec.md |
-| Bottom-Up | 单一功能需求（无明确 Domain） | 独立 Feature Spec | /write-feature {name} | docs/_features/{feature}.spec.md |
-| Bottom-Up | 单一功能需求（Domain 已存在） | Feature Spec | /write-feature {domain} {name} | docs/{domain}/{feature}.spec.md |
+| - | 产品愿景、路线图 | PRD | /write-prd | docs/requirements/prd.md |
+| - | 跨 Feature 的公共能力 | Capability Spec | /write-capability | docs/requirements/_capabilities/{name}.spec.md |
+| - | 跨域业务流程 | Flow Spec | /write-flow | docs/requirements/_flows/{name}.spec.md |
+| Top-Down | 单一功能需求（Domain 已存在） | Feature Spec | /write-feature {domain} {name} | docs/requirements/{domain}/{feature}.spec.md |
+| Bottom-Up | 单一功能需求（无明确 Domain） | 独立 Feature Spec | /write-feature {name} | docs/requirements/_features/{feature}.spec.md |
+| Bottom-Up | 单一功能需求（Domain 已存在） | Feature Spec | /write-feature {domain} {name} | docs/requirements/{domain}/{feature}.spec.md |
 
 ### Phase 4: STRUCTURE（结构化需求）
 

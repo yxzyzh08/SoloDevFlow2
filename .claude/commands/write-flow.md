@@ -16,9 +16,9 @@
 
 ### 步骤1: 加载规范和模板
 
-1. 规范文档：`{sourcePath}/docs/specs/requirements-doc.spec.md`
-2. Flow 模板：`docs/templates/{projectType}/flow.spec.md`
-3. 现有 Flow Spec：`docs/_flows/{name}.spec.md`（如存在）
+1. 规范文档：`{sourcePath}/docs/requirements/specs/requirements-doc.spec.md`
+2. Flow 模板：`docs/requirements/templates/{projectType}/flow.spec.md`
+3. 现有 Flow Spec：`docs/requirements/_flows/{name}.spec.md`（如存在）
 
 **注意**: 规范文档来自 SoloDevFlow 源目录，为只读文件。
 
@@ -26,14 +26,14 @@
 
 ### 2. 前置检查
 
-1. 检测 `docs/_flows/{name}.spec.md` 是否存在
+1. 检测 `docs/requirements/_flows/{name}.spec.md` 是否存在
 2. 读取规范文档，了解 Flow Spec 结构要求（Section 7）
 
 **如果不存在（新建模式）**：
 3. 读取 Flow 模板，作为文档骨架
 4. 根据用户提供的流程信息，填充模板内容
 5. 按模板中的锚点要求添加锚点（替换 `{name}` 为实际流程名）
-6. 输出到 `docs/_flows/{name}.spec.md`
+6. 输出到 `docs/requirements/_flows/{name}.spec.md`
 
 **如果存在（更新模式）**：
 3. 读取现有 Flow Spec 内容
@@ -43,7 +43,7 @@
 7. 输出更新后的文件
 
 **最后**：
-- 运行校验：`npm run validate:docs docs/_flows/{name}.spec.md`，确保符合规范
+- 运行校验：`npm run validate:docs docs/requirements/_flows/{name}.spec.md`，确保符合规范
 
 ## 创建时机
 

@@ -178,20 +178,39 @@ PRD（总）
 
 ```
 docs/
-├── specs/
-│   └── design-doc-spec.md      # 本规范
-├── {domain}/
-│   ├── _domain.spec.md         # 需求（需求阶段）
-│   ├── _domain.design.md       # 设计（设计阶段）
-│   ├── {feature}.spec.md       # Feature 需求
-│   └── {feature}.design.md     # Feature 设计
-├── _capabilities/
-│   ├── {name}.spec.md          # Capability 需求
-│   └── {name}.design.md        # Capability 设计
-└── _flows/
-    ├── {name}.spec.md          # Flow 需求
-    └── {name}.design.md        # Flow 设计
+├── requirements/                    # 需求文档根目录
+│   ├── prd.md                       # 产品 PRD
+│   ├── specs/                       # 规范文档
+│   │   ├── requirements-doc.spec.md # 需求文档规范
+│   │   ├── design-doc-spec.md       # 本规范
+│   │   └── meta-spec.md             # 元规范
+│   ├── templates/                   # 文档模板
+│   ├── _features/                   # 独立 Feature 需求
+│   │   └── {feature}.spec.md
+│   ├── {domain}/                    # Domain 需求
+│   │   └── {feature}.spec.md
+│   ├── _capabilities/               # Capability 需求
+│   │   └── {name}.spec.md
+│   └── _flows/                      # Flow 需求
+│       └── {name}.spec.md
+│
+└── designs/                         # 设计文档根目录
+    ├── architecture.design.md       # 产品级架构设计（可选）
+    ├── _features/                   # 独立 Feature 设计
+    │   └── {feature}.design.md
+    ├── {domain}/                    # Domain 设计
+    │   └── {feature}.design.md
+    ├── _capabilities/               # Capability 设计
+    │   └── {name}.design.md
+    └── _flows/                      # Flow 设计
+        └── {name}.design.md
 ```
+
+**目录结构说明**：
+- **requirements/** - 所有需求文档存放于此，包含规范、模板和各类需求文档
+- **designs/** - 所有设计文档独立存放，与需求文档完全分离
+- 设计文档与需求文档一一对应，通过相同的文件名关联（.spec.md vs .design.md）
+- 设计文档的目录结构镜像需求文档的组织方式（_features/, {domain}/, _capabilities/, _flows/）
 
 ---
 
@@ -375,8 +394,8 @@ docs/
 
 ---
 
-*Version: v3.0*
+*Version: v3.1*
 *Created: 2024-12-20*
-*Updated: 2025-12-21*
-*Changes: v2.1 新增 L0 级别; v2.2 新增 Flow Design 类型; v3.0 新增项目类型特定设计规范（Backend/Web App/Mobile App）*
+*Updated: 2025-01-22*
+*Changes: v2.1 新增 L0 级别; v2.2 新增 Flow Design 类型; v3.0 新增项目类型特定设计规范（Backend/Web App/Mobile App）; v3.1 设计文档与需求文档完全分离到 docs/designs/ 和 docs/requirements/ 两个独立目录*
 *Applies to: SoloDevFlow 2.0*

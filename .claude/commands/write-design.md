@@ -20,8 +20,8 @@
 
 | 调用方式 | 输出位置 |
 |----------|----------|
-| `/write-design {name}` | `docs/_features/{name}.design.md` |
-| `/write-design {domain} {name}` | `docs/{domain}/{name}.design.md` |
+| `/write-design {name}` | `docs/designs/_features/{name}.design.md` |
+| `/write-design {domain} {name}` | `docs/designs/{domain}/{name}.design.md` |
 
 ## 加载文件
 
@@ -33,9 +33,9 @@
 
 ### 步骤1: 加载规范和模板
 
-1. 设计规范：`{sourcePath}/docs/specs/design-doc-spec.md`
-2. 设计模板：`docs/templates/{projectType}/feature.design.md`
-3. Feature Spec：对应的 `{name}.spec.md`（必须存在）
+1. 设计规范：`{sourcePath}/docs/requirements/specs/design-doc-spec.md`
+2. 设计模板：`docs/requirements/templates/{projectType}/feature.design.md`
+3. Feature Spec：对应的 `{name}.spec.md`（必须存在，位于 `docs/requirements/` 树）
 4. 现有 Design Doc：目标路径文件（如存在）
 
 **注意**: 规范文档来自 SoloDevFlow 源目录，为只读文件。

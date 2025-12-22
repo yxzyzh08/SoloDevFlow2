@@ -46,8 +46,9 @@ const META_SPEC = {
 // Constants
 // ═══════════════════════════════════════════════════════════════════════════
 
-const DOCS_DIR = path.join(__dirname, '..', 'docs');
-const SPEC_FILE = path.join(DOCS_DIR, 'specs', 'requirements-doc.spec.md');
+const REQUIREMENTS_DIR = path.join(__dirname, '..', 'docs', 'requirements');
+const DESIGNS_DIR = path.join(__dirname, '..', 'docs', 'designs');
+const SPEC_FILE = path.join(REQUIREMENTS_DIR, 'specs', 'requirements-doc.spec.md');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Parsing Functions
@@ -205,8 +206,19 @@ function getDocName(filePath) {
  * Used when frontmatter.type is a project type (backend, web-app, etc.)
  */
 function inferDocType(filePath, frontmatterType) {
-  const relativePath = path.relative(DOCS_DIR, filePath).replace(/\\/g, '/');
   const basename = path.basename(filePath);
+
+  // Determine which tree the file is in
+  let relativePath;
+  if (filePath.includes('requirements')) {
+    relativePath = path.relative(REQUIREMENTS_DIR, filePath).replace(/\\/g, '/');
+  } else if (filePath.includes('designs')) {
+    // Design documents
+    return 'design-doc';
+  } else {
+    // Fallback for old structure or other files
+    relativePath = path.relative(path.join(__dirname, '..', 'docs'), filePath).replace(/\\/g, '/');
+  }
 
   // PRD
   if (basename === 'prd.md') {
@@ -385,7 +397,9 @@ function findDocuments(targetPath) {
     }
   }
 
-  scanDir(DOCS_DIR);
+  // Scan both requirements and designs directories
+  scanDir(REQUIREMENTS_DIR);
+  scanDir(DESIGNS_DIR);
 
   return docs;
 }

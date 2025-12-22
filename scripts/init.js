@@ -31,19 +31,19 @@ const PROJECT_TYPES = ['backend', 'web-app', 'mobile-app'];
 
 const UI_FILES = {
   'web-app': [
-    { src: 'docs/templates/shared/component-registry.md', dest: 'docs/ui/component-registry.md' },
-    { src: 'docs/templates/shared/capability-ui-component.spec.md', dest: 'docs/_capabilities/ui-component-management.spec.md' }
+    { src: 'docs/requirements/templates/shared/component-registry.md', dest: 'docs/ui/component-registry.md' },
+    { src: 'docs/requirements/templates/shared/capability-ui-component.spec.md', dest: 'docs/requirements/_capabilities/ui-component-management.spec.md' }
   ],
   'mobile-app': [
-    { src: 'docs/templates/shared/component-registry.md', dest: 'docs/ui/component-registry.md' },
-    { src: 'docs/templates/shared/capability-ui-component.spec.md', dest: 'docs/_capabilities/ui-component-management.spec.md' }
+    { src: 'docs/requirements/templates/shared/component-registry.md', dest: 'docs/ui/component-registry.md' },
+    { src: 'docs/requirements/templates/shared/capability-ui-component.spec.md', dest: 'docs/requirements/_capabilities/ui-component-management.spec.md' }
   ],
   'backend': []
 };
 
 const CLAUDE_RULES = {
-  'web-app': 'docs/templates/web-app/CLAUDE.md',
-  'mobile-app': 'docs/templates/mobile-app/CLAUDE.md',
+  'web-app': 'docs/requirements/templates/web-app/CLAUDE.md',
+  'mobile-app': 'docs/requirements/templates/mobile-app/CLAUDE.md',
   'backend': null
 };
 
@@ -327,12 +327,12 @@ async function copyToolFiles(config) {
   }
 
   // 3. Copy project-type specific templates
-  log(`  复制 docs/templates/${config.projectType}/...`);
-  const templatesSrc = path.join(SOLODEVFLOW_ROOT, 'docs/templates', config.projectType);
-  const templatesDest = path.join(targetPath, 'docs/templates');
+  log(`  复制 docs/requirements/templates/${config.projectType}/...`);
+  const templatesSrc = path.join(SOLODEVFLOW_ROOT, 'docs/requirements/templates', config.projectType);
+  const templatesDest = path.join(targetPath, 'docs/requirements/templates');
   if (fs.existsSync(templatesSrc)) {
     copyDir(templatesSrc, templatesDest);
-    log(`    docs/templates/`, 'success');
+    log(`    docs/requirements/templates/`, 'success');
   }
 
   // 4. Copy scripts (if not skipped)
@@ -407,7 +407,14 @@ async function generateConfig(config) {
   log('    CLAUDE.md', 'success');
 
   // 3. Create empty docs directories (if not exists)
-  const docsDirs = ['docs/_features', 'docs/_capabilities', 'docs/_flows'];
+  const docsDirs = [
+    'docs/requirements/_features',
+    'docs/requirements/_capabilities',
+    'docs/requirements/_flows',
+    'docs/designs/_features',
+    'docs/designs/_capabilities',
+    'docs/designs/_flows'
+  ];
   for (const dir of docsDirs) {
     ensureDir(path.join(targetPath, dir));
   }

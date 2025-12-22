@@ -16,9 +16,9 @@
 
 ### 步骤1: 加载规范和模板
 
-1. 规范文档：`{sourcePath}/docs/specs/requirements-doc.spec.md`
-2. Capability 模板：`docs/templates/{projectType}/capability.spec.md`
-3. 现有 Capability Spec：`docs/_capabilities/{name}.spec.md`（如存在）
+1. 规范文档：`{sourcePath}/docs/requirements/specs/requirements-doc.spec.md`
+2. Capability 模板：`docs/requirements/templates/{projectType}/capability.spec.md`
+3. 现有 Capability Spec：`docs/requirements/_capabilities/{name}.spec.md`（如存在）
 
 **注意**: 规范文档来自 SoloDevFlow 源目录，为只读文件。
 
@@ -26,14 +26,14 @@
 
 ### 2. 前置检查
 
-1. 检测 `docs/_capabilities/{name}.spec.md` 是否存在
+1. 检测 `docs/requirements/_capabilities/{name}.spec.md` 是否存在
 2. 读取规范文档，了解 Capability Spec 结构要求（Section 6）
 
 **如果不存在（新建模式）**：
 3. 读取 Capability 模板，作为文档骨架
 4. 根据用户提供的能力信息，填充模板内容
 5. 按模板中的锚点要求添加锚点（替换 `{name}` 为实际能力名）
-6. 输出到 `docs/_capabilities/{name}.spec.md`
+6. 输出到 `docs/requirements/_capabilities/{name}.spec.md`
 
 **如果存在（更新模式）**：
 3. 读取现有 Capability Spec 内容
@@ -43,7 +43,7 @@
 7. 输出更新后的文件
 
 **最后**：
-- 运行校验：`npm run validate:docs docs/_capabilities/{name}.spec.md`，确保符合规范
+- 运行校验：`npm run validate:docs docs/requirements/_capabilities/{name}.spec.md`，确保符合规范
 
 ## 创建时机
 
