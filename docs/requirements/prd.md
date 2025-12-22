@@ -1,6 +1,6 @@
 ---
 type: backend
-template: docs/templates/backend/prd
+template: .solodevflow/templates/backend/backend/prd.md
 version: "2.4"
 ---
 
@@ -80,14 +80,10 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 | 组成部分 | 说明 |
 |----------|------|
 | **规范文档** | 定义需求、设计、开发、测试的文档结构和编写标准 |
-| **协作流程** | 定义人机协作的阶段、状态管理、输入捕获机制 |
+| **协作流程** | 定义人机协作的工作流、状态管理、输入捕获机制 |
 | **辅助工具** | 状态查看、格式校验、自动化脚本 |
 | **智能技能** | Claude 自动触发的智能助手（需求专家等） |
 
-**核心工作流**：
-```
-人类描述需求 → AI 结构化为文档 → 人类审核 → AI 执行实现 → 人类验收
-```
 
 ### 3.2 Domain Structure
 
@@ -95,14 +91,14 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 |--------|------|--------------|
 | **specification** | 规范文档（元规范/需求/设计/开发/测试） | 5 |
 | **process** | 协作流程（核心流程/状态管理/输入捕获/灵光收集/影响追踪） | 5 |
-| **tooling** | 独立工具（项目初始化/分发安装） | 1 |
+| **tooling** | 独立工具（项目初始化/分发安装/自我升级） | 1 |
 | **ai-config** | AI 协作配置（CLAUDE.md/命令/技能） | 3 |
 
 ---
 
 ## 4. Feature Roadmap <!-- id: prod_roadmap -->
 
-> Feature 状态由 state.json 统一管理，PRD 不记录状态。Feature 之间的依赖关系定义在各 Feature Spec 的 Dependencies 章节，参见 [requirements-doc.spec.md](./specs/requirements-doc.spec.md#spec_req_optional_sections)。
+> Feature 状态由 state.json 统一管理，PRD 不记录状态。Feature 之间的依赖关系定义在各 Feature 的 Dependencies 章节.
 
 ### 4.1 Domain: specification <!-- id: domain_specification -->
 

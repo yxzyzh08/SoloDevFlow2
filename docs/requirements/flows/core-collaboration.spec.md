@@ -7,7 +7,7 @@ version: "3.0"
 
 > 人机协作的核心流程，定义 AI 如何响应用户输入并维护状态
 
-**执行规范**：[.solodevflow/flows/core-collaboration.md](../../../.solodevflow/flows/core-collaboration.md)
+**执行规范**：[.solodevflow/flows/core-collaboration.md](../../../.solodevflow/flows/workflows.md)
 
 ---
 

@@ -1,0 +1,729 @@
+# Meta-Spec v2.0 <!-- 元规范 -->
+
+> 定义文档系统的基础规则，是验证系统的"宪法层"
+
+---
+
+**重要声明**：
+
+- 此文档是验证系统的"根"，**不被程序验证**
+- 变更此文档需同步更新 `scripts/validate-docs.js`
+- 变更历史通过 Git 追踪
+- **版本 v2.0**：重构文档架构，明确需求→设计→开发→测试的完整流转
+
+---
+
+## 1. Document System Overview <!-- id: meta_overview -->
+
+### 1.1 Documentation Philosophy
+
+文档系统遵循**研发全生命周期**原则：
+
+```
+需求阶段 → 设计阶段 → 开发阶段 → 测试阶段
+    ↓          ↓          ↓          ↓
+   需求文档   设计文档    代码+规范   测试文档
+```
+
+### 1.2 Document Lifecycle
+
+| 阶段 | 产出 | 受众 |
+|------|------|------|
+| **需求** | PRD, Feature Spec, Capability Spec, Flow Spec | 产品、设计、研发 |
+| **设计** | Design Doc（架构、接口、功能、数据模型） | 研发、测试 |
+| **开发** | 代码 + 单元测试 + 集成测试 + 开发规范 | 研发 |
+| **测试** | E2E 测试文档 + 性能测试 + 破坏性测试 | 测试、研发 |
+| **规范** | 元规范 + 各阶段规范文档 | AI + 人类 |
+
+---
+
+## 2. Document Types <!-- id: meta_types -->
+
+**元规范的职责**：
+- 定义文档类型（Type）及其对应的验证规范文档
+- **不定义具体的章节结构**（章节号、章节名称等由各规范文档自行定义）
+- 例如：元规范规定 `prd` 由 `spec-requirements-doc.md` 验证，但 PRD 的具体章节由 `spec-requirements-doc.md` 定义
+
+### 2.1 Requirements Documents （需求文档）
+
+| Type | 说明 | 独立性 | 验证规则来源 |
+|------|------|--------|--------------|
+| `prd` | 产品需求文档（Product Requirements Document） | 必须独立 | spec-requirements-doc.md |
+| `feature` | 功能文档（可独立验收的功能） | 视复杂度 | spec-requirements-doc.md |
+| `capability` | 横向能力文档（非业务需求，基础能力） | 视复杂度 | spec-requirements-doc.md |
+| `flow` | 跨域流程（跨 Domain/Feature 的业务流程） | 视复杂度 | spec-requirements-doc.md |
+
+**独立性说明**：
+- **简单场景**：Feature/Capability/Flow 仅在 PRD 中描述（作为章节）
+- **复杂场景**：需要详细 Design 文档时，独立成文档
+- **判断标准**：是否需要详细设计文档、是否跨产品复用、章节内容是否超过500行
+
+### 2.2 Design Documents （设计文档）
+
+| Type | 说明 | 输入来源 | 验证规则来源 |
+|------|------|----------|--------------|
+| `design` | 技术设计文档（架构、接口、功能、数据模型） | PRD + Feature/Capability/Flow | spec-design-doc.md |
+
+**设计文档必须声明输入来源**（使用文档引用语法）：
+```markdown
+## Input Requirements <!-- id: design_input -->
+
+本设计基于以下需求：
+- [PRD - 用户登录模块](docs/requirements/prd.md#feat_login)
+- [Feature - 认证能力](docs/requirements/capabilities/fea-auth.md#cap_auth_intent)
+```
+
+### 2.3 Test Documents （测试文档）
+
+| Type | 说明 | 范围 | 验证规则来源 |
+|------|------|------|--------------|
+| `test-e2e` | 端到端测试文档 | 用户场景测试 | spec-test-doc.md |
+| `test-performance` | 性能测试文档 | 性能基准、压测 | spec-test-doc.md |
+| `test-destructive` | 破坏性测试文档 | 容错、灾难恢复 | spec-test-doc.md |
+
+**测试粒度**：
+- **代码级测试**：单元测试、集成测试（在代码中，不单独成文档）
+- **系统级测试**：E2E、性能、破坏性测试（独立测试文档）
+
+### 2.4 Specification Documents （规范文档）
+
+| Type | 说明 | 作用域 | 验证规则来源 |
+|------|------|--------|--------------|
+| `meta-spec` | 元规范（本文档） | 整个文档系统 | 不被验证（定义者） |
+| `requirements-doc-spec` | 需求文档规范 | 所有需求文档 | spec-meta.md |
+| `design-doc-spec` | 设计文档规范 | 所有设计文档 | spec-meta.md |
+| `test-doc-spec` | 测试文档规范 | 所有测试文档 | spec-meta.md |
+| `backend-dev-spec` | 后端开发规范 | 后端代码 | spec-meta.md |
+| `frontend-dev-spec` | 前端开发规范 | 前端代码 | spec-meta.md |
+
+**规范文档层级**：
+- `spec-meta.md`（宪法级）定义规范文档的格式和验证规则
+- 各专项规范遵循 `meta-spec` 定义的格式
+
+**开发规范包含**：
+- 代码风格和命名约定（Linting 规则）
+- 架构模式和设计模式
+- 目录结构和模块组织
+- 错误处理和日志规范
+- 安全和性能最佳实践
+
+---
+
+## 3. Document Identity <!-- id: meta_identity -->
+
+每个文档必须能被系统识别其类型。
+
+### 3.1 Frontmatter
+
+所有文档必须包含 YAML frontmatter：
+
+```yaml
+---
+type: {doc_type}
+version: {version}
+# 可选字段
+inputs: [path/to/doc.md#anchor]  # Design 文档必填
+---
+```
+
+| 字段 | 必填 | 适用文档 | 说明 |
+|------|------|----------|------|
+| `type` | 是 | 所有文档 | 文档类型标识 |
+| `version` | 是 | 所有文档 | 文档版本号 |
+| `inputs` | 设计文档必填 | design-doc | 输入来源（需求文档引用） |
+
+### 3.2 Document Reference Syntax
+
+文档之间使用锚点引用建立关联：
+
+```markdown
+[显示文本](相对路径#anchor_id)
+```
+
+**示例**：
+```markdown
+本设计基于 [PRD - 用户管理模块](docs/requirements/prd.md#domain_user_management)
+```
+
+---
+
+## 4. Document Structure <!-- id: meta_structure -->
+
+### 4.1 Domain Concept
+
+**Domain 不是文档类型**，而是 PRD 中的**目录组织方式**：
+
+```markdown
+## Domain: User Management <!-- id: domain_user_management -->
+
+### Feature: User Registration <!-- id: feat_user_registration -->
+### Feature: User Login <!-- id: feat_user_login -->
+```
+
+**Domain 的作用**：
+- 在 PRD 中对相关 Feature 进行分组
+- 提供业务领域的视角（如 `user-management`、`payment`）
+- 不影响文件系统目录结构
+
+### 4.2 Feature & Capability Flexibility
+
+Feature 和 Capability 有两种存在形式：
+
+| 场景 | 位置 | 文件 |
+|------|------|------|
+| **简单** | 在 PRD 中 | `docs/requirements/prd.md` 的某个章节 |
+| **复杂** | 独立文档 | `docs/requirements/features/{name}.md` 或 `docs/requirements/capabilities/{name}.md` |
+
+**独立标准**：需要详细 Design 文档的 Feature/Capability 应独立成文档。
+
+### 4.3 Flow Specification
+
+Flow（跨域流程）可以：
+- 在 PRD 中作为章节描述
+- 独立成文档（`docs/requirements/flows/{name}.md`）
+
+---
+
+## 5. Directory Structure <!-- id: meta_directory -->
+
+### 5.1 Directory Principles
+
+| 目录 | 用途 | 受众 |
+|------|------|------|
+| `docs/requirements/` | 需求文档（PRD, Feature, Capability, Flow） | 产品、设计、研发 |
+| `docs/designs/` | 设计文档（架构、接口、功能、数据模型） | 研发、测试 |
+| `docs/tests/` | 测试文档（E2E、性能、破坏性） | 测试、研发 |
+| `docs/specs/` | 规范文档（meta-spec, *-spec.md） | AI + 人类 |
+| `src/` | 源代码 + 单元测试 + 集成测试 | 研发 |
+| `scripts/` | 自动化脚本 | 开发者 / CI |
+| `.solodevflow/` | 运行时状态 + Flow 执行规范 | AI 执行 |
+| `.claude/` | Claude CLI 配置（commands, skills） | Claude CLI |
+
+### 5.2 Requirements Directory
+
+```
+docs/requirements/
+├── prd.md                    # 产品需求文档（必须，固定名称）
+├── features/                 # 独立 Feature（复杂场景）
+│   ├── fea-user-login.md     # Feature 文档使用 fea- 前缀
+│   └── fea-payment-gateway.md
+├── capabilities/             # 横向能力 Capability（复杂场景）
+│   ├── cap-auth.md           # Capability 文档使用 cap- 前缀
+│   └── cap-logging.md
+└── flows/                    # 跨域流程 Flow（复杂场景）
+    └── flow-order-fulfillment.md  # Flow 文档使用 flow- 前缀
+```
+
+### 5.3 Design Directory
+
+**设计文档组织原则**：
+- **按技术架构组织**，而不是镜像需求文档结构
+- **通过 `inputs` 字段关联需求**，而不是通过目录结构
+- **命名反映设计内容**，而不是需求名称
+- **粒度由技术需要决定**，可以是系统级、模块级、组件级
+
+**组织方式示例**：
+
+```
+docs/designs/
+├── des-system-architecture.md    # 系统级架构设计
+│                                  # inputs: [prd.md#prod_architecture]
+│
+├── user-module/                   # 按模块组织
+│   ├── des-architecture.md        # 用户模块架构
+│   │                              # inputs: [fea-login.md, fea-register.md]
+│   ├── des-api.md                 # 用户模块 API
+│   └── des-data-model.md          # 用户数据模型
+│
+├── payment-module/                # 按模块组织
+│   ├── des-architecture.md        # 支付模块架构
+│   │                              # inputs: [fea-checkout.md, fea-refund.md]
+│   └── des-payment-gateway.md     # 支付网关设计
+│
+├── des-auth-capability.md         # 横向能力设计
+│                                  # inputs: [cap-auth.md]
+│
+└── des-order-fulfillment-flow.md  # 流程设计
+                                   # inputs: [flow-order-fulfillment.md]
+```
+
+**多对多关系**：
+- **一个 Feature → 多个 Design**：大型 Feature 可能需要架构、API、数据模型等多个设计文档
+- **多个 Feature → 一个 Design**：相关的小 Feature 可能共享一个模块设计文档
+- **一个 Design → 多个 Feature**：一个设计文档可能服务于多个需求
+
+**命名规范**：
+- 系统级：`des-{descriptive-name}.md`（如 `des-system-architecture.md`）
+- 模块级：`{module}/des-{aspect}.md`（如 `user-module/des-api.md`）
+- 自由命名：反映设计的实际内容，不必与需求文档名称对应
+
+### 5.4 Test Directory
+
+```
+docs/tests/
+├── e2e/                      # E2E 测试文档
+│   ├── test-user-flows.md    # 测试文档使用 test- 前缀
+│   └── test-checkout-process.md
+├── performance/              # 性能测试文档
+│   └── test-load-testing.md
+└── destructive/              # 破坏性测试文档
+    └── test-disaster-recovery.md
+```
+
+### 5.5 Specs Directory
+
+```
+docs/specs/
+├── spec-meta.md              # 元规范（本文档），规范文档使用 spec- 前缀
+├── spec-requirements-doc.md  # 需求文档规范
+├── spec-design-doc.md        # 设计文档规范
+├── spec-test-doc.md          # 测试文档规范
+├── spec-backend-dev.md       # 后端开发规范
+└── spec-frontend-dev.md      # 前端开发规范
+```
+
+### 5.6 Document Naming Convention <!-- id: meta_naming -->
+
+文档命名使用**前缀标识**文档类型，不使用 `.spec` 或 `.doc` 后缀。
+
+#### 5.6.1 Naming Rules
+
+| 文档类型 | 前缀 | 格式 | 示例 |
+|---------|------|------|------|
+| **PRD** | 无 | `prd.md` | `prd.md`（固定名称） |
+| **Feature** | `fea-` | `fea-{name}.md` | `fea-user-login.md` |
+| **Capability** | `cap-` | `cap-{name}.md` | `cap-auth.md` |
+| **Flow** | `flow-` | `flow-{name}.md` | `flow-order-fulfillment.md` |
+| **Design** | `des-` | `des-{descriptive-name}.md` | `des-system-architecture.md` |
+| **Test** | `test-` | `test-{name}.md` | `test-user-flows.md` |
+| **Spec** | `spec-` | `spec-{name}.md` | `spec-meta.md` |
+
+**命名规则**：
+- `{name}` 使用 **kebab-case**（全小写，连字符分隔）
+- **不使用** `.spec`、`.doc`、`.design` 等后缀
+- **Feature**（纵向功能）：`fea-` 前缀
+- **Capability**（横向能力）：`cap-` 前缀
+- **Flow**（跨域流程）：`flow-` 前缀
+- **Design**（设计文档）：`des-` 前缀，命名反映设计内容而非需求名称
+- **Test**（测试文档）：`test-` 前缀
+- **Spec**（规范文档）：`spec-` 前缀
+- 文档类型通过前缀标识，与目录位置无关
+
+#### 5.6.2 Requirements-Design Relationship
+
+需求文档与设计文档**不是一对一关系**，通过 **`inputs` 字段**建立关联：
+
+```yaml
+# 设计文档的 frontmatter
+---
+type: design
+version: 1.0
+inputs:
+  - ../../requirements/features/fea-user-login.md#feat_login_intent
+  - ../../requirements/features/fea-user-register.md#feat_register_intent
+  - ../../requirements/capabilities/cap-auth.md#cap_auth_intent
+---
+```
+
+**关系示例**：
+
+```
+# 一个 Feature → 多个 Design
+docs/requirements/features/fea-payment.md
+  → docs/designs/payment-module/des-architecture.md
+  → docs/designs/payment-module/des-api.md
+  → docs/designs/payment-module/des-data-model.md
+
+# 多个 Feature → 一个 Design
+docs/requirements/features/fea-user-login.md  ┐
+docs/requirements/features/fea-user-register.md├→ docs/designs/user-module/des-architecture.md
+docs/requirements/capabilities/cap-auth.md    ┘
+
+# 一个 Design → 多个 Feature
+docs/designs/des-system-architecture.md
+  ← fea-api-gateway.md
+  ← fea-service-mesh.md
+  ← cap-logging.md
+```
+
+测试文档也通过 `inputs` 或引用关联设计：
+
+```
+docs/designs/user-module/des-api.md        # 设计
+docs/tests/e2e/test-user-api.md             # 测试（在文档中引用设计）
+```
+
+#### 5.6.3 Cross-Reference Syntax
+
+文档引用使用相对路径：
+
+```markdown
+# 引用需求文档
+[Feature 需求](../../requirements/features/fea-user-login.md#feat_login_intent)
+[Capability 需求](../../requirements/capabilities/cap-auth.md#cap_auth_intent)
+[Flow 需求](../../requirements/flows/flow-order-fulfillment.md#flow_order_steps)
+
+# 引用设计文档（按实际路径）
+[系统架构设计](../../designs/des-system-architecture.md#design_overview)
+[用户模块 API](../../designs/user-module/des-api.md#api_endpoints)
+[支付网关设计](../../designs/payment-module/des-payment-gateway.md#gateway_integration)
+
+# 引用测试文档
+[E2E 测试](../../tests/e2e/test-user-flows.md#test_scenarios)
+[性能测试](../../tests/performance/test-load-testing.md#test_baseline)
+```
+
+#### 5.6.4 Directory Naming
+
+**需求文档目录**：
+- Domain 目录使用 kebab-case，不加前缀
+- 反映业务领域的组织方式
+
+```
+docs/requirements/user-management/        # Domain 目录（业务领域）
+docs/requirements/user-management/fea-login.md
+docs/requirements/user-management/fea-register.md
+```
+
+**设计文档目录**：
+- 按技术模块组织，使用 kebab-case，不加前缀
+- 反映技术架构的组织方式，不必与需求目录对应
+
+```
+docs/designs/user-module/                 # 技术模块（不一定对应 Domain）
+docs/designs/user-module/des-architecture.md
+docs/designs/user-module/des-api.md
+docs/designs/user-module/des-data-model.md
+```
+
+#### 5.6.5 Terminology Clarification
+
+| 中文术语 | 英文术语 | 缩写 | 说明 |
+|---------|---------|------|------|
+| 功能 | Feature | `fea` | 纵向业务功能，可独立验收 |
+| 横向能力 | Capability | `cap` | 跨 Feature 的公共能力（日志、权限、缓存等） |
+| 跨域流程 | Flow | `flow` | 跨多个 Domain/Feature 的业务流程 |
+| 设计文档 | Design | `des` | 技术设计文档 |
+| 测试文档 | Test | `test` | 系统级测试文档 |
+| 规范文档 | Specification | `spec` | 元规范和各类规范文档 |
+
+**关键区别**：
+- **Feature**（纵向）：独立的业务功能单元，如"用户登录"、"订单支付"
+- **Capability**（横向）：跨功能的公共能力层，如"日志系统"、"权限管理"、"缓存"
+- **Flow**（横向）：跨域的业务流程编排，如"订单处理流程"、"用户注册流程"
+
+**Capability 的英文术语**：
+- ✅ **Capability** - 能力（当前使用）
+- 也称 **Cross-cutting Concern** - 横切关注点（软件工程术语）
+- 或 **Aspect** - 切面（面向切面编程中的概念）
+
+---
+
+## 6. Anchor Format <!-- id: meta_anchor -->
+
+锚点用于文档内定位和跨文档引用。
+
+### 6.1 Format
+
+```markdown
+## Section Title <!-- id: {identifier} -->
+```
+
+### 6.2 Rules
+
+| 规则 | 说明 |
+|------|------|
+| 格式 | `<!-- id: {identifier} -->` |
+| 标识符 | `[a-z][a-z0-9_]*`（小写字母开头，只含小写字母、数字、下划线） |
+| 唯一性 | 文档内唯一 |
+| 引用格式 | `相对路径#锚点` 或 `绝对路径#锚点` |
+
+### 6.3 Naming Conventions
+
+| 前缀 | 用途 | 示例 |
+|------|------|------|
+| `prod_` | PRD 相关章节 | `prod_vision`, `prod_users` |
+| `domain_` | Domain 章节 | `domain_user_management` |
+| `feat_` | Feature 章节 | `feat_login_intent`, `feat_login_acceptance` |
+| `cap_` | Capability 章节 | `cap_auth_intent` |
+| `flow_` | Flow 章节 | `flow_checkout_steps` |
+| `design_` | Design 章节 | `design_architecture`, `design_api` |
+| `test_` | Test 章节 | `test_e2e_scenarios` |
+| `meta_` | Meta-spec 章节 | `meta_identity`, `meta_anchor` |
+
+---
+
+## 7. Specification Mapping <!-- id: meta_mapping -->
+
+规范文档如何声明它定义了哪种文档的结构。
+
+**重要原则**：
+- 元规范（本文档）只定义**由哪个规范文档负责验证某类文档**
+- 元规范**不预先规定具体的章节结构**（章节号、章节名称等）
+- 具体的章节结构由各专项规范文档自行定义
+
+**示例**：
+- 元规范规定：`prd` 类型文档由 `spec-requirements-doc.md` 验证
+- `spec-requirements-doc.md` 自行定义：PRD 必须包含哪些章节（如 Product Vision、Target Users 等）
+
+### 7.1 Declaration Format
+
+规范文档使用特殊注释声明它定义的文档类型：
+
+```markdown
+## Section Title <!-- defines: {doc_type} -->
+```
+
+**示例**：
+```markdown
+## 3. PRD Structure <!-- defines: prd -->
+```
+
+表示此章节定义了 `type=prd` 文档的结构要求。
+
+### 7.2 Structure Definition Table
+
+声明后必须包含结构定义表格：
+
+| 列名 | 必填 | 说明 |
+|------|------|------|
+| Section | 是 | 章节名称 |
+| Anchor | 是 | 锚点标识（支持 `{name}` 变量） |
+| Required | 是 | 是否必填（Yes/No） |
+| Description | 否 | 章节描述 |
+
+**示例**：
+```markdown
+## 3. PRD Structure <!-- defines: prd -->
+
+| Section | Required | Anchor | Description |
+|---------|----------|--------|-------------|
+| Product Vision | Yes | `prod_vision` | 产品愿景和目标 |
+| Target Users | Yes | `prod_users` | 目标用户画像 |
+| Domains | No | `domain_{name}` | 业务领域分组 |
+```
+
+### 7.3 Anchor Variables
+
+锚点中可使用变量，验证时替换为实际值：
+
+| 变量 | 说明 | 示例 |
+|------|------|------|
+| `{name}` | 文档名称（从文件名推断） | `feat_{name}_intent` → `feat_login_intent` |
+| `{domain}` | Domain 名称 | `domain_{domain}` → `domain_user_management` |
+
+---
+
+## 8. Validation Behavior <!-- id: meta_validation -->
+
+验证器的行为规则。
+
+### 8.1 Validation Scope
+
+| 文档类型 | 验证行为 |
+|----------|----------|
+| `type: meta-spec` | 不验证结构（元规范是根） |
+| `type: *-spec` | 不验证结构（规范文档是定义者） |
+| 其他类型 | 按对应规范验证 |
+
+### 8.2 Validation Process
+
+```
+1. 读取文档 frontmatter.type
+2. 在规范文档中查找 <!-- defines: {type} --> 声明
+3. 解析结构定义表格
+4. 验证文档是否符合定义
+5. 检查锚点格式和唯一性
+6. 验证文档引用的有效性（如 Design 文档的 inputs）
+7. 输出验证结果
+```
+
+### 8.3 Error Levels
+
+| Level | 说明 | 示例 |
+|-------|------|------|
+| ERROR | 必须修复 | 缺少必填章节、frontmatter 格式错误 |
+| WARNING | 建议修复 | 锚点格式不规范、引用路径不存在 |
+| INFO | 仅提示 | 可选章节缺失、文档建议 |
+
+---
+
+## 9. Document Flow <!-- id: meta_flow -->
+
+文档在研发全生命周期中的流转关系。
+
+### 9.1 Input-Output Relationship
+
+```
+PRD (产品需求)
+  ├─ Feature (简单) → 直接在 PRD 中
+  ├─ Feature (复杂) → features/fea-{name}.md
+  ├─ Capability (简单) → 直接在 PRD 中
+  ├─ Capability (复杂) → capabilities/cap-{name}.md
+  └─ Flow (简单/复杂) → 直接在 PRD 或 flows/flow-{name}.md
+
+            ↓ (需求明确)
+
+Design Doc (设计文档)
+  - 按技术架构组织，不镜像需求结构
+  - 文件名：des-{descriptive-name}.md（反映设计内容）
+  - 声明 inputs: [需求文档的锚点引用]
+  - 多对多关系：
+    * 一个需求可能对应多个设计文档
+    * 多个需求可能对应一个设计文档
+  - 包含：架构设计、接口设计、功能设计、数据模型设计
+
+            ↓ (设计完成)
+
+Development (开发)
+  - 代码实现（src/）
+  - 单元测试（与代码同目录）
+  - 集成测试（tests/ 或与代码同目录）
+  - 遵循：spec-backend-dev.md 或 spec-frontend-dev.md
+
+            ↓ (开发完成)
+
+Test Documents (测试文档)
+  - 文件名：test-{name}.md
+  - E2E 测试文档（docs/tests/e2e/）
+  - 性能测试文档（docs/tests/performance/）
+  - 破坏性测试文档（docs/tests/destructive/）
+  - 遵循：spec-test-doc.md
+```
+
+### 9.2 Cross-Reference Rules
+
+1. **Design 必须引用需求来源**：
+   ```yaml
+   ---
+   type: design
+   version: 1.0
+   inputs:
+     - ../../requirements/prd.md#feat_login
+     - ../../requirements/capabilities/cap-auth.md#cap_auth_intent
+   ---
+   ```
+
+2. **Test 可以引用 Design**：
+   ```markdown
+   ## Test Basis <!-- id: test_basis -->
+
+   本测试基于 [用户模块 API 设计](../../designs/user-module/des-api.md#design_architecture)
+   ```
+
+3. **引用必须使用相对路径**（便于目录迁移）
+
+---
+
+## 10. Change Management <!-- id: meta_change -->
+
+元规范变更是"宪法级"事件。
+
+### 10.1 Change Criteria
+
+元规范应极少变更，仅在以下情况考虑：
+- 发现根本性设计缺陷
+- 需要支持全新的文档类型
+- 需要支持全新的研发流程阶段
+- 外部依赖变化（如 Markdown 规范变更）
+
+### 10.2 Change Process
+
+1. 在 `.solodevflow/input-log.md` 记录变更原因
+2. 评估对整个文档系统的影响
+3. 更新 `meta-spec.md`（递增主版本号）
+4. 同步更新 `scripts/validate-docs.js`
+5. 更新所有受影响的规范文档（`*-spec.md`）
+6. 更新所有受影响的业务文档
+7. 人类审核确认
+8. Git 提交并标记版本
+
+### 10.3 Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| v1.0 | 2024-12-21 | 初始版本（需求文档系统） |
+| v2.0 | 2025-12-22 | 重构：增加设计、开发、测试文档；明确文档流转关系 |
+
+---
+
+## 11. Implementation <!-- id: meta_impl -->
+
+元规范的代码实现。
+
+### 11.1 Validation Scripts
+
+| 文件 | 用途 |
+|------|------|
+| `scripts/validate-docs.js` | 文档结构验证器（遵循本规范） |
+| `scripts/validate-state.js` | 状态文件验证器（`.solodevflow/state.json`） |
+| `scripts/validate-refs.js` | 文档引用完整性检查 |
+
+### 11.2 Specification Documents
+
+| 文件 | 定义的文档类型 |
+|------|---------------|
+| `docs/specs/spec-requirements-doc.md` | `prd`, `feature`, `capability`, `flow` |
+| `docs/specs/spec-design-doc.md` | `design` |
+| `docs/specs/spec-test-doc.md` | `test-e2e`, `test-performance`, `test-destructive` |
+| `docs/specs/spec-backend-dev.md` | 后端代码规范（不验证代码，仅指导开发） |
+| `docs/specs/spec-frontend-dev.md` | 前端代码规范（不验证代码，仅指导开发） |
+
+---
+
+## 12. Migration Guide <!-- id: meta_migration -->
+
+从 v1.0 迁移到 v2.0 的指导。
+
+### 12.1 Breaking Changes
+
+| v1.0 | v2.0 | 迁移操作 |
+|------|------|----------|
+| `domain-spec` | Domain 只在 PRD 中 | 将 domain-spec 合并到 prd.md |
+| `docs/` 混合目录 | `docs/requirements/`, `docs/designs/`, `docs/tests/` | 按类型重新组织文档 |
+| 无 Design 文档 | `design` | 按技术架构组织创建 Design 文档 |
+| 无测试文档 | `test-e2e`, `test-performance`, `test-destructive` | 创建系统级测试文档 |
+| 无开发规范 | `backend-dev-spec`, `frontend-dev-spec` | 创建开发规范文档 |
+| Feature 镜像设计 | 自由组织设计 | 设计文档不再镜像需求结构，按技术架构组织 |
+
+### 12.2 Migration Steps
+
+1. **备份现有文档**
+2. **创建新目录结构**：
+   ```bash
+   mkdir -p docs/requirements/{features,capabilities,flows}
+   mkdir -p docs/designs                    # 设计文档按技术架构自由组织
+   mkdir -p docs/tests/{e2e,performance,destructive}
+   mkdir -p docs/specs
+   ```
+3. **重命名规范文档**（使用 spec- 前缀）：
+   ```bash
+   mv docs/specs/meta-spec.md docs/specs/spec-meta.md
+   mv docs/specs/requirements-doc.spec.md docs/specs/spec-requirements-doc.md
+   mv docs/specs/design-doc-spec.md docs/specs/spec-design-doc.md
+   ```
+4. **迁移 PRD**：移除 domain-spec，Domain 作为章节
+5. **迁移 Feature/Capability/Flow**：
+   - 复杂的独立成文档
+   - Feature：重命名为 `fea-{name}.md`（去掉 .spec 后缀）
+   - Capability：重命名为 `cap-{name}.md`（去掉 .spec 后缀）
+   - Flow：重命名为 `flow-{name}.md`（去掉 .spec 后缀）
+6. **创建 Design 文档**：
+   - 按技术架构组织，不镜像需求结构
+   - 命名反映设计内容：`des-{descriptive-name}.md`
+   - 通过 frontmatter 的 `inputs` 字段关联需求文档
+   - 可按模块组织目录（如 `user-module/des-api.md`）
+7. **创建测试文档**：
+   - 为系统级测试创建文档
+   - 命名为 `test-{name}.md`
+8. **创建开发规范**：编写 spec-backend-dev.md 和 spec-frontend-dev.md
+9. **更新验证脚本**：`scripts/validate-docs.js` 支持新文档类型和命名规则
+10. **验证**：`npm run validate:docs`
+
+---
+
+*Version: v2.0*
+*Created: 2024-12-21 (v1.0)*
+*Updated: 2025-12-22 (v2.0)*
+*Status: Draft (等待人类审核)*
+*Breaking Changes: Yes (完全重构文档架构)*
