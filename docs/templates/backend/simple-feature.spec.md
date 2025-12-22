@@ -3,7 +3,7 @@
 > {一句话功能描述}
 
 **Feature Type**: code | document
-**Design Depth**: L0 | L1（适用于简单 Feature，L2+ 请使用独立设计文档）
+**Design Depth**: none | required（适用于简单 Feature）
 
 ---
 
@@ -90,7 +90,7 @@
 
 | Type | Path | Required | Description |
 |------|------|----------|-------------|
-| Design | (内联于 Section 5) | L1 | 设计内容（对应 `artifacts.design`） |
+| Design | (内联于 Section 5) | required 时必填 | 设计内容（对应 `artifacts.design`） |
 | Code | src/{module}/ | Yes | 代码目录（对应 `artifacts.code[]`） |
 | Scripts | scripts/{name}.js | Optional | 脚本（document 类型用 `scripts` 字段） |
 | E2E Test | tests/e2e/{name}.test.ts | Yes | E2E 测试（对应 `artifacts.tests[]`） |
@@ -98,7 +98,7 @@
 **state.json 示例（code 类型）**：
 ```json
 {
-  "designDepth": "L1",
+  "designDepth": "none",
   "artifacts": {
     "design": null,
     "code": ["src/{module}/"],

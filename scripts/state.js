@@ -403,7 +403,7 @@ function addFeature(name, options) {
 
     // For code type, initialize designDepth and artifacts
     if (type === 'code') {
-      state.features[name].designDepth = options.designDepth || 'L1';
+      state.features[name].designDepth = options.designDepth || 'required';
       state.features[name].artifacts = {
         design: null,
         code: [],
@@ -634,7 +634,7 @@ function setArtifacts(featureName, options) {
 
     // Update designDepth if provided
     if (options.designDepth) {
-      const validDepths = ['L0', 'L1', 'L2', 'L3'];
+      const validDepths = ['none', 'required'];
       if (!validDepths.includes(options.designDepth)) {
         console.error(`Error: Invalid designDepth. Expected: ${validDepths.join(', ')}`);
         process.exit(1);
@@ -752,7 +752,7 @@ QUERY COMMANDS:
 UPDATE COMMANDS:
   update-feature <name> --phase <phase> [--status <status>]
   complete-feature <name>      Mark feature as done
-  add-feature <name> --domain <domain> [--type code|document] [--description ...] [--designDepth L0|L1|L2|L3]
+  add-feature <name> --domain <domain> [--type code|document] [--description ...] [--designDepth none|required]
   remove-feature <name>        Remove feature
   activate-feature <name>      Add to activeFeatures
   deactivate-feature <name>    Remove from activeFeatures
@@ -760,7 +760,7 @@ UPDATE COMMANDS:
   complete-subtask <feature> <subtask-id>
   add-domain <name> --description <desc>
   record-commit                Record latest git commit to metadata
-  set-artifacts <name> [--designDepth L0|L1|L2|L3] [--design <path>] [--code <paths>] [--tests <paths>]
+  set-artifacts <name> [--designDepth none|required] [--design <path>] [--code <paths>] [--tests <paths>]
 
 OPTIONS:
   --help                       Show this help
@@ -771,7 +771,7 @@ EXAMPLES:
   node scripts/state.js update-feature xxx --phase done --status completed
   node scripts/state.js complete-feature xxx
   node scripts/state.js add-subtask xxx --description "Check dependencies"
-  node scripts/state.js set-artifacts xxx --designDepth L1 --design "docs/xxx.design.md" --code "src/xxx.js" --tests "tests/xxx.test.ts"
+  node scripts/state.js set-artifacts xxx --designDepth required --design "docs/xxx.design.md" --code "src/xxx.js" --tests "tests/xxx.test.ts"
 `);
 }
 

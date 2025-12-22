@@ -165,17 +165,16 @@ target-project/
 
 | Type | Path | Required | Description |
 |------|------|----------|-------------|
-| Design | docs/tooling/project-init.design.md | L2 | 设计文档 |
+| Design | docs/tooling/project-init.design.md | required | 设计文档 |
 | Code | scripts/init.js | Yes | 初始化脚本 |
 | E2E Test | tests/e2e/project-init.test.js | Yes | E2E 测试 |
 
-**Design Depth**: L2
+**Design Depth**: required
 
-**L2 选择理由**：
+**选择理由**：
 - 涉及多文件操作（目录创建、文件复制）
 - 需要处理多种边界情况（文件已存在、权限问题）
 - 需要定义清晰的接口（CLI 参数、配置选项）
-- 预计实现周期 3-5 天
 
 ---
 

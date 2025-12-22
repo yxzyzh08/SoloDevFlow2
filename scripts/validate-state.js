@@ -2,7 +2,7 @@
 
 /**
  * state.json Validation Script
- * Validates state.json against v9.0 schema
+ * Validates state.json against v10.0 schema
  *
  * Usage: node scripts/validate-state.js
  */
@@ -13,7 +13,7 @@ const path = require('path');
 const STATE_FILE = path.join(__dirname, '..', '.flow', 'state.json');
 
 // Schema version
-const EXPECTED_SCHEMA_VERSION = "9.0.0";
+const EXPECTED_SCHEMA_VERSION = "10.0.0";
 
 // Enums
 const PROJECT_TYPES = ['web-app', 'cli-tool', 'backend', 'library', 'api-service', 'mobile-app'];
@@ -24,7 +24,7 @@ const DOCUMENT_PHASES = ['pending', 'drafting', 'done'];
 const FEATURE_STATUSES = ['not_started', 'in_progress', 'blocked', 'completed'];
 const SUBTASK_STATUSES = ['pending', 'in_progress', 'completed', 'skipped'];
 const SUBTASK_SOURCES = ['impact-analysis', 'user', 'ai'];
-const DESIGN_DEPTHS = ['L0', 'L1', 'L2', 'L3'];
+const DESIGN_DEPTHS = ['none', 'required'];
 
 let errors = [];
 let warnings = [];
@@ -202,8 +202,8 @@ function validateState(state) {
           const artifacts = feature.artifacts;
           const artifactsPath = `${featurePath}.artifacts`;
 
-          // design: required for L1+ or can be null for L0
-          if (feature.designDepth && feature.designDepth !== 'L0') {
+          // design: required when designDepth is 'required', can be null for 'none'
+          if (feature.designDepth && feature.designDepth === 'required') {
             if (!artifacts.design) {
               error(`${artifactsPath}.design is required when designDepth is ${feature.designDepth}`);
             } else if (typeof artifacts.design !== 'string') {

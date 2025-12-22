@@ -51,18 +51,16 @@
 
 ### 3. 确定设计深度
 
-根据功能复杂度选择设计深度：
+根据功能复杂度判断是否需要设计：
 
-| 级别 | 名称 | 适用场景 | 产出 |
-|------|------|----------|------|
-| L0 | 无设计 | 极简单，半天内完成 | **不创建设计文档** |
-| L1 | 轻量设计 | 简单功能、低风险 | Overview + Interface |
-| L2 | 标准设计 | 中等复杂度 | 完整必选章节 |
-| L3 | 详细设计 | 复杂、高风险 | 完整必选 + 可选章节 |
+| 级别 | 适用场景 | 产出 |
+|------|----------|------|
+| none | 简单、边界清晰、无架构决策 | **不创建设计文档** |
+| required | 需要架构决策、涉及多模块 | 设计文档（深度由设计规范指导） |
 
-**L0 处理**：
-- 如果 Feature Spec 中 Design Depth 为 L0，直接返回提示：
-  > "此 Feature 为 L0（无设计），无需创建设计文档。请直接进入实现阶段。"
+**none 处理**：
+- 如果 Feature Spec 中 Design Depth 为 none，直接返回提示：
+  > "此 Feature 为 none（无设计），无需创建设计文档。请直接进入实现阶段。"
 - 不创建 .design.md 文件
 
 **深度判断依据**（参考 design-doc-spec Section 2.2）：
@@ -78,10 +76,7 @@
 **如果不存在（新建模式）**：
 1. 读取设计模板
 2. 读取 Feature Spec，提取需求信息
-3. 根据设计深度，填充对应章节：
-   - L1：Overview + Interface Design
-   - L2：+ Technical Approach + Implementation Plan + Dependencies
-   - L3：+ Alternatives + Risks
+3. 根据功能复杂度填充对应章节（设计规范会指导深度）
 4. 替换模板中的 `{name}` 为实际功能名
 5. 输出到对应位置
 
@@ -99,20 +94,21 @@
 
 ## 设计深度与章节对照
 
-| 章节 | L1 | L2 | L3 |
-|------|:--:|:--:|:--:|
-| Overview | 必选 | 必选 | 必选 |
-| Technical Approach | - | 必选 | 必选 |
-| Interface Design | 必选 | 必选 | 必选 |
-| Implementation Plan | - | 必选 | 必选 |
-| Alternatives | - | - | 必选 |
-| Dependencies | - | 可选 | 必选 |
-| Risks | - | - | 必选 |
+设计深度现在只有 none/required 两个级别，具体包含哪些章节由设计规范指导：
+
+| 章节 | 说明 |
+|------|------|
+| Overview | 必选 |
+| Interface Design | 必选 |
+| Technical Approach | 复杂 Feature 包含 |
+| Implementation Plan | 复杂 Feature 包含 |
+| Dependencies | 有外部依赖时包含 |
+| Alternatives | 高风险 Feature 包含 |
+| Risks | 高风险 Feature 包含 |
 
 ## 注意事项
 
 - **必须先有 Feature Spec**，设计文档依赖需求定义
-- 避免过度设计：选择匹配复杂度的设计深度
-- L1 设计可随时升级为 L2/L3（需求变复杂时）
+- 避免过度设计：designDepth 为 none 时不创建设计文档
 - 更新时保留文档版本历史
 - 设计决策应记录理由，便于后续回顾

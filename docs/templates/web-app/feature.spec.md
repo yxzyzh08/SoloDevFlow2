@@ -56,16 +56,14 @@
 
 | Type | Path | Required | Description |
 |------|------|----------|-------------|
-| Design | docs/{domain}/{name}.design.md | L1+ | 设计文档 |
+| Design | docs/{domain}/{name}.design.md | required 时必填 | 设计文档 |
 | Code | src/{module}/ | Yes | 代码目录 |
 | E2E Test | tests/e2e/{name}.test.ts | Yes | E2E 测试 |
 
-**Design Depth**: L{0|1|2|3}
+**Design Depth**: none | required
 
-- L0: 无需设计文档，直接实现
-- L1: 轻量设计（Overview + Interface）
-- L2: 标准设计（+ Approach + Implementation）
-- L3: 详细设计（+ Alternatives + Risks）
+- none: 简单、边界清晰、无架构决策，无需设计文档
+- required: 需要架构决策、涉及多模块，需要设计文档（深度由设计规范指导）
 
 ---
 

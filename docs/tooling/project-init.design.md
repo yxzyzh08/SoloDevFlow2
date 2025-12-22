@@ -7,7 +7,7 @@ version: "1.0"
 
 > 设计一个初始化脚本，将 SoloDevFlow 安装到目标项目
 
-**Design Depth**: L2（标准设计）
+**Design Depth**: required
 
 ---
 

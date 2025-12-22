@@ -24,7 +24,7 @@
 
 ---
 
-<!-- L2/L3: 包含此章节 -->
+<!-- 可选：复杂 Feature 包含此章节 -->
 ## 2. Technical Approach <!-- id: design_{name}_approach -->
 
 ### 2.1 Architecture Decision
@@ -141,7 +141,7 @@ function doSomething(input: Input): Output {
 
 ---
 
-<!-- L2/L3: 包含此章节 -->
+<!-- 可选：复杂 Feature 包含此章节 -->
 ## 6. Implementation Plan <!-- id: design_{name}_impl -->
 
 ### 6.1 Steps
@@ -158,7 +158,7 @@ function doSomething(input: Input): Output {
 
 ---
 
-<!-- L3: 包含此章节 -->
+<!-- 可选：高风险 Feature 包含此章节 -->
 ## 7. Alternatives <!-- id: design_{name}_alternatives -->
 
 | 方案 | 优点 | 缺点 | 结论 |
@@ -168,7 +168,7 @@ function doSomething(input: Input): Output {
 
 ---
 
-<!-- L2/L3: 包含此章节 -->
+<!-- 可选：有外部依赖时包含此章节 -->
 ## 8. Dependencies <!-- id: design_{name}_dependencies -->
 
 | 依赖 | 类型 | 说明 |
@@ -177,7 +177,7 @@ function doSomething(input: Input): Output {
 
 ---
 
-<!-- L3: 包含此章节 -->
+<!-- 可选：高风险 Feature 包含此章节 -->
 ## 9. Risks <!-- id: design_{name}_risks -->
 
 | 风险 | 影响 | 缓解措施 |

@@ -3,7 +3,7 @@
 > {一句话功能描述}
 
 **Feature Type**: code | document
-**Design Depth**: L0 | L1（适用于简单 Feature，L2+ 请使用独立设计文档）
+**Design Depth**: none | required（适用于简单 Feature）
 
 ---
 
@@ -99,7 +99,7 @@
 
 | Type | Path | Required | Description |
 |------|------|----------|-------------|
-| Design | (内联于 Section 6) | L1 | 设计内容 |
+| Design | (内联于 Section 6) | required 时必填 | 设计内容 |
 | Code | src/{module}/ | Yes | 代码目录（code 类型） |
 | Scripts | scripts/{name}.js | Optional | 脚本（document 类型） |
 | E2E Test | tests/e2e/{name}.test.ts | Yes | E2E 测试（code 类型） |

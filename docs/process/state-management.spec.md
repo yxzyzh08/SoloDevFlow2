@@ -185,7 +185,7 @@ Feature 扁平化存储，key 为 Feature 名称。
 | `domain` | string\|null | 所属 Domain（null 表示独立 Feature） |
 | `docPath` | string\|null | 文档路径（直接定位 Feature 相关文档） |
 | `scripts` | string[] | （可选）脚本产物路径数组（仅 document 类型） |
-| `designDepth` | enum | （code 类型必填）设计深度：`L0` / `L1` / `L2` / `L3` |
+| `designDepth` | enum | （code 类型必填）设计深度：`none` / `required` |
 | `artifacts` | object | （code 类型必填）产物路径，用于影响分析和变更追踪 |
 | `subtasks` | array | （可选）子任务数组，用于跟踪细粒度工作项 |
 | `phase` | enum | Feature 阶段（根据类型不同） |
@@ -210,16 +210,14 @@ document 类型：`pending` → `drafting` → `done`
 }
 ```
 
-**features.{}.designDepth 说明**（v9.0 新增）：
+**features.{}.designDepth 说明**（v9.0 新增，v10.0 简化）：
 
-用于 code 类型 Feature，表示设计深度：
+用于 code 类型 Feature，表示是否需要设计文档：
 
 | 级别 | 条件 | Design Doc |
 |------|------|------------|
-| `L0` | 极简单，无需架构决策 | 不需要 |
-| `L1` | 简单，边界清晰 | 轻量设计 |
-| `L2` | 中等，涉及多模块 | 标准设计 |
-| `L3` | 复杂，高风险，核心架构 | 详细设计 |
+| `none` | 简单、边界清晰、无架构决策 | 不需要 |
+| `required` | 需要架构决策、涉及多模块 | 需要（深度由设计规范指导） |
 
 **features.{}.artifacts 说明**（v9.0 新增）：
 
@@ -228,7 +226,7 @@ document 类型：`pending` → `drafting` → `done`
 ```json
 "prd-validator": {
   "type": "code",
-  "designDepth": "L1",
+  "designDepth": "required",
   "artifacts": {
     "design": "docs/_features/prd-validator.design.md",
     "code": ["src/validators/prd-validator.js"],
@@ -242,13 +240,13 @@ document 类型：`pending` → `drafting` → `done`
 
 | 字段 | 类型 | 必填条件 | 说明 |
 |------|------|----------|------|
-| `design` | string\|null | L1+ 必填 | 设计文档路径 |
+| `design` | string\|null | required 时必填 | 设计文档路径 |
 | `code` | string[] | 必填 | 代码文件/目录路径数组 |
 | `tests` | string[] | 必填 | 测试文件路径数组 |
 
 **校验规则**：
-- `designDepth: L0` → `artifacts.design` 可为 null
-- `designDepth: L1/L2/L3` → `artifacts.design` 必须有值
+- `designDepth: none` → `artifacts.design` 可为 null
+- `designDepth: required` → `artifacts.design` 必须有值
 - `artifacts.code` 和 `artifacts.tests` 不能为空数组
 
 **features.{}.subtasks 说明**（v7.0 新增）：
@@ -354,10 +352,10 @@ function buildDomainTree(state) {
 - `flow.activeFeatures` 中的 Feature 的 `status` 应为 `in_progress` 或 `blocked`（警告级别）
 - `features.{}.scripts` 如存在，每个路径对应的文件应存在（警告级别）
 
-**Artifacts Validation**（v9.0 新增）：
+**Artifacts Validation**（v9.0 新增，v10.0 简化）：
 - `type: code` 的 Feature 必须有 `designDepth` 和 `artifacts` 字段
-- `designDepth` 必须是 `L0` / `L1` / `L2` / `L3` 之一
-- `designDepth: L1+` 时，`artifacts.design` 不能为 null
+- `designDepth` 必须是 `none` / `required` 之一
+- `designDepth: required` 时，`artifacts.design` 不能为 null
 - `artifacts.code` 和 `artifacts.tests` 必须是非空数组
 - `artifacts` 中的路径对应的文件应存在（警告级别）
 
@@ -376,6 +374,7 @@ function buildDomainTree(state) {
 | v7.0 | 新增 subtasks 可选字段（影响分析子任务跟踪） |
 | v8.0 | 移除 domainTree（冗余），新增 domains（只存描述），树形视图由程序派生 |
 | v9.0 | 新增 designDepth 和 artifacts 字段（code 类型产物追踪，支持代码文件级别影响分析） |
+| v10.0 | 简化 designDepth 为 2 级（none/required），移除 L0-L3 |
 
 **Schema 升级**：由 AI 直接编辑 state.json 执行，无需迁移脚本。
 
@@ -468,7 +467,7 @@ document 类型：pending → drafting → done
       "description": "PRD 格式校验器",
       "domain": "specification",
       "docPath": "docs/_features/prd-validator.spec.md",
-      "designDepth": "L1",
+      "designDepth": "required",
       "artifacts": {
         "design": "docs/_features/prd-validator.design.md",
         "code": ["src/validators/prd-validator.js"],
@@ -513,8 +512,8 @@ document 类型：pending → drafting → done
 
 ---
 
-*Version: v4.0*
+*Version: v5.0*
 *Created: 2024-12-20*
-*Updated: 2024-12-21*
-*Changes: v4.0 Schema v9.0.0 - 新增 designDepth 和 artifacts 字段（code 类型产物追踪）*
+*Updated: 2024-12-22*
+*Changes: v5.0 Schema v10.0.0 - 简化 designDepth 为 2 级（none/required）*
 *Applies to: SoloDevFlow 2.0*

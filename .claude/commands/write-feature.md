@@ -83,11 +83,11 @@
 
 | Type | Path | Required | Description |
 |------|------|----------|-------------|
-| Design | docs/{domain}/{name}.design.md | L1+ | 设计文档 |
+| Design | docs/{domain}/{name}.design.md | required 时必填 | 设计文档 |
 | Code | src/{module}/ | Yes | 代码目录 |
 | E2E Test | tests/e2e/{name}.test.ts | Yes | E2E 测试 |
 
-**Design Depth**: L{0|1|2|3}
+**Design Depth**: none | required
 ```
 
 ### Design Depth 初步评估
@@ -96,10 +96,8 @@
 
 | 级别 | 条件 |
 |------|------|
-| L0 | 极简单，半天内完成，无需架构决策 |
-| L1 | 简单，1-2 天，边界清晰 |
-| L2 | 中等，3-7 天，涉及多模块 |
-| L3 | 复杂，高风险，核心架构 |
+| none | 简单、边界清晰、无架构决策，无需设计文档 |
+| required | 需要架构决策、涉及多模块，需要设计文档 |
 
 ## 注意事项
 
