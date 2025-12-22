@@ -20,15 +20,16 @@
       "type": "document",
       "description": "核心协作流程（意图路由/阶段流转/交付流程）",
       "domain": "process",
-      "docPath": "docs/_flows/core-collaboration.spec.md",
+      "docPath": "docs/requirements/_flows/core-collaboration.spec.md",
+      "execPath": ".solodevflow/flows/core-collaboration.md",
       "phase": "done",
       "status": "completed"
     },
     "meta-spec": {
       "type": "document",
-      "description": "文档系统元规范（文档身份/锚点/规范映射）",
+      "description": "文档系统元规范（文档身份/锚点/目录结构/规范映射）",
       "domain": "specification",
-      "docPath": "docs/specs/meta-spec.md",
+      "docPath": "docs/requirements/specs/meta-spec.md",
       "scripts": [
         "scripts/validate-docs.js"
       ],
@@ -38,28 +39,28 @@
     "requirements-doc": {
       "type": "document",
       "domain": "specification",
-      "docPath": "docs/specs/requirements-doc.spec.md",
+      "docPath": "docs/requirements/specs/requirements-doc.spec.md",
       "phase": "done",
       "status": "completed"
     },
     "design-doc-spec": {
       "type": "document",
       "domain": "specification",
-      "docPath": "docs/specs/design-doc-spec.md",
+      "docPath": "docs/requirements/specs/design-doc-spec.md",
       "phase": "done",
       "status": "completed"
     },
     "development-spec": {
       "type": "document",
       "domain": "specification",
-      "docPath": "docs/specs/development-spec.md",
+      "docPath": "docs/requirements/specs/development-spec.md",
       "phase": "pending",
       "status": "not_started"
     },
     "testing-spec": {
       "type": "document",
       "domain": "specification",
-      "docPath": "docs/specs/testing-spec.md",
+      "docPath": "docs/requirements/specs/testing-spec.md",
       "phase": "pending",
       "status": "not_started"
     },
@@ -67,7 +68,7 @@
       "type": "document",
       "description": "状态管理机制（state.json Schema）",
       "domain": "process",
-      "docPath": "docs/process/state-management.spec.md",
+      "docPath": "docs/requirements/process/state-management.spec.md",
       "scripts": [
         "scripts/validate-state.js",
         "scripts/status.js",
@@ -103,7 +104,7 @@
       "type": "document",
       "description": "变更影响追踪机制",
       "domain": "process",
-      "docPath": "docs/process/change-impact-tracking.spec.md",
+      "docPath": "docs/requirements/process/change-impact-tracking.spec.md",
       "scripts": [
         "scripts/analyze-impact.js",
         "scripts/validate-docs.js"
@@ -114,14 +115,14 @@
     "input-capture": {
       "type": "document",
       "domain": "process",
-      "docPath": ".flow/input-log.md",
+      "docPath": ".solodevflow/input-log.md",
       "phase": "done",
       "status": "completed"
     },
     "spark-box": {
       "type": "document",
       "domain": "process",
-      "docPath": ".flow/spark-box.md",
+      "docPath": ".solodevflow/spark-box.md",
       "phase": "done",
       "status": "completed"
     },
@@ -157,7 +158,7 @@
     "project-init": {
       "type": "code",
       "domain": "tooling",
-      "docPath": "docs/tooling/project-init.spec.md",
+      "docPath": "docs/requirements/tooling/project-init.spec.md",
       "phase": "feature_design",
       "status": "in_progress",
       "description": "项目初始化工具（将 SoloDevFlow 安装到其他项目）",
