@@ -174,11 +174,11 @@
   "sparks": [],
   "pendingDocs": [],
   "metadata": {
-    "lastGitCommit": "42155260a92010c7e43e94dda5cbc91d8d3b2fa9",
-    "lastGitCommitMessage": "feat(state-management): Schema v10.0 - 简化 designDepth 为 2 级",
-    "lastGitCommitAt": "2025-12-22T00:37:19.956Z",
-    "stateFileVersion": 26,
-    "totalStateChanges": 26
+    "lastGitCommit": "587042352d0d815268934e61b180af5c619622b4",
+    "lastGitCommitMessage": "refactor(claude-md): 重构为索引文件，流程定义迁移至规范文档",
+    "lastGitCommitAt": "2025-12-22T01:20:25.923Z",
+    "stateFileVersion": 27,
+    "totalStateChanges": 27
   },
-  "lastUpdated": "2025-12-22T00:37:19.957Z"
+  "lastUpdated": "2025-12-22T01:20:25.926Z"
 }
