@@ -1,4 +1,4 @@
-# Requirements Document Specification v2.0 <!-- id: spec_requirements -->
+# Requirements Document Specification v2.2 <!-- id: spec_requirements -->
 
 > 定义需求文档（PRD、Feature、Capability、Flow）的结构和编写标准
 
@@ -9,7 +9,7 @@
 - 此规范定义需求文档的**具体章节结构**
 - 元规范 `spec-meta.md` 定义文档类型和验证规则
 - 设计文档规范见 `spec-design.md`
-- **版本 v2.0**：与 spec-meta.md v2.1 对齐，采用前缀命名规范
+- **版本 v2.2**：Design Depth 移至设计规范，由设计阶段决定并回填
 
 ---
 
@@ -94,6 +94,8 @@ version: {version}
 | Feature Roadmap | Yes | `prod_roadmap` | 按 Domain 分组的 Feature 列表 |
 | Success Criteria | Yes | `prod_success` | 可验证的成功指标 |
 | Non-Goals | No | `prod_non_goals` | 明确排除的范围 |
+| Constraints & Assumptions | No | `prod_constraints` | 技术/业务/法规约束，前提假设 |
+| Non-Functional Requirements | No | `prod_nfr` | 性能、安全、可用性等质量属性 |
 | Core Flow | No | `prod_flow` | 有复杂业务流程时 |
 | Appendix | No | `prod_appendix` | 速查表、术语表 |
 
@@ -139,6 +141,60 @@ Feature Roadmap 按 Domain 组织，每个 Feature 以子章节形式呈现：
 1. **Rule Name**: {规则描述}
 ```
 
+### 3.3 Constraints & Assumptions (Optional)
+
+当产品有明确的约束条件或前提假设时，添加此章节：
+
+```markdown
+## Constraints & Assumptions <!-- id: prod_constraints -->
+
+### Constraints（约束）
+
+| 类型 | 约束内容 | 影响范围 |
+|------|----------|----------|
+| 技术约束 | 必须使用 Node.js 18+ | 所有后端服务 |
+| 业务约束 | 仅支持中国大陆地区 | 支付、物流 |
+| 法规约束 | 需符合 GDPR | 用户数据处理 |
+| 资源约束 | 团队仅 2 人 | 功能优先级 |
+
+### Assumptions（假设）
+
+| 假设 | 若不成立的影响 |
+|------|----------------|
+| 用户有基础开发经验 | 需增加新手引导 |
+| 网络环境稳定 | 需增加离线支持 |
+```
+
+### 3.4 Non-Functional Requirements (Optional)
+
+当产品有特定质量属性要求时，添加此章节：
+
+```markdown
+## Non-Functional Requirements <!-- id: prod_nfr -->
+
+### Performance（性能）
+
+| 指标 | 目标值 | 测量方法 |
+|------|--------|----------|
+| 页面加载时间 | < 2s | Lighthouse |
+| API 响应时间 | P95 < 500ms | APM 监控 |
+
+### Security（安全）
+
+| 要求 | 说明 |
+|------|------|
+| 认证方式 | JWT + Refresh Token |
+| 数据加密 | 敏感数据 AES-256 加密存储 |
+
+### Availability（可用性）
+
+| 指标 | 目标值 |
+|------|--------|
+| SLA | 99.9% |
+| RTO | < 4 小时 |
+| RPO | < 1 小时 |
+```
+
 ---
 
 ## 4. Feature Spec Structure <!-- id: spec_req_feature --> <!-- defines: feature -->
@@ -152,6 +208,7 @@ Feature Roadmap 按 Domain 组织，每个 Feature 以子章节形式呈现：
 | User Stories | No | `feat_{name}_stories` | 需要详细描述用户场景 |
 | Boundaries | No | `feat_{name}_boundaries` | 需要明确排除项 |
 | Dependencies | No | `feat_{name}_dependencies` | 有前置依赖 |
+| Non-Functional Requirements | No | `feat_{name}_nfr` | 性能、安全等质量属性（Feature 级） |
 
 ### 4.1 Feature Types
 
@@ -160,16 +217,48 @@ Feature Roadmap 按 Domain 组织，每个 Feature 以子章节形式呈现：
 | `code` | 代码型 | 代码 + 测试 + 设计文档（可选） |
 | `document` | 文档型 | Markdown 文档（可选脚本） |
 
-### 4.2 Design Depth
+### 4.2 Artifacts Section
 
-code 类型 Feature 需声明设计深度：
+Artifacts 章节记录 Feature 的产出物位置：
 
-| 级别 | 名称 | 设计文档 | 适用场景 |
-|------|------|----------|----------|
-| L0 | 无设计 | 不需要 | 极简单功能，直接实现 |
-| L1 | 轻量设计 | 需要 | 简单功能，低风险 |
-| L2 | 标准设计 | 需要 | 一般功能，中等复杂度 |
-| L3 | 详细设计 | 需要 | 复杂功能，高风险 |
+```markdown
+## Artifacts <!-- id: feat_{name}_artifacts -->
+
+| Type | Path | Description |
+|------|------|-------------|
+| Design | docs/designs/des-{name}.md | 设计文档（设计阶段填写） |
+| Code | src/{module}/ | 代码目录 |
+| Test | tests/e2e/{name}.test.ts | E2E 测试 |
+
+**Design Depth**: TBD（由设计阶段确定，见 spec-design.md）
+```
+
+**Design Depth 工作流**：
+1. 需求阶段：Artifacts 章节标记 `Design Depth: TBD`
+2. 设计阶段：设计 AI 评估复杂度，决定 L0-L3 级别
+3. 设计 AI 回填 Feature Spec 的 `Design Depth` 字段
+4. 根据级别编写相应深度的设计文档
+
+> Design Depth 的定义和选择标准见 `spec-design.md`
+
+### 4.3 Non-Functional Requirements (Optional)
+
+当 Feature 有特定的质量属性要求（超出 PRD 级别的通用要求）时，添加此章节：
+
+```markdown
+## Non-Functional Requirements <!-- id: feat_{name}_nfr -->
+
+| 类别 | 要求 | 验收标准 |
+|------|------|----------|
+| 性能 | 搜索响应时间 | P95 < 200ms |
+| 安全 | 输入校验 | 防止 XSS/SQL 注入 |
+| 可用性 | 降级策略 | 外部服务不可用时返回缓存 |
+```
+
+**使用场景**：
+- Feature 有比 PRD 更严格的性能要求
+- Feature 涉及敏感数据，有额外安全要求
+- Feature 是核心链路，需要高可用保障
 
 ---
 
@@ -310,7 +399,7 @@ minor: 内容更新（修改描述）
 
 ---
 
-*Version: v2.0*
+*Version: v2.2*
 *Created: 2024-12-20 (v1.0)*
-*Updated: 2025-12-23 (v2.0)*
-*Changes: v2.0 与 spec-meta.md v2.1 对齐，采用前缀命名规范，简化冗余章节*
+*Updated: 2025-12-23 (v2.2)*
+*Changes: v2.1 新增 Constraints & Assumptions、Non-Functional Requirements; v2.2 Design Depth 移至 spec-design.md，由设计阶段决定并回填*

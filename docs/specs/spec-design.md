@@ -1,4 +1,4 @@
-# Design Document Specification v2.0 <!-- id: spec_design -->
+# Design Document Specification v2.1 <!-- id: spec_design -->
 
 > 定义设计文档的结构、内容要素、编写标准
 
@@ -9,7 +9,7 @@
 - 此规范定义设计文档的**具体章节结构**
 - 元规范 `spec-meta.md` 定义文档类型和验证规则
 - 需求文档规范见 `spec-requirements.md`
-- **版本 v2.0**：与 spec-meta.md v2.1 对齐，采用前缀命名规范
+- **版本 v2.1**：Design Depth 为设计规范独有，由设计阶段决定并回填 Feature Spec
 
 ---
 
@@ -132,6 +132,32 @@ inputs:
 | 过早抽象 | 为假想的未来需求设计接口 | 等到真正需要时再抽象 |
 | 过度分层 | 为简单功能设计多层架构 | 先用最简单方案，必要时重构 |
 | 文档膨胀 | L1 场景写 L3 级别文档 | 匹配实际复杂度 |
+
+### 3.4 Design Depth Workflow
+
+Design Depth 由设计阶段决定，而非需求阶段：
+
+```
+需求阶段                          设计阶段
+    │                                │
+    ▼                                ▼
+Feature Spec                    设计 AI 评估复杂度
+(Artifacts.designDepth = TBD)        │
+    │                                ▼
+    │                          决定 L0/L1/L2/L3
+    │                                │
+    │◄───────── 回填 ────────────────┤
+    │                                │
+    ▼                                ▼
+Feature Spec                    编写设计文档
+(Artifacts.designDepth = L2)    (按级别选择章节)
+```
+
+**设计 AI 职责**：
+1. 读取 Feature Spec，分析功能复杂度
+2. 根据 3.2 选择标准，决定 Design Depth
+3. **回填** Feature Spec 的 `Artifacts.designDepth` 字段
+4. 根据级别编写相应深度的设计文档
 
 ---
 
@@ -288,7 +314,7 @@ inputs:
 
 ---
 
-*Version: v2.0*
+*Version: v2.1*
 *Created: 2024-12-20 (v1.0)*
-*Updated: 2025-12-23 (v2.0)*
-*Changes: v2.0 与 spec-meta.md v2.1 对齐，采用 des- 前缀命名，使用 inputs 字段建立多对多关系，精简项目类型规范*
+*Updated: 2025-12-23 (v2.1)*
+*Changes: v2.0 与 spec-meta.md v2.1 对齐; v2.1 新增 Design Depth Workflow，明确设计阶段回填 Feature Spec*
