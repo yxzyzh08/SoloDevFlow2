@@ -1,4 +1,4 @@
-# Design Document Specification v2.1 <!-- id: spec_design -->
+# Design Document Specification v2.3 <!-- id: spec_design -->
 
 > 定义设计文档的结构、内容要素、编写标准
 
@@ -9,7 +9,7 @@
 - 此规范定义设计文档的**具体章节结构**
 - 元规范 `spec-meta.md` 定义文档类型和验证规则
 - 需求文档规范见 `spec-requirements.md`
-- **版本 v2.1**：Design Depth 为设计规范独有，由设计阶段决定并回填 Feature Spec
+- **版本 v2.3**：简化 Design Depth 为二元判断（Required/None），移除 L0-L3
 
 ---
 
@@ -106,32 +106,53 @@ inputs:
 
 > 核心理念：**最小可行设计**（Minimum Viable Design）—— 够用就好，不要过度设计。
 
-### 3.1 Depth Levels
+### 3.1 Binary Decision
 
-| 级别 | 名称 | 适用场景 | 文档内容 |
-|------|------|----------|----------|
-| L0 | 无设计 | 极简单功能，直接实现 | 无设计文档 |
-| L1 | 轻量设计 | 简单功能，低风险 | Overview + 关键接口 |
-| L2 | 标准设计 | 一般功能，中等复杂度 | 完整必选章节 |
-| L3 | 详细设计 | 复杂功能，高风险 | 完整必选 + 可选章节 |
+设计深度只有两种：**需要设计文档** 或 **不需要设计文档**。
 
-### 3.2 Depth Selection Criteria
+| 判断结果 | 说明 |
+|----------|------|
+| **Design Required** | 需要编写设计文档 |
+| **No Design** | 不需要设计文档，直接实现 |
 
-**L0（无设计）**：功能极简单，可在半天内完成，失败可即时重做
+### 3.2 判断标准
 
-**L1（轻量设计）**：功能逻辑简单，边界清晰，1-2 天完成
+**需要设计文档**（满足任一条件）：
 
-**L2（标准设计）**：有一定复杂度，涉及多模块协作，3-7 天完成
+| 条件 | 说明 |
+|------|------|
+| 新增 Feature | 新增一个完整的功能特性 |
+| 新增数据模型 | 新增数据库表、API Schema |
+| 新增核心实体 | 新增领域对象、业务实体 |
+| 新增模块 | 新增模块或涉及跨模块协作 |
+| 引入外部依赖 | 引入第三方服务、SDK、API |
+| 架构变更 | 架构层面的调整 |
 
-**L3（详细设计）**：功能复杂，有多种实现方案，涉及核心架构决策
+**不需要设计文档**：
 
-### 3.3 Anti-patterns
+| 场景 | 说明 |
+|------|------|
+| 已有逻辑简单变更 | 在现有代码上做小改动 |
+| 已有模型字段增减 | 不改变模型核心结构 |
+| Bug 修复 | 修复缺陷 |
+| 配置/文案修改 | 非逻辑变更 |
+| 单模块内重构 | 不影响外部接口的重构 |
+| UI 样式调整 | 纯展示层变更 |
 
-| 反模式 | 说明 | 正确做法 |
-|--------|------|----------|
-| 过早抽象 | 为假想的未来需求设计接口 | 等到真正需要时再抽象 |
-| 过度分层 | 为简单功能设计多层架构 | 先用最简单方案，必要时重构 |
-| 文档膨胀 | L1 场景写 L3 级别文档 | 匹配实际复杂度 |
+### 3.3 判断流程
+
+```
+是否满足以下任一条件？
+  □ 新增 Feature（完整功能特性）
+  □ 新增数据模型（数据库表、API Schema）
+  □ 新增核心实体（领域对象）
+  □ 新增模块或跨模块协作
+  □ 引入外部依赖（第三方服务、SDK）
+  □ 架构层面变更
+
+→ 任一勾选 = Design Required（需要设计文档）
+→ 全部未勾选 = No Design（不需要设计文档）
+```
 
 ### 3.4 Design Depth Workflow
 
@@ -141,23 +162,22 @@ Design Depth 由设计阶段决定，而非需求阶段：
 需求阶段                          设计阶段
     │                                │
     ▼                                ▼
-Feature Spec                    设计 AI 评估复杂度
+Feature Spec                    设计 AI 评估
 (Artifacts.designDepth = TBD)        │
     │                                ▼
-    │                          决定 L0/L1/L2/L3
+    │                          判断是否需要设计文档
     │                                │
     │◄───────── 回填 ────────────────┤
     │                                │
     ▼                                ▼
-Feature Spec                    编写设计文档
-(Artifacts.designDepth = L2)    (按级别选择章节)
+Feature Spec                    No Design: 直接实现
+(designDepth = Required/None)   Required: 编写设计文档
 ```
 
 **设计 AI 职责**：
-1. 读取 Feature Spec，分析功能复杂度
-2. 根据 3.2 选择标准，决定 Design Depth
-3. **回填** Feature Spec 的 `Artifacts.designDepth` 字段
-4. 根据级别编写相应深度的设计文档
+1. 读取 Feature Spec，按 3.2 标准判断
+2. **回填** Feature Spec 的 `Artifacts.designDepth` 字段（`Required` 或 `None`）
+3. 若 Required，编写设计文档
 
 ---
 
@@ -167,12 +187,12 @@ Feature Spec                    编写设计文档
 |---------|----------|--------|-------------|
 | Input Requirements | Yes | `design_{name}_input` | 声明输入来源（需求文档引用） |
 | Overview | Yes | `design_{name}_overview` | 设计目标、约束条件 |
-| Technical Approach | L2+ | `design_{name}_approach` | 技术方案、架构决策 |
-| Interface Design | Yes | `design_{name}_interface` | 接口定义、数据结构 |
-| Implementation Plan | L2+ | `design_{name}_impl` | 实现步骤、关键代码 |
-| Alternatives | L3 | `design_{name}_alternatives` | 方案对比 |
-| Risks | L3 | `design_{name}_risks` | 技术风险 |
-| Dependencies | No | `design_{name}_dependencies` | 外部依赖 |
+| Technical Approach | Yes | `design_{name}_approach` | 技术方案、架构决策 |
+| Interface Design | Yes | `design_{name}_interface` | 接口定义、数据结构、错误码 |
+| Decision Record | Yes | `design_{name}_decisions` | 关键决策及其理由（ADR） |
+| Implementation Plan | No | `design_{name}_impl` | 实现步骤（复杂场景可选） |
+| Risks | No | `design_{name}_risks` | 技术风险及缓解措施（高风险可选） |
+| Dependencies | No | `design_{name}_dependencies` | 外部依赖（有依赖时填写） |
 
 ### 4.1 Input Requirements Section
 
@@ -186,36 +206,94 @@ Feature Spec                    编写设计文档
 - [Feature - 认证能力](docs/requirements/capabilities/cap-auth.md#cap_auth_intent)
 ```
 
-### 4.2 Section Requirements by Depth
+### 4.2 Interface Design Section
 
-| Section | L1 | L2 | L3 |
-|---------|:--:|:--:|:--:|
-| Input Requirements | Yes | Yes | Yes |
-| Overview | Yes | Yes | Yes |
-| Technical Approach | - | Yes | Yes |
-| Interface Design | Yes | Yes | Yes |
-| Implementation Plan | - | Yes | Yes |
-| Alternatives | - | - | Yes |
-| Risks | - | - | Yes |
+接口设计章节需包含以下要素：
+
+| 要素 | Required | 说明 |
+|------|:--------:|------|
+| 函数签名 | Yes | 输入/输出类型定义 |
+| 数据结构 | Yes | DTO/Entity/Schema 定义 |
+| 错误码定义 | Yes | 业务错误枚举 |
+| 状态流转 | No | 状态机（如有） |
+
+```markdown
+## Interface Design <!-- id: design_{name}_interface -->
+
+### 函数签名
+
+\`\`\`typescript
+interface UserService {
+  login(credentials: LoginDTO): Promise<AuthResult>;
+  logout(userId: string): Promise<void>;
+}
+\`\`\`
+
+### 数据结构
+
+\`\`\`typescript
+interface LoginDTO {
+  email: string;
+  password: string;
+}
+\`\`\`
+
+### 错误码定义（L2+）
+
+| Code | Name | Description |
+|------|------|-------------|
+| AUTH_001 | INVALID_CREDENTIALS | 用户名或密码错误 |
+| AUTH_002 | ACCOUNT_LOCKED | 账户已锁定 |
+```
+
+### 4.3 Decision Record Section (ADR)
+
+记录关键技术决策及其理由，遵循 ADR（Architecture Decision Records）最佳实践：
+
+```markdown
+## Decision Record <!-- id: design_{name}_decisions -->
+
+| Decision | Options | Choice | Rationale |
+|----------|---------|--------|-----------|
+| 数据库选型 | PostgreSQL / MySQL / MongoDB | PostgreSQL | 需要复杂查询 + 事务支持 |
+| 缓存策略 | Redis / Memcached / 本地缓存 | Redis | 需要持久化 + 分布式锁 |
+| 认证方式 | JWT / Session / OAuth | JWT | 无状态、易于扩展 |
+```
+
+**Decision Record 要点**：
+- 每个决策记录"选择了什么"和"为什么这样选择"
+- 列出考虑过的备选方案
+- 说明选择的关键理由
+
+### 4.4 Risks Section
+
+风险章节需包含缓解措施：
+
+```markdown
+## Risks <!-- id: design_{name}_risks -->
+
+| Risk | Impact | Probability | Mitigation |
+|------|--------|-------------|------------|
+| 第三方 API 不稳定 | High | Medium | 添加熔断 + 降级策略 |
+| 数据量超预期 | Medium | Low | 分库分表预案 |
+| 并发竞争条件 | High | Low | 分布式锁 + 乐观锁 |
+```
 
 ---
 
 ## 5. Design Review Checklist <!-- id: spec_design_checklist -->
 
-**通用检查项**：
-- [ ] 设计深度是否匹配功能复杂度？
-- [ ] 是否有清晰的接口定义？
-- [ ] 是否与需求文档一致？
+**必选章节检查**：
 - [ ] `inputs` 字段是否正确引用需求文档？
+- [ ] Overview 是否清晰描述设计目标？
+- [ ] Technical Approach 是否说明技术方案？
+- [ ] Interface Design 是否包含函数签名、数据结构、错误码？
+- [ ] Decision Record 是否记录关键决策及理由？
 
-**L2/L3 额外检查项**：
-- [ ] 是否考虑了错误处理？
-- [ ] 是否有实现步骤？
-- [ ] 技术方案是否合理？
-
-**L3 额外检查项**：
-- [ ] 是否评估了替代方案？
-- [ ] 是否识别了技术风险？
+**可选章节检查**（按需）：
+- [ ] 复杂场景：是否有 Implementation Plan？
+- [ ] 高风险场景：是否识别 Risks 及缓解措施？
+- [ ] 有外部依赖：是否列出 Dependencies？
 
 ---
 
@@ -249,15 +327,6 @@ Feature Spec                    编写设计文档
 | 屏幕适配 | 安全区域、横竖屏 |
 | 性能设计 | 启动时间、内存管理 |
 | 原生集成 | 权限、推送、后台任务 |
-
-### 6.4 Depth by Project Type
-
-| 设计深度 | Backend | Web App | Mobile App |
-|---------|---------|---------|------------|
-| L0 | 简单 CRUD | 静态页面 | 单屏展示 |
-| L1 | 基础 API | 简单交互 | 基础导航 |
-| L2 | 多模块 API | 状态管理 | 原生集成 |
-| L3 | 分布式系统 | 复杂状态 | 跨平台架构 |
 
 ---
 
@@ -314,7 +383,7 @@ inputs:
 
 ---
 
-*Version: v2.1*
+*Version: v2.3*
 *Created: 2024-12-20 (v1.0)*
-*Updated: 2025-12-23 (v2.1)*
-*Changes: v2.0 与 spec-meta.md v2.1 对齐; v2.1 新增 Design Depth Workflow，明确设计阶段回填 Feature Spec*
+*Updated: 2025-12-23 (v2.3)*
+*Changes: v2.2 新增 Decision Record（ADR）、扩展 Interface Design 和 Risks; v2.3 简化 Design Depth 为二元判断（Required/None）*

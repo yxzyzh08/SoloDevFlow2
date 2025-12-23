@@ -1,4 +1,4 @@
-# Requirements Document Specification v2.2 <!-- id: spec_requirements -->
+# Requirements Document Specification v2.3 <!-- id: spec_requirements -->
 
 > 定义需求文档（PRD、Feature、Capability、Flow）的结构和编写标准
 
@@ -9,7 +9,7 @@
 - 此规范定义需求文档的**具体章节结构**
 - 元规范 `spec-meta.md` 定义文档类型和验证规则
 - 设计文档规范见 `spec-design.md`
-- **版本 v2.2**：Design Depth 移至设计规范，由设计阶段决定并回填
+- **版本 v2.3**：Design Depth 简化为 Required/None 二元判断
 
 ---
 
@@ -230,16 +230,16 @@ Artifacts 章节记录 Feature 的产出物位置：
 | Code | src/{module}/ | 代码目录 |
 | Test | tests/e2e/{name}.test.ts | E2E 测试 |
 
-**Design Depth**: TBD（由设计阶段确定，见 spec-design.md）
+**Design Depth**: TBD（由设计阶段确定）
 ```
 
 **Design Depth 工作流**：
 1. 需求阶段：Artifacts 章节标记 `Design Depth: TBD`
-2. 设计阶段：设计 AI 评估复杂度，决定 L0-L3 级别
-3. 设计 AI 回填 Feature Spec 的 `Design Depth` 字段
-4. 根据级别编写相应深度的设计文档
+2. 设计阶段：设计 AI 按判断标准评估
+3. 设计 AI 回填 `Design Depth` 字段（`Required` 或 `None`）
+4. 若 Required，编写设计文档
 
-> Design Depth 的定义和选择标准见 `spec-design.md`
+> Design Depth 判断标准见 `spec-design.md` 第 3 节
 
 ### 4.3 Non-Functional Requirements (Optional)
 
@@ -399,7 +399,7 @@ minor: 内容更新（修改描述）
 
 ---
 
-*Version: v2.2*
+*Version: v2.3*
 *Created: 2024-12-20 (v1.0)*
-*Updated: 2025-12-23 (v2.2)*
-*Changes: v2.1 新增 Constraints & Assumptions、Non-Functional Requirements; v2.2 Design Depth 移至 spec-design.md，由设计阶段决定并回填*
+*Updated: 2025-12-23 (v2.3)*
+*Changes: v2.2 Design Depth 移至设计规范; v2.3 同步简化为 Required/None 二元判断*
