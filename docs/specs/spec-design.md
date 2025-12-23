@@ -1,4 +1,4 @@
-# Design Document Specification v2.3 <!-- id: spec_design -->
+# Design Document Specification v2.4 <!-- id: spec_design -->
 
 > 定义设计文档的结构、内容要素、编写标准
 
@@ -9,7 +9,7 @@
 - 此规范定义设计文档的**具体章节结构**
 - 元规范 `spec-meta.md` 定义文档类型和验证规则
 - 需求文档规范见 `spec-requirements.md`
-- **版本 v2.3**：简化 Design Depth 为二元判断（Required/None），移除 L0-L3
+- **版本 v2.4**：Decision Record 改为可选，减少过度设计
 
 ---
 
@@ -189,8 +189,8 @@ Feature Spec                    No Design: 直接实现
 | Input Requirements | Yes | `design_{name}_input` | 声明输入来源（需求文档引用） |
 | Overview | Yes | `design_{name}_overview` | 设计目标、约束条件 |
 | Technical Approach | Yes | `design_{name}_approach` | 技术方案、架构决策 |
-| Interface Design | No | `design_{name}_interface` | 接口定义、数据结构、错误码(可选，有接口才需要） |
-| Decision Record | Yes | `design_{name}_decisions` | 关键决策及其理由（ADR） |
+| Interface Design | No | `design_{name}_interface` | 接口定义、数据结构、错误码（有接口才需要） |
+| Decision Record | No | `design_{name}_decisions` | 关键决策及其理由（有多方案选择时填写） |
 | Implementation Plan | No | `design_{name}_impl` | 实现步骤（复杂场景可选） |
 | Risks | No | `design_{name}_risks` | 技术风险及缓解措施（高风险可选） |
 | Dependencies | No | `design_{name}_dependencies` | 外部依赖（有依赖时填写） |
@@ -288,10 +288,10 @@ interface LoginDTO {
 - [ ] `inputs` 字段是否正确引用需求文档？
 - [ ] Overview 是否清晰描述设计目标？
 - [ ] Technical Approach 是否说明技术方案？
-- [ ] Decision Record 是否记录关键决策及理由？
 
 **可选章节检查**（按需）：
-- [ ] Interface Design 是否包含函数签名、数据结构、错误码？
+- [ ] 有多方案选择：是否有 Decision Record 记录决策理由？
+- [ ] 有接口设计：Interface Design 是否包含函数签名、数据结构、错误码？
 - [ ] 复杂场景：是否有 Implementation Plan？
 - [ ] 高风险场景：是否识别 Risks 及缓解措施？
 - [ ] 有外部依赖：是否列出 Dependencies？
@@ -381,7 +381,7 @@ inputs:
 
 ---
 
-*Version: v2.3*
+*Version: v2.4*
 *Created: 2024-12-20 (v1.0)*
-*Updated: 2025-12-23 (v2.3)*
-*Changes: v2.2 新增 Decision Record（ADR）、扩展 Interface Design 和 Risks; v2.3 简化 Design Depth 为二元判断（Required/None）*
+*Updated: 2025-12-23 (v2.4)*
+*Changes: v2.2 新增 Decision Record（ADR）、扩展 Interface Design 和 Risks; v2.3 简化 Design Depth 为二元判断; v2.4 Decision Record 改为可选（减少过度设计）*

@@ -1,4 +1,4 @@
-# Frontend Development Specification v2.0 <!-- id: spec_frontend_dev -->
+# Frontend Development Specification v2.3 <!-- id: spec_frontend_dev -->
 
 > 定义前端代码的开发原则、组件设计、质量标准（技术栈无关）
 
@@ -8,14 +8,72 @@
 
 - 此规范定义前端开发的**通用原则**，不绑定具体技术栈
 - 具体实现细节（框架、工具、库）由项目自行定义
+- **版本 v2.3**：新增项目规模分级，避免小项目过度设计
 - 元规范 `spec-meta.md` 定义文档类型和验证规则
-- 设计文档规范见 `spec-design.md`
 
 ---
 
-## 1. Scope <!-- id: spec_frontend_scope -->
+## 1. Project Scale <!-- id: spec_frontend_scale -->
 
-### 1.1 Applicable Project Types
+> 核心理念：**规模决定规范**——小项目轻装上阵，大项目严格把控。
+
+### 1.1 Scale Definition
+
+| 规模 | 页面数 | 团队 | 典型场景 |
+|------|--------|------|----------|
+| **Small** | 1-5 页 | 1-2 人 | 落地页、原型、内部工具、简单 SPA |
+| **Medium** | 5-20 页 | 2-5 人 | 标准业务系统、管理后台 |
+| **Large** | > 20 页 | 5+ 人 | 大型应用、平台级产品 |
+
+### 1.2 Section Applicability
+
+| 章节 | Small | Medium | Large |
+|------|:-----:|:------:|:-----:|
+| Directory Structure | 简化版 | 标准版 | 标准版 |
+| Component Design (Atomic) | 1-2 层 | 3-4 层 | 完整 5 层 |
+| State Management | useState 即可 | 按需选择 | 完整方案 |
+| Styling | 单一方案 | 按需选择 | 设计系统 |
+| API Integration | 直接调用 | Service 层 | 完整封装 |
+| Error Handling | 基础 | 标准 | 完整 |
+| Testing | 关键路径 | 标准覆盖率 | 高覆盖率 |
+| Performance | 按需 | 推荐 | 必须 |
+| Accessibility | 基础 | 推荐 | 必须 |
+| Routing | 简单路由 | 标准 | 完整守卫 |
+| i18n | 不需要 | 按需 | 按需 |
+
+### 1.3 Small Project Simplified Structure
+
+小项目推荐的精简目录结构：
+
+```
+project/
+├── src/
+│   ├── App.{ext}           # 主组件
+│   ├── components/         # 组件（扁平结构）
+│   │   ├── Header.{ext}
+│   │   └── Footer.{ext}
+│   ├── pages/              # 页面（可选）
+│   ├── api.{ext}           # API 调用（可选）
+│   └── styles.css          # 样式
+├── public/
+├── tests/
+└── README.md
+```
+
+**Small 项目可以省略**：
+- Atomic Design 分层（直接写组件）
+- 状态管理库（useState/useReducer 足够）
+- Service 层封装（直接 fetch）
+- 复杂的组件目录结构
+- Design Tokens（直接写样式）
+- i18n 国际化
+- 完整的可访问性检查
+
+---
+
+## 2. Scope <!-- id: spec_frontend_scope -->
+
+### 2.1 Applicable Project Types
 
 | 类型 | 说明 |
 |------|------|
@@ -24,7 +82,7 @@
 | `desktop-app` | 桌面应用（Electron 等） |
 | `component-library` | 组件库 |
 
-### 1.2 Technology Agnostic
+### 2.2 Technology Agnostic
 
 本规范适用于任何前端技术栈，包括但不限于：
 - React / Next.js
@@ -266,13 +324,14 @@ ComponentName/
 
 ## 8. Testing <!-- id: spec_frontend_testing -->
 
+开发规范只涵盖**单元测试**和**组件测试**，E2E 测试属于测试规范范畴。
+
 ### 8.1 Test Types
 
 | 类型 | 范围 | 目标 |
 |------|------|------|
 | 单元测试 | 工具函数、Hooks | 快速、隔离 |
 | 组件测试 | 组件渲染、交互 | 用户视角 |
-| E2E 测试 | 完整用户流程 | 端到端验证 |
 
 ### 8.2 Testing Principles
 
@@ -296,11 +355,15 @@ ComponentName/
 
 ### 8.4 Coverage Requirements
 
-| 指标 | 最低要求 |
-|------|----------|
-| 语句覆盖率 | 70% |
-| 分支覆盖率 | 60% |
-| 组件覆盖率 | 核心组件 100% |
+按项目规模设定不同的覆盖率要求：
+
+| 指标 | Small | Medium | Large |
+|------|-------|--------|-------|
+| 语句覆盖率 | 关键路径 | 60% | 70% |
+| 分支覆盖率 | - | 50% | 60% |
+| 组件覆盖率 | - | 核心组件 | 核心组件 100% |
+
+**Small 项目**：只需覆盖关键业务路径，不强制覆盖率指标。
 
 ---
 
@@ -393,6 +456,93 @@ ComponentName/
 
 ---
 
+## 12. Routing <!-- id: spec_frontend_routing -->
+
+### 12.1 Route Organization
+
+| 路由类型 | 说明 | 示例 |
+|----------|------|------|
+| 静态路由 | 固定路径 | `/about`, `/contact` |
+| 动态路由 | 含参数路径 | `/users/:id`, `/posts/:slug` |
+| 嵌套路由 | 父子层级 | `/settings/profile` |
+| 通配路由 | 404 兜底 | `/*` |
+
+### 12.2 Route Naming Conventions
+
+| 原则 | 说明 |
+|------|------|
+| 使用 kebab-case | `/user-profile` 而非 `/userProfile` |
+| 名词优先 | `/users` 而非 `/get-users` |
+| 层级清晰 | `/users/:id/orders` |
+| 避免深层嵌套 | 最多 3-4 层 |
+
+### 12.3 Route Protection
+
+| 场景 | 处理方式 |
+|------|----------|
+| 需要认证 | 路由守卫检查登录状态 |
+| 需要权限 | 路由守卫检查用户角色 |
+| 未授权 | 重定向到登录页或 403 页 |
+| 已登录访问登录页 | 重定向到首页 |
+
+### 12.4 Navigation Best Practices
+
+| Do | Don't |
+|-----|-------|
+| 使用路由库的导航方法 | 直接修改 window.location |
+| 保留浏览器历史 | 过度使用 replace |
+| 处理导航加载状态 | 导航时无反馈 |
+| 滚动位置恢复 | 忽略滚动行为 |
+
+---
+
+## 13. Internationalization (i18n) <!-- id: spec_frontend_i18n -->
+
+### 13.1 i18n Principles
+
+| 原则 | 说明 |
+|------|------|
+| 文本外置 | 所有用户可见文本存放在语言文件中 |
+| 键名语义化 | 使用有意义的键名（如 `user.login.title`） |
+| 复数处理 | 支持不同语言的复数规则 |
+| 日期/货币 | 使用 Intl API 或库处理格式化 |
+
+### 13.2 i18n File Organization
+
+```
+locales/
+├── en/
+│   ├── common.json       # 通用文本
+│   ├── auth.json         # 认证模块
+│   └── dashboard.json    # 仪表盘模块
+├── zh-CN/
+│   ├── common.json
+│   ├── auth.json
+│   └── dashboard.json
+└── index.ts              # 语言配置
+```
+
+### 13.3 Translation Key Naming
+
+| 规则 | 示例 |
+|------|------|
+| 模块.功能.元素 | `auth.login.submitButton` |
+| 动作用动词 | `common.actions.save` |
+| 状态用形容词 | `common.status.loading` |
+| 避免过长 | 最多 4 层嵌套 |
+
+### 13.4 i18n Best Practices
+
+| Do | Don't |
+|-----|-------|
+| 设计时预留文本扩展空间 | 假设所有语言长度相同 |
+| 使用参数化字符串 | 拼接字符串 |
+| 支持 RTL 布局 | 只考虑 LTR |
+| 使用 Intl API 格式化日期 | 硬编码日期格式如 MM/DD/YYYY |
+| 提供语言切换入口 | 强制用户使用单一语言 |
+
+---
+
 ## Appendix: Checklist <!-- id: spec_frontend_appendix -->
 
 ### A. Component Review Checklist
@@ -420,9 +570,21 @@ ComponentName/
 - [ ] 焦点状态可见
 - [ ] ARIA 标签正确
 
+### D. New Developer Onboarding
+
+新成员入职时应完成：
+
+- [ ] 阅读本规范文档
+- [ ] 了解项目目录结构
+- [ ] 配置本地开发环境
+- [ ] 运行开发服务器
+- [ ] 运行测试套件
+- [ ] 熟悉组件库和设计系统
+- [ ] 完成一个小任务熟悉流程
+
 ---
 
-*Version: v2.0*
+*Version: v2.3*
 *Created: 2025-12-23*
 *Updated: 2025-12-23*
-*Changes: v2.0 重构为技术栈无关的通用原则版本*
+*Changes: v2.0 技术栈无关; v2.1 新增 Routing、i18n; v2.2 E2E 测试属于测试规范; v2.3 新增项目规模分级（Small/Medium/Large），避免小项目过度设计*

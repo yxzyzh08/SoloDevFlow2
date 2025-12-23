@@ -1,4 +1,4 @@
-# Backend Development Specification v2.0 <!-- id: spec_backend_dev -->
+# Backend Development Specification v2.2 <!-- id: spec_backend_dev -->
 
 > 定义后端代码的开发原则、架构模式、质量标准（技术栈无关）
 
@@ -8,14 +8,70 @@
 
 - 此规范定义后端开发的**通用原则**，不绑定具体技术栈
 - 具体实现细节（语言、框架、工具）由项目自行定义
+- **版本 v2.2**：新增项目规模分级，避免小项目过度设计
 - 元规范 `spec-meta.md` 定义文档类型和验证规则
-- 设计文档规范见 `spec-design.md`
 
 ---
 
-## 1. Scope <!-- id: spec_backend_scope -->
+## 1. Project Scale <!-- id: spec_backend_scale -->
 
-### 1.1 Applicable Project Types
+> 核心理念：**规模决定规范**——小项目轻装上阵，大项目严格把控。
+
+### 1.1 Scale Definition
+
+| 规模 | 代码量 | 团队 | 典型场景 |
+|------|--------|------|----------|
+| **Small** | < 2000 行 | 1-2 人 | CLI 工具、原型、内部脚本、简单 API |
+| **Medium** | 2000-10000 行 | 2-5 人 | 标准业务系统、微服务 |
+| **Large** | > 10000 行 | 5+ 人 | 核心系统、平台级产品 |
+
+### 1.2 Section Applicability
+
+| 章节 | Small | Medium | Large |
+|------|:-----:|:------:|:-----:|
+| Directory Structure | 简化版 | 标准版 | 标准版 |
+| Architecture Patterns | 可选 | 推荐 | 必须 |
+| Configuration | 基础 | 标准 | 标准 |
+| Error Handling | 基础 | 标准 | 标准 |
+| Logging | console 即可 | 结构化 | 结构化 |
+| API Design | 推荐 | 必须 | 必须 |
+| Database | 按需 | 标准 | 标准 |
+| Security | 基础 | 标准 | 标准 |
+| Testing | 关键路径 | 标准覆盖率 | 高覆盖率 |
+| Health Check | 不需要 | 推荐 | 必须 |
+| Async Processing | 不需要 | 按需 | 按需 |
+| Performance | 按需 | 推荐 | 必须 |
+
+### 1.3 Small Project Simplified Structure
+
+小项目推荐的精简目录结构：
+
+```
+project/
+├── src/
+│   ├── index.{ext}       # 入口
+│   ├── api.{ext}         # 路由/接口（可选）
+│   ├── db.{ext}          # 数据访问（可选）
+│   └── utils.{ext}       # 工具函数（可选）
+├── tests/
+│   └── main.test.{ext}   # 测试（关键路径）
+├── .env.example
+└── README.md
+```
+
+**Small 项目可以省略**：
+- 分层架构（Controller/Service/Repository）
+- 依赖注入
+- DTO 分离
+- 结构化日志
+- Health Check
+- 复杂的测试分层
+
+---
+
+## 2. Scope <!-- id: spec_backend_scope -->
+
+### 2.1 Applicable Project Types
 
 | 类型 | 说明 |
 |------|------|
@@ -24,7 +80,7 @@
 | `background-job` | 后台任务、定时任务 |
 | `library` | 库 / SDK |
 
-### 1.2 Technology Agnostic
+### 2.2 Technology Agnostic
 
 本规范适用于任何后端技术栈，包括但不限于：
 - Node.js / TypeScript
@@ -53,8 +109,7 @@ project/
 │   └── middlewares/          # 中间件
 ├── tests/                    # 测试代码
 │   ├── unit/                 # 单元测试
-│   ├── integration/          # 集成测试
-│   └── e2e/                  # E2E 测试
+│   └── integration/          # 集成测试
 ├── migrations/               # 数据库迁移
 ├── scripts/                  # 自动化脚本
 ├── docs/                     # 文档
@@ -352,16 +407,16 @@ HTTP Request
 
 ## 10. Testing <!-- id: spec_backend_testing -->
 
-### 10.1 Test Pyramid
+### 10.1 Test Scope
+
+开发规范只涵盖**单元测试**和**集成测试**，E2E 测试属于测试规范范畴。
 
 ```
-        ┌───────┐
-        │  E2E  │  ← 少量，验证完整流程
-       ┌┴───────┴┐
+       ┌───────────┐
        │Integration│  ← 适量，验证模块协作
-      ┌┴──────────┴┐
-      │    Unit    │  ← 大量，验证单个函数/类
-      └────────────┘
+      ┌┴───────────┴┐
+      │    Unit     │  ← 大量，验证单个函数/类
+      └─────────────┘
 ```
 
 ### 10.2 Test Types
@@ -370,15 +425,18 @@ HTTP Request
 |------|------|------|
 | 单元测试 | 单个函数/类 | 快速、隔离 |
 | 集成测试 | 多模块协作 | 验证交互 |
-| E2E 测试 | 完整流程 | 验证用户场景 |
 
 ### 10.3 Coverage Requirements
 
-| 指标 | 最低要求 |
-|------|----------|
-| 语句覆盖率 | 80% |
-| 分支覆盖率 | 70% |
-| 函数覆盖率 | 80% |
+按项目规模设定不同的覆盖率要求：
+
+| 指标 | Small | Medium | Large |
+|------|-------|--------|-------|
+| 语句覆盖率 | 关键路径 | 70% | 80% |
+| 分支覆盖率 | - | 60% | 70% |
+| 函数覆盖率 | - | 70% | 80% |
+
+**Small 项目**：只需覆盖关键业务路径，不强制覆盖率指标。
 
 ### 10.4 Mock Strategy
 
@@ -530,7 +588,7 @@ HTTP Request
 
 ---
 
-*Version: v2.1*
+*Version: v2.2*
 *Created: 2025-12-23*
 *Updated: 2025-12-23*
-*Changes: v2.0 重构为技术栈无关的通用原则版本; v2.1 新增 Async Processing 章节、New Developer Onboarding*
+*Changes: v2.0 技术栈无关; v2.1 新增 Async Processing; v2.2 新增项目规模分级（Small/Medium/Large），避免小项目过度设计*
