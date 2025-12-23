@@ -1,5 +1,5 @@
 ---
-type: feature-spec
+type: feature
 version: "1.2"
 ---
 
@@ -342,7 +342,7 @@ Feature 名称出现在 PRD Feature Roadmap 表格中
 | `docs/specs/meta-spec.md` | 元规范文档（验证系统的公理层） |
 | `scripts/analyze-impact.js` | 影响分析脚本 |
 | `scripts/validate-docs.js` | 文档契约验证脚本（实现 meta-spec） |
-| `docs/process/state-management.spec.md` | v7.0 Schema 文档 |
+| `docs/requirements/features/fea-state-management.md` | state.json Schema 文档 |
 | `scripts/validate-state.js` | v7.0 校验规则 |
 
 ### 6.2 Usage

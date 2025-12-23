@@ -1,7 +1,6 @@
 ---
-type: backend
-template: .solodevflow/templates/backend/backend/prd.md
-version: "2.4"
+type: prd
+version: "2.9"
 ---
 
 # SoloDevFlow 2.0 <!-- id: prod_solodevflow -->
@@ -111,7 +110,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature Spec**: [meta-spec.md](specs/meta-spec.md)
+- **Feature Spec**: [spec-meta.md](../specs/spec-meta.md)
 
 #### requirements-doc <!-- id: feat_ref_requirements_doc -->
 
@@ -120,7 +119,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature Spec**: [requirements-doc.spec.md](specs/requirements-doc.spec.md)
+- **Feature Spec**: [spec-requirements.md](../specs/spec-requirements.md)
 
 #### design-doc-spec <!-- id: feat_ref_design_doc_spec -->
 
@@ -129,7 +128,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature Spec**: [design-doc-spec.md](specs/design-doc-spec.md)
+- **Feature Spec**: [spec-design.md](../specs/spec-design.md)
 
 #### development-spec <!-- id: feat_ref_development_spec -->
 
@@ -138,7 +137,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P1
 - **Type**: document
-- **Feature Spec**: [development-spec.md](specs/development-spec.md)
+- **Feature Spec**: [spec-backend-dev.md](../specs/spec-backend-dev.md), [spec-frontend-dev.md](../specs/spec-frontend-dev.md)
 
 #### testing-spec <!-- id: feat_ref_testing_spec -->
 
@@ -147,7 +146,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P1
 - **Type**: document
-- **Feature Spec**: [testing-spec.md](specs/testing-spec.md)
+- **Feature Spec**: [spec-test.md](../specs/spec-test.md)
 
 ### 4.2 Domain: process <!-- id: domain_process -->
 
@@ -160,7 +159,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature Spec**: [core-collaboration.spec.md](_flows/core-collaboration.spec.md)
+- **Feature Spec**: [flow-core-collaboration.md](flows/flow-core-collaboration.md)
 
 #### state-management <!-- id: feat_ref_state_management -->
 
@@ -169,7 +168,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature Spec**: [state-management.spec.md](process/state-management.spec.md)
+- **Feature Spec**: [fea-state-management.md](features/fea-state-management.md)
 
 #### change-impact-tracking <!-- id: feat_ref_change_impact_tracking -->
 
@@ -178,7 +177,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature Spec**: [change-impact-tracking.spec.md](process/change-impact-tracking.spec.md)
+- **Feature Spec**: [fea-change-impact-tracking.md](features/fea-change-impact-tracking.md)
 
 #### input-capture <!-- id: feat_ref_input_capture -->
 
@@ -187,7 +186,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature Spec**: [input-log.md](../.flow/input-log.md)
+- **Feature Spec**: [input-log.md](../../.solodevflow/input-log.md)
 
 #### spark-box <!-- id: feat_ref_spark_box -->
 
@@ -196,7 +195,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature Spec**: [spark-box.md](../.flow/spark-box.md)
+- **Feature Spec**: [spark-box.md](../../.solodevflow/spark-box.md)
 
 ### 4.3 Domain: tooling <!-- id: domain_tooling -->
 
@@ -211,7 +210,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P0
 - **Type**: code
-- **Feature Spec**: [project-init.spec.md](tooling/project-init.spec.md)
+- **Feature Spec**: [fea-project-init.md](features/fea-project-init.md)
 
 ### 4.4 Domain: ai-config <!-- id: domain_ai_config -->
 
@@ -281,17 +280,17 @@ AI 行为入口，解决 AI 对话启动时缺乏上下文和导航的问题。�
 | 文件 | 用途 |
 |------|------|
 | `CLAUDE.md` | AI 行为规范（精简版） |
-| `.flow/state.json` | 唯一状态源 |
+| `.solodevflow/state.json` | 唯一状态源 |
 | `docs/specs/` | 规范文档 |
 | `docs/templates/` | 文档模板 |
 
 ### Design Principles
 
-核心设计原则定义在设计文档规范中：[design-doc-spec.md](./specs/design-doc-spec.md#spec_design_principles)
+核心设计原则定义在设计文档规范中：[spec-design.md](../specs/spec-design.md#spec_design_principles)
 
 ---
 
-*Version: v2.8*
+*Version: v2.9*
 *Created: 2024-12-16*
-*Updated: 2025-12-22*
-*Changes: v2.7 process domain 新增 core-collaboration Feature，修正 claude-md 描述为索引入口; v2.8 Feature Roadmap 改为子章节形式，每个 Feature 有独立锚点（feat_ref_前缀），便于精确影响分析*
+*Updated: 2025-12-23*
+*Changes: v2.9 基于 spec-requirements.md v2.3 重构：(1) Frontmatter 修正为 type: prd; (2) 目录结构适配规范（features/, flows/）; (3) 所有 Feature Spec 引用路径更新*

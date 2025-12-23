@@ -1,5 +1,5 @@
 ---
-type: feature-spec
+type: feature
 version: "1.0"
 ---
 
@@ -164,7 +164,7 @@ target-project/
 
 | Type | Path | Required | Description |
 |------|------|----------|-------------|
-| Design | docs/tooling/project-init.design.md | required | 设计文档 |
+| Design | docs/designs/tooling/project-init.design.md | required | 设计文档 |
 | Code | scripts/init.js | Yes | 初始化脚本 |
 | E2E Test | tests/e2e/project-init.test.js | Yes | E2E 测试 |
 

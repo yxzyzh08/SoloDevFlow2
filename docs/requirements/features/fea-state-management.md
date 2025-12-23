@@ -1,5 +1,5 @@
 ---
-type: feature-spec
+type: feature
 version: "9.0"
 ---
 
@@ -510,7 +510,7 @@ document 类型：pending → drafting → done
       "type": "document",
       "description": "状态管理机制（state.json Schema）",
       "domain": "process",
-      "docPath": "docs/process/state-management.spec.md",
+      "docPath": "docs/requirements/features/fea-state-management.md",
       "scripts": ["scripts/validate-state.js", "scripts/state.js"],
       "phase": "drafting",
       "status": "in_progress"

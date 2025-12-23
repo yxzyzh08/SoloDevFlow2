@@ -1,5 +1,5 @@
 ---
-type: flow-spec
+type: flow
 version: "3.0"
 ---
 

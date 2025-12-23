@@ -10,7 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const STATE_FILE = path.join(__dirname, '..', '.flow', 'state.json');
+const STATE_FILE = path.join(__dirname, '..', '.solodevflow', 'state.json');
 
 // Schema version
 const EXPECTED_SCHEMA_VERSION = "10.0.0";
