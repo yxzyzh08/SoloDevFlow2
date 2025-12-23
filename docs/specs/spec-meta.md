@@ -187,9 +187,10 @@ Flow（跨域流程）可以：
 | `docs/tests/` | 测试文档（E2E、性能、破坏性） | 测试、研发 |
 | `docs/specs/` | 规范文档（meta-spec, *-spec.md） | AI + 人类 |
 | `src/` | 源代码 + 单元测试 + 集成测试 | 研发 |
-| `scripts/` | 本项目的自动化脚本，在.solodeveflow有拷贝 | 开发者 / CI |
-| `.solodevflow/` | 本项目可以提供给其他项目使用的产出包含不限于:所有规范，模板，脚本等 | AI 执行 |
-| `.claude/` | Claude CLI 配置（commands, skills） | Claude CLI |
+| `scripts/` | 本项目的自动化脚本 | 开发者 / CI |
+| `template/` | 可分发的静态模板（flows, commands, requirements, skills） | AI + 开发者 |
+| `.solodevflow/` | 运行时目录（state, logs, flows实例） | AI 执行 |
+| `.claude/` | Claude CLI 配置（从 template/ 同步） | Claude CLI |
 
 ### 5.2 Requirements Directory
 
