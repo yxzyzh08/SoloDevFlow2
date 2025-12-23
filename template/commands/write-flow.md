@@ -6,44 +6,49 @@
 
 - `name`：流程名称（必填）
 
+## 输出位置
+
+`docs/requirements/flows/flow-{name}.md`
+
 ## 加载文件
 
-### 步骤0: 获取规范路径
+### 步骤0: 获取项目信息
 
-1. 读取 `.solodevflow/state.json` 获取:
-   - `project.type`（项目类型：`backend` | `web-app` | `mobile-app`）
-   - `solodevflow.sourcePath`（SoloDevFlow 源路径）
+读取 `.solodevflow/state.json` 获取:
+- `project.type`（项目类型：`backend` | `web-app` | `mobile-app`）
 
-### 步骤1: 加载规范和模板
+### 步骤1: 加载规范
 
-1. 规范文档：`docs/specs/spec-requirements.md`
-2. Flow 模板：`.solodevflow/templates/requirements/{projectType}/flow.spec.md`
-3. 现有 Flow Spec：`docs/requirements/_flows/{name}.spec.md`（如存在）
+1. 规范文档：`docs/specs/spec-requirements.md`（Section 6: Flow Spec Structure）
+2. 现有 Flow Spec：`docs/requirements/flows/flow-{name}.md`（如存在）
 
-**注意**: 规范文档和模板已在安装时复制到本项目。
+**注意**: 直接从规范生成文档，不使用模板。
 
 ## 执行步骤
 
 ### 2. 前置检查
 
-1. 检测 `docs/requirements/_flows/{name}.spec.md` 是否存在
-2. 读取规范文档，了解 Flow Spec 结构要求（Section 7）
+1. 检测目标文件是否存在
+2. 读取规范文档 Section 6，了解 Flow Spec 结构要求
 
 **如果不存在（新建模式）**：
-3. 读取 Flow 模板，作为文档骨架
-4. 根据用户提供的流程信息，填充模板内容
-5. 按模板中的锚点要求添加锚点（替换 `{name}` 为实际流程名）
-6. 输出到 `docs/requirements/_flows/{name}.spec.md`
+
+1. 根据规范 Section 6 的表格，生成文档结构
+2. 必选章节（Required=Yes）必须包含
+3. 替换锚点中的 `{name}` 为实际流程名
+4. 根据用户提供的流程信息填充内容
+5. 输出到目标位置
 
 **如果存在（更新模式）**：
-3. 读取现有 Flow Spec 内容
-4. 根据用户输入的需求，自动判断需要更新哪些章节
-5. 保留未变更的章节，只修改相关部分
-6. 确保锚点和结构完整
-7. 输出更新后的文件
+
+1. 读取现有 Flow Spec 内容
+2. 根据用户输入的需求，自动判断需要更新哪些章节
+3. 保留未变更的章节，只修改相关部分
+4. 确保锚点和结构完整
+5. 输出更新后的文件
 
 **最后**：
-- 运行校验：`npm run validate:docs docs/requirements/_flows/{name}.spec.md`，确保符合规范
+- 运行校验：`npm run validate:docs {输出文件路径}`，确保符合规范
 
 ## 创建时机
 

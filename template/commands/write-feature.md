@@ -18,24 +18,22 @@
 
 | 调用方式 | 输出位置 |
 |----------|----------|
-| `/write-feature {name}` | `docs/requirements/_features/{feature}.spec.md` |
-| `/write-feature {domain} {name}` | `docs/requirements/{domain}/{feature}.spec.md` |
+| `/write-feature {name}` | `docs/requirements/features/fea-{feature}.md` |
+| `/write-feature {domain} {name}` | `docs/requirements/{domain}/fea-{feature}.md` |
 
 ## 加载文件
 
-### 步骤0: 获取规范路径
+### 步骤0: 获取项目信息
 
-1. 读取 `.solodevflow/state.json` 获取:
-   - `project.type`（项目类型：`backend` | `web-app` | `mobile-app`）
-   - `solodevflow.sourcePath`（SoloDevFlow 源路径）
+读取 `.solodevflow/state.json` 获取:
+- `project.type`（项目类型：`backend` | `web-app` | `mobile-app`）
 
-### 步骤1: 加载规范和模板
+### 步骤1: 加载规范
 
-1. 规范文档：`docs/specs/spec-requirements.md`
-2. Feature 模板：`.solodevflow/templates/requirements/{projectType}/feature.spec.md`
-3. 现有 Feature Spec：目标路径文件（如存在）
+1. 规范文档：`docs/specs/spec-requirements.md`（Section 4: Feature Spec Structure）
+2. 现有 Feature Spec：目标路径文件（如存在）
 
-**注意**: 规范文档和模板已在安装时复制到本项目。
+**注意**: 直接从规范生成文档，不使用模板。
 
 ## 执行步骤
 
@@ -43,25 +41,64 @@
 
 1. 判断参数数量，确定调用模式和输出路径
 2. 检测目标文件是否存在
-3. 读取规范文档，了解 Feature Spec 结构要求（Section 5）
+3. 读取规范文档 Section 4，了解 Feature Spec 结构要求
 
 ### 3. 文档编写
 
 **如果不存在（新建模式）**：
-4. 读取 Feature 模板，作为文档骨架
-5. 根据用户提供的功能信息，填充模板内容
-6. 按模板中的锚点要求添加锚点（替换 `{name}` 为实际功能名）
-7. 输出到对应位置
+
+1. 根据规范 Section 4 的表格，生成文档结构
+2. 必选章节（Required=Yes）必须包含
+3. **检查 Condition 列**：
+   - 若当前 `project.type` 匹配条件，包含该章节
+   - 例如：`projectType: web-app` 时包含 UI Components 章节
+4. 替换锚点中的 `{name}` 为实际功能名
+5. 根据用户提供的功能信息填充内容
+6. 输出到对应位置
 
 **如果存在（更新模式）**：
-4. 读取现有 Feature Spec 内容
-5. 根据用户输入的需求，自动判断需要更新哪些章节
-6. 保留未变更的章节，只修改相关部分
-7. 确保锚点和结构完整
-8. 输出更新后的文件
+
+1. 读取现有 Feature Spec 内容
+2. 根据用户输入的需求，自动判断需要更新哪些章节
+3. 保留未变更的章节，只修改相关部分
+4. 确保锚点和结构完整
+5. 输出更新后的文件
 
 **最后**：
 - 运行校验：`npm run validate:docs {输出文件路径}`，确保符合规范
+
+## 项目类型条件章节
+
+根据 `project.type` 包含条件章节：
+
+| 项目类型 | 额外章节 |
+|----------|----------|
+| `backend` | 无 |
+| `web-app` | UI Components（必选） |
+| `mobile-app` | 无 |
+
+### UI Components 章节格式（web-app）
+
+```markdown
+## UI Components <!-- id: feat_{name}_ui_components -->
+
+| Component | 描述 | 复用/新建 |
+|-----------|------|-----------|
+| {组件名} | {组件功能} | 复用现有 / 新建 |
+
+### Component Dependencies
+
+```
+PageComponent
+  ├── HeaderComponent
+  └── ContentComponent
+```
+```
+
+**规则**：
+- 先查询 `docs/ui/component-registry.md`（如存在）
+- 优先复用现有组件
+- 新建组件实现后需更新组件注册表
 
 ## Feature 类型与 Artifacts
 
@@ -77,15 +114,15 @@
 ### Artifacts 章节（code 类型必选）
 
 ```markdown
-## Artifacts <!-- feat_{name}_artifacts -->
+## Artifacts <!-- id: feat_{name}_artifacts -->
 
-| Type | Path | Required | Description |
-|------|------|----------|-------------|
-| Design | docs/designs/{domain}/{name}.design.md | required 时必填 | 设计文档 |
-| Code | src/{module}/ | Yes | 代码目录 |
-| E2E Test | tests/e2e/{name}.test.ts | Yes | E2E 测试 |
+| Type | Path | Description |
+|------|------|-------------|
+| Design | docs/designs/des-{name}.md | 设计文档（设计阶段填写） |
+| Code | src/{module}/ | 代码目录 |
+| Test | tests/e2e/{name}.test.ts | E2E 测试 |
 
-**Design Depth**: none | required
+**Design Depth**: TBD
 ```
 
 ### Design Depth 初步评估
@@ -94,14 +131,14 @@
 
 | 级别 | 条件 |
 |------|------|
-| none | 简单、边界清晰、无架构决策，无需设计文档 |
-| required | 需要架构决策、涉及多模块，需要设计文档 |
+| None | 简单、边界清晰、无架构决策，无需设计文档 |
+| Required | 需要架构决策、涉及多模块，需要设计文档 |
 
 ## 注意事项
 
 - 必须包含：Intent、Core Capabilities、Acceptance Criteria
 - **code 类型必须包含 Artifacts 章节**
+- **web-app 项目必须包含 UI Components 章节**
 - User Stories 为可选章节，需要详细描述用户场景时添加
-- 参考 Appendix E 了解 User Story 与 User Scenario 的区别
 - 独立 Feature 后续可迁移到 Domain 目录（当 Domain 确定时）
 - 更新时保留文档版本历史（末尾的 Version/Changes 信息）

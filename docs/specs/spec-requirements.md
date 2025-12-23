@@ -9,7 +9,8 @@
 - 此规范定义需求文档的**具体章节结构**
 - 元规范 `spec-meta.md` 定义文档类型和验证规则
 - 设计文档规范见 `spec-design.md`
-- **版本 v2.3**：Design Depth 简化为 Required/None 二元判断
+- **版本 v2.4**：增加 `Condition` 列支持项目类型差异，消除模板层
+- **模板已消除**：AI 直接从本规范生成文档，不再使用 `template/requirements/` 模板
 
 ---
 
@@ -199,16 +200,33 @@ Feature Roadmap 按 Domain 组织，每个 Feature 以子章节形式呈现：
 
 ## 4. Feature Spec Structure <!-- id: spec_req_feature --> <!-- defines: feature -->
 
-| Section | Required | Anchor | Description |
-|---------|----------|--------|-------------|
-| Intent | Yes | `feat_{name}_intent` | 解决什么问题（Why） |
-| Core Capabilities | Yes | `feat_{name}_capabilities` | 提供什么能力（What） |
-| Acceptance Criteria | Yes | `feat_{name}_acceptance` | 可验证的完成条件 |
-| Artifacts | code 类型必填 | `feat_{name}_artifacts` | 产物记录（设计/代码/测试路径） |
-| User Stories | No | `feat_{name}_stories` | 需要详细描述用户场景 |
-| Boundaries | No | `feat_{name}_boundaries` | 需要明确排除项 |
-| Dependencies | No | `feat_{name}_dependencies` | 有前置依赖 |
-| Non-Functional Requirements | No | `feat_{name}_nfr` | 性能、安全等质量属性（Feature 级） |
+| Section | Required | Anchor | Description | Condition |
+|---------|----------|--------|-------------|-----------|
+| Intent | Yes | `feat_{name}_intent` | 解决什么问题（Why） | - |
+| Core Capabilities | Yes | `feat_{name}_capabilities` | 提供什么能力（What） | - |
+| Acceptance Criteria | Yes | `feat_{name}_acceptance` | 可验证的完成条件 | - |
+| Artifacts | code 类型必填 | `feat_{name}_artifacts` | 产物记录（设计/代码/测试路径） | - |
+| UI Components | Yes | `feat_{name}_ui_components` | 涉及的 UI 组件（复用/新建） | projectType: web-app |
+| User Stories | No | `feat_{name}_stories` | 需要详细描述用户场景 | - |
+| Boundaries | No | `feat_{name}_boundaries` | 需要明确排除项 | - |
+| Dependencies | No | `feat_{name}_dependencies` | 有前置依赖 | - |
+| Non-Functional Requirements | No | `feat_{name}_nfr` | 性能、安全等质量属性（Feature 级） | - |
+
+### 4.0 Condition Column
+
+`Condition` 列用于标注章节的适用条件：
+
+| 条件格式 | 说明 | 示例 |
+|----------|------|------|
+| `-` | 无条件，适用于所有项目类型 | Intent、Acceptance Criteria |
+| `projectType: {type}` | 仅适用于指定项目类型 | `projectType: web-app` |
+
+**支持的项目类型**：
+- `backend`: 后端服务项目
+- `web-app`: Web 前端应用
+- `mobile-app`: 移动端应用
+
+AI 在生成文档时，根据 `state.json` 的 `project.type` 字段判断是否包含条件章节。
 
 ### 4.1 Feature Types
 
@@ -259,6 +277,36 @@ Artifacts 章节记录 Feature 的产出物位置：
 - Feature 有比 PRD 更严格的性能要求
 - Feature 涉及敏感数据，有额外安全要求
 - Feature 是核心链路，需要高可用保障
+
+### 4.5 UI Components Section (web-app only)
+
+> 此章节仅适用于 `projectType: web-app` 的项目
+
+列出 Feature 涉及的 UI 组件，标注复用现有组件还是新建：
+
+```markdown
+## UI Components <!-- id: feat_{name}_ui_components -->
+
+| Component | 描述 | 复用/新建 |
+|-----------|------|-----------|
+| {组件名} | {组件功能} | 复用现有 / 新建 |
+
+### Component Dependencies
+
+```
+PageComponent
+  ├── HeaderComponent
+  ├── ContentComponent
+  │   ├── FormComponent
+  │   └── TableComponent
+  └── FooterComponent
+```
+```
+
+**规则**：
+- 先查询 `docs/ui/component-registry.md`（如存在）
+- 优先复用现有组件
+- 新建组件实现后需更新组件注册表
 
 ---
 
@@ -399,7 +447,7 @@ minor: 内容更新（修改描述）
 
 ---
 
-*Version: v2.3*
+*Version: v2.4*
 *Created: 2024-12-20 (v1.0)*
-*Updated: 2025-12-23 (v2.3)*
-*Changes: v2.2 Design Depth 移至设计规范; v2.3 同步简化为 Required/None 二元判断*
+*Updated: 2025-12-23 (v2.4)*
+*Changes: v2.4 增加 Condition 列支持项目类型差异，消除模板层*

@@ -29,19 +29,13 @@ const VERSION = require(path.join(SOLODEVFLOW_ROOT, 'package.json')).version;
 
 const PROJECT_TYPES = ['backend', 'web-app', 'mobile-app'];
 
-const UI_FILES = {
-  'web-app': [
-    { src: 'template/requirements/shared/component-registry.md', dest: 'docs/ui/component-registry.md' }
-  ],
-  'mobile-app': [
-    { src: 'template/requirements/shared/component-registry.md', dest: 'docs/ui/component-registry.md' }
-  ],
-  'backend': []
-};
+// Note: Template layer has been eliminated (v2.4)
+// AI commands now generate documents directly from spec-requirements.md
+// Project type differences are handled via Condition column in spec
 
 const CLAUDE_RULES = {
-  'web-app': 'template/requirements/web-app/CLAUDE.md',
-  'mobile-app': 'template/requirements/mobile-app/CLAUDE.md',
+  'web-app': null,  // Rules now embedded in spec-requirements.md
+  'mobile-app': null,
   'backend': null
 };
 
@@ -461,28 +455,11 @@ async function copyToolFiles(config) {
     }
   }
 
-  // 5. Copy template/requirements/{projectType}/ to .solodevflow/templates/ (non-bootstrap mode only)
-  if (!config.bootstrap && config.projectType) {
-    log('  复制 .solodevflow/templates/requirements/（需求模板）...');
-    const templatesSrc = path.join(SOLODEVFLOW_ROOT, 'template/requirements', config.projectType);
-    const templatesDest = path.join(targetPath, '.solodevflow/templates/requirements', config.projectType);
-    if (fs.existsSync(templatesSrc)) {
-      copyDir(templatesSrc, templatesDest);
-      log(`    .solodevflow/templates/requirements/${config.projectType}/`, 'success');
-    }
+  // Note: Template layer eliminated (v2.4)
+  // AI commands now generate documents directly from spec-requirements.md
+  // Project type differences are handled via Condition column in spec
 
-    // Copy shared templates for web-app and mobile-app
-    if (config.projectType === 'web-app' || config.projectType === 'mobile-app') {
-      const sharedSrc = path.join(SOLODEVFLOW_ROOT, 'template/requirements/shared');
-      const sharedDest = path.join(targetPath, '.solodevflow/templates/requirements/shared');
-      if (fs.existsSync(sharedSrc)) {
-        copyDir(sharedSrc, sharedDest);
-        log('    .solodevflow/templates/requirements/shared/', 'success');
-      }
-    }
-  }
-
-  // 6. Copy scripts to .solodevflow/scripts/ (if not skipped)
+  // 5. Copy scripts to .solodevflow/scripts/ (if not skipped)
   if (!config.skipScripts) {
     log('  复制 .solodevflow/scripts/...');
     const scriptsToCopy = ['status.js', 'validate-state.js', 'state.js', 'validate-docs.js', 'analyze-impact.js'];
@@ -494,21 +471,6 @@ async function copyToolFiles(config) {
       if (fs.existsSync(srcPath)) {
         copyFile(srcPath, destPath);
         log(`    .solodevflow/scripts/${script}`, 'success');
-      }
-    }
-  }
-
-  // 5. Copy UI component files (web-app / mobile-app only)
-  const uiFiles = UI_FILES[config.projectType] || [];
-  if (uiFiles.length > 0) {
-    log('  复制 UI 组件管理文件...');
-    for (const { src, dest } of uiFiles) {
-      const srcPath = path.join(SOLODEVFLOW_ROOT, src);
-      const destPath = path.join(targetPath, dest);
-      if (fs.existsSync(srcPath)) {
-        ensureDir(path.dirname(destPath));
-        copyFile(srcPath, destPath);
-        log(`    ${dest}`, 'success');
       }
     }
   }
@@ -618,7 +580,6 @@ function finalize(config) {
 已更新:
   - .solodevflow/flows/（工作流文件）
   - .solodevflow/scripts/（运行时脚本）
-  - .solodevflow/templates/（需求模板）
   - .claude/commands/（命令文件）
   - .claude/skills/（技能文件）
   - docs/specs/（规范文档）

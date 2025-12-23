@@ -5,7 +5,7 @@ version: "1.0"
 
 # Feature: Project Init <!-- id: feat_project_init -->
 
-> 提供安装器，将 SoloDevFlow 的规范、模板、工具分发到目标项目，支持常规项目安装和自身升级（自举模式）
+> 提供安装器，将 SoloDevFlow 的规范、命令、工具分发到目标项目，支持常规项目安装和自身升级（自举模式）
 
 **Feature Type**: code
 
@@ -20,21 +20,23 @@ version: "1.0"
 **使用场景**：
 1. **场景A：常规项目安装**
    - 用户有一个现有项目（backend / web-app / mobile-app），想接入 SoloDevFlow
-   - 需要将规范文档、需求模板、AI 命令、工作流等完整安装到目标项目
+   - 需要将规范文档、AI 命令、工作流等完整安装到目标项目
    - 目标项目获得独立运行的能力，无需依赖 SoloDevFlow 源目录
 
 2. **场景B：自举模式（自身升级）**
-   - 开发者在 SoloDevFlow 项目本身开发新功能（如新命令、新模板）
+   - 开发者在 SoloDevFlow 项目本身开发新功能（如新命令、新规范）
    - 开发完成后，需要将 `template/` 源码同步到运行态目录（`.solodevflow/`, `.claude/`）
    - 必须保留项目自身的状态数据（state.json 中的 features, sparks 等）
 
 **核心挑战**：
 - **源码与运行时分离**：`template/` 是源码（可分发），`.solodevflow/` 是运行时实例
 - **两种模式差异处理**：
-  - 常规项目：完整复制规范、模板、工具（目标项目需要独立副本）
-  - 自举模式：仅同步运行态文件，跳过规范和模板（源码已存在）
+  - 常规项目：完整复制规范、命令、工具（目标项目需要独立副本）
+  - 自举模式：仅同步运行态文件，跳过规范（源码已存在）
 - **版本管理**：记录安装/升级版本，支持后续升级检测
 - **向后兼容**：自动迁移遗留的 `.flow/` 路径到 `.solodevflow/`
+
+> **注意**：v2.4 版本已消除模板层，AI 命令直接从规范生成文档，项目类型差异通过规范中的 Condition 列处理。
 
 ### 1.2 Value
 
@@ -59,10 +61,12 @@ version: "1.0"
 | C1 | 自身项目检测 | 检测目标项目是否为 SoloDevFlow 自身 |
 | C2 | 目录初始化 | 创建 `.solodevflow/` 目录和状态文件 |
 | C3 | 命令安装 | 安装 `.claude/commands/` 命令集 |
-| C4 | 规范复制 | 复制规范文档和模板到目标项目 |
+| C4 | 规范复制 | 复制规范文档到目标项目（非自举模式） |
 | C5 | 配置生成 | 生成 `CLAUDE.md` 和更新 `package.json` |
 | C6 | 版本记录 | 记录安装的 SoloDevFlow 版本 |
 | C7 | 自举模式 | 自身项目的特殊处理（只更新工具文件，保留项目状态） |
+
+> **已消除**：模板复制能力（v2.4）。AI 命令现在直接从 `spec-requirements.md` 生成文档。
 
 ### 2.2 Capability Details
 
@@ -174,34 +178,7 @@ target-project/
 - 自举模式跳过（SoloDevFlow 自身已有规范）
 - 完整复制所有规范文件
 
-#### C6: 模板复制（非自举模式）
-
-按项目类型复制需求文档模板到目标项目的运行时目录。
-
-**输出**：
-```
-target-project/
-└── .solodevflow/
-    └── templates/
-        └── requirements/
-            └── {projectType}/     # backend / web-app / mobile-app
-                ├── prd.md
-                ├── feature.spec.md
-                ├── capability.spec.md
-                ├── flow.spec.md
-                ├── feature.design.md
-                └── simple-feature.spec.md
-```
-
-**源路径**：`SoloDevFlow/template/requirements/{projectType}/` → 目标项目 `.solodevflow/templates/requirements/`
-
-**规则**：
-- **仅在非自举模式下复制**（其他项目需要模板）
-- 自举模式跳过（SoloDevFlow 自身已有 `template/` 源）
-- 根据项目类型选择对应模板子目录
-- 对于 web-app 和 mobile-app，额外复制 shared 模板
-
-#### C7: 脚本安装
+#### C6: 脚本安装
 
 复制运行时脚本到目标项目的运行时目录，使其能独立运行状态管理和验证。
 
@@ -224,7 +201,7 @@ target-project/
 - 复制的脚本列表：state.js, status.js, validate-state.js, validate-docs.js, analyze-impact.js
 - 覆盖已存在的文件（升级场景）
 
-#### C8: 配置生成
+#### C7: 配置生成
 
 生成 CLAUDE.md 和更新 package.json。
 
@@ -250,7 +227,7 @@ target-project/
 - 如果 `package.json` 不存在，创建最小版本
 - 如果 `package.json` 存在，合并 scripts（不覆盖已有脚本）
 
-#### C9: 版本记录
+#### C8: 版本记录
 
 在 state.json 中记录安装信息和源路径。
 
@@ -268,9 +245,9 @@ target-project/
 - `version`: 当前安装的 SoloDevFlow 版本
 - `installedAt`: 首次安装时间（升级时保留）
 - `upgradedAt`: 最后升级时间（升级时更新）
-- `sourcePath`: SoloDevFlow 源目录的绝对路径（用于引用模板和规范）
+- `sourcePath`: SoloDevFlow 源目录的绝对路径（用于引用规范）
 
-#### C10: 升级模式与自举模式
+#### C9: 升级模式与自举模式
 
 **三种操作场景**的差异：
 
@@ -281,7 +258,6 @@ target-project/
 | `.solodevflow/state.json` | **创建** | 从模板生成，空的 features 列表 |
 | `.solodevflow/flows/` | **创建** | 从 `template/flows/` 复制 |
 | `.solodevflow/scripts/` | **创建** | 从 `scripts/` 复制运行时脚本（5个） |
-| `.solodevflow/templates/requirements/` | **创建** | 从 `template/requirements/{type}/` 复制 |
 | `.claude/commands/` | **创建** | 从 `template/commands/` 复制 |
 | `.claude/skills/` | **创建** | 从 `template/skills/` 复制 |
 | `docs/specs/` | **创建** | 从 `docs/specs/` 复制（完整规范文档） |
@@ -294,7 +270,6 @@ target-project/
 | `.solodevflow/state.json` | **部分更新** | 只更新版本信息，**保留用户数据** |
 | `.solodevflow/flows/` | **覆盖** | 从 `template/flows/` 更新 |
 | `.solodevflow/scripts/` | **覆盖** | 从 `scripts/` 更新运行时脚本 |
-| `.solodevflow/templates/requirements/` | **覆盖** | 从 `template/requirements/{type}/` 更新 |
 | `.claude/commands/` | **覆盖** | 从 `template/commands/` 更新 |
 | `.claude/skills/` | **覆盖** | 从 `template/skills/` 更新 |
 | `docs/specs/` | **覆盖** | 从 `docs/specs/` 更新（规范可能有变化） |
@@ -324,7 +299,6 @@ state.lastUpdated = new Date().toISOString();
 | `.claude/commands/` | **覆盖** | 从 `template/commands/` 同步 |
 | `.claude/skills/` | **覆盖** | 从 `template/skills/` 同步 |
 | `docs/specs/` | **跳过** | 源码已存在，不复制给自己 |
-| `template/` | **跳过** | 源码已存在，不复制给自己 |
 | `scripts/` | **跳过** | 源码已存在，不覆盖 |
 | `CLAUDE.md` | **跳过** | 保留项目自身的配置 |
 
@@ -341,7 +315,6 @@ solodevflow upgrade .   # 同样识别为自举模式（操作相同）
 |------|-------------|-------------|---------|
 | `.solodevflow/` 运行时目录 | ✅ 全部创建 | ✅ 更新工具文件 | ✅ 同步运行态 |
 | `.solodevflow/scripts/` | ✅ 复制 | ✅ 更新 | ❌ 跳过（已有源码） |
-| `.solodevflow/templates/` | ✅ 复制 | ✅ 更新 | ❌ 跳过（已有源码） |
 | `docs/specs/` 规范文档 | ✅ 复制 | ✅ 更新 | ❌ 跳过（已有源码） |
 | state.json | 创建空数据 | 保留用户数据 | 保留项目数据 |
 
@@ -356,10 +329,9 @@ solodevflow upgrade .   # 同样识别为自举模式（操作相同）
 | 运行时目录 | 检查目标项目 | `.solodevflow/` 目录和 4 个文件存在 |
 | 工作流安装 | 检查目标项目 | `.solodevflow/flows/workflows.md` 存在 |
 | 脚本安装 | 检查目标项目 | `.solodevflow/scripts/` 包含 5 个运行时脚本 |
-| 模板安装 | 检查目标项目 | `.solodevflow/templates/requirements/{type}/` 存在 |
 | 命令安装 | 检查目标项目 | `.claude/commands/` 包含 7 个 write-*.md |
 | 技能安装 | 检查目标项目 | `.claude/skills/requirements-expert/` 存在 |
-| 规范复制 | 检查目标项目 | `docs/specs/` 包含 5 个规范文件 |
+| 规范复制 | 检查目标项目 | `docs/specs/` 包含规范文件 |
 | CLAUDE.md | 检查目标项目 | 文件存在且包含项目信息 |
 | package.json | 检查目标项目 | scripts 字段包含状态管理命令（指向 .solodevflow/scripts/） |
 | 功能验证 | 运行 `npm run status` | 输出状态摘要 |
@@ -375,7 +347,6 @@ solodevflow upgrade .   # 同样识别为自举模式（操作相同）
 | 命令更新 | 检查 `.claude/commands/` | 从 `template/commands/` 同步 |
 | 技能更新 | 检查 `.claude/skills/` | 从 `template/skills/` 同步 |
 | 规范不复制 | 检查 `docs/specs/` | 保持不变（源码不复制给自己） |
-| 模板不复制 | 检查 `template/` | 保持不变（源码不复制给自己） |
 | 脚本不复制 | 检查根目录 `scripts/` | 保持不变（源码不覆盖） |
 | 运行时脚本不复制 | 检查 `.solodevflow/scripts/` | 保持不变（使用根目录源码） |
 | 状态保留 | 检查 state.json | `features`, `domains`, `sparks` 保持不变 |
@@ -403,7 +374,7 @@ solodevflow upgrade .   # 同样识别为自举模式（操作相同）
 ### In Scope
 
 - 初始化 SoloDevFlow 到目标项目
-- 复制规范、模板、命令
+- 复制规范、命令、工具
 - 生成配置文件
 
 ### Out of Scope
@@ -424,5 +395,7 @@ solodevflow upgrade .   # 同样识别为自举模式（操作相同）
 
 ---
 
-*Version: v1.0*
+*Version: v1.1*
 *Created: 2025-12-21*
+*Updated: 2025-12-23*
+*Changes: v1.1 消除模板层，AI 命令直接从规范生成文档*
