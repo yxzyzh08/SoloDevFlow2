@@ -155,7 +155,7 @@ npm run status           # 状态摘要
 npm run validate         # 校验 .solodevflow/ 格式
 npm run validate:state   # 校验 state.json Schema
 npm run validate:docs    # 校验文档规范
-node scripts/analyze-impact.js <file>  # 影响分析
+node .solodevflow/scripts/analyze-impact.js <file>  # 影响分析
 ```
 
 ### 状态 CLI（state.js）
@@ -164,17 +164,17 @@ node scripts/analyze-impact.js <file>  # 影响分析
 
 ```bash
 # 查询操作
-node scripts/state.js summary                    # 状态摘要
-node scripts/state.js get-feature <name>         # 获取单个 Feature
-node scripts/state.js list-active                # 列出活跃 Features
-node scripts/state.js get-domain <name>          # 获取 Domain 信息
+node .solodevflow/scripts/state.js summary                    # 状态摘要
+node .solodevflow/scripts/state.js get-feature <name>         # 获取单个 Feature
+node .solodevflow/scripts/state.js list-active                # 列出活跃 Features
+node .solodevflow/scripts/state.js get-domain <name>          # 获取 Domain 信息
 
 # 更新操作（带并发锁）
-node scripts/state.js update-feature <name> --phase=<phase> --status=<status>
-node scripts/state.js complete-feature <name>    # 标记完成
-node scripts/state.js add-subtask <feature> --desc="任务描述" --source=ai
-node scripts/state.js complete-subtask <feature> <subtaskId>
-node scripts/state.js record-commit              # 记录最新 commit 到 metadata
+node .solodevflow/scripts/state.js update-feature <name> --phase=<phase> --status=<status>
+node .solodevflow/scripts/state.js complete-feature <name>    # 标记完成
+node .solodevflow/scripts/state.js add-subtask <feature> --desc="任务描述" --source=ai
+node .solodevflow/scripts/state.js complete-subtask <feature> <subtaskId>
+node .solodevflow/scripts/state.js record-commit              # 记录最新 commit 到 metadata
 ```
 
 ## 8. 约束规则
@@ -193,7 +193,7 @@ node scripts/state.js record-commit              # 记录最新 commit 到 metad
 
 ```bash
 git add -A && git commit -m "feat(<feature-name>): <描述>"
-node scripts/state.js record-commit
+node .solodevflow/scripts/state.js record-commit
 ```
 
 **Commit Message 格式**：
@@ -221,13 +221,16 @@ node scripts/state.js record-commit
 │   └── skills/            # 智能技能
 ├── docs/
 │   ├── prd.md             # 产品 PRD
-│   ├── templates/         # 模板文件
+│   ├── specs/             # 规范文档（从 SoloDevFlow 复制）
 │   ├── {domain}/          # Domain 目录
 │   ├── _features/         # 独立 Feature
 │   ├── _capabilities/     # 横向能力
 │   └── _flows/            # 跨域流程
-├── scripts/               # 工具脚本
-└── .solodevflow/          # 状态文件
+└── .solodevflow/          # 运行时目录
+    ├── state.json         # 项目状态
+    ├── flows/             # 工作流规范
+    ├── scripts/           # 运行时脚本
+    └── templates/         # 需求文档模板
 ```
 
 ---

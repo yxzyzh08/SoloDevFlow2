@@ -12,11 +12,11 @@
 
 ### 步骤1: 加载规范和模板
 
-1. 规范文档：`{sourcePath}/docs/specs/spec-requirements.md`
-2. PRD 模板：`{sourcePath}/template/requirements/{projectType}/prd.md`
+1. 规范文档：`docs/specs/spec-requirements.md`
+2. PRD 模板：`.solodevflow/templates/requirements/{projectType}/prd.md`
 3. 现有 PRD：`docs/requirements/prd.md`（如存在）
 
-**注意**: 规范文档来自 SoloDevFlow 源目录，为只读文件。
+**注意**: 规范文档和模板已在安装时复制到本项目。
 
 ## 执行步骤
 

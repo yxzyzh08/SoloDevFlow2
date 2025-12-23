@@ -176,14 +176,14 @@ target-project/
 
 #### C6: 模板复制（非自举模式）
 
-按项目类型复制需求文档模板到目标项目。
+按项目类型复制需求文档模板到目标项目的运行时目录。
 
 **输出**：
 ```
 target-project/
-└── docs/
-    └── requirements/
-        └── templates/
+└── .solodevflow/
+    └── templates/
+        └── requirements/
             └── {projectType}/     # backend / web-app / mobile-app
                 ├── prd.md
                 ├── feature.spec.md
@@ -193,7 +193,7 @@ target-project/
                 └── simple-feature.spec.md
 ```
 
-**源路径**：`SoloDevFlow/template/requirements/{projectType}/` → 目标项目 `docs/requirements/templates/`
+**源路径**：`SoloDevFlow/template/requirements/{projectType}/` → 目标项目 `.solodevflow/templates/requirements/`
 
 **规则**：
 - **仅在非自举模式下复制**（其他项目需要模板）
@@ -203,20 +203,21 @@ target-project/
 
 #### C7: 脚本安装
 
-复制运行时脚本到目标项目，使其能独立运行状态管理和验证。
+复制运行时脚本到目标项目的运行时目录，使其能独立运行状态管理和验证。
 
 **输出**：
 ```
 target-project/
-└── scripts/
-    ├── state.js             # 状态管理 CLI
-    ├── status.js            # 状态摘要显示
-    ├── validate-state.js    # state.json 验证
-    ├── validate-docs.js     # 文档验证
-    └── analyze-impact.js    # 影响分析
+└── .solodevflow/
+    └── scripts/
+        ├── state.js             # 状态管理 CLI
+        ├── status.js            # 状态摘要显示
+        ├── validate-state.js    # state.json 验证
+        ├── validate-docs.js     # 文档验证
+        └── analyze-impact.js    # 影响分析
 ```
 
-**源路径**：`SoloDevFlow/scripts/` → 目标项目 `scripts/`
+**源路径**：`SoloDevFlow/scripts/` → 目标项目 `.solodevflow/scripts/`
 
 **规则**：
 - 选择性复制运行时脚本（排除 init.js 等安装脚本）
@@ -236,10 +237,10 @@ target-project/
 ```json
 {
   "scripts": {
-    "status": "node scripts/status.js",
-    "validate": "node scripts/validate-state.js",
-    "validate:state": "node scripts/validate-state.js",
-    "validate:docs": "node scripts/validate-docs.js"
+    "status": "node .solodevflow/scripts/status.js",
+    "validate": "node .solodevflow/scripts/validate-state.js",
+    "validate:state": "node .solodevflow/scripts/validate-state.js",
+    "validate:docs": "node .solodevflow/scripts/validate-docs.js"
   }
 }
 ```
@@ -279,11 +280,11 @@ target-project/
 |----------|------|------|
 | `.solodevflow/state.json` | **创建** | 从模板生成，空的 features 列表 |
 | `.solodevflow/flows/` | **创建** | 从 `template/flows/` 复制 |
+| `.solodevflow/scripts/` | **创建** | 从 `scripts/` 复制运行时脚本（5个） |
+| `.solodevflow/templates/requirements/` | **创建** | 从 `template/requirements/{type}/` 复制 |
 | `.claude/commands/` | **创建** | 从 `template/commands/` 复制 |
 | `.claude/skills/` | **创建** | 从 `template/skills/` 复制 |
 | `docs/specs/` | **创建** | 从 `docs/specs/` 复制（完整规范文档） |
-| `docs/requirements/templates/` | **创建** | 从 `template/requirements/{type}/` 复制 |
-| `scripts/` | **创建** | 复制运行时脚本（5个） |
 | `CLAUDE.md` | **创建** | 从模板生成 |
 
 ##### 场景2：常规项目升级（`solodevflow upgrade <path>`）
@@ -292,11 +293,11 @@ target-project/
 |----------|------|------|
 | `.solodevflow/state.json` | **部分更新** | 只更新版本信息，**保留用户数据** |
 | `.solodevflow/flows/` | **覆盖** | 从 `template/flows/` 更新 |
+| `.solodevflow/scripts/` | **覆盖** | 从 `scripts/` 更新运行时脚本 |
+| `.solodevflow/templates/requirements/` | **覆盖** | 从 `template/requirements/{type}/` 更新 |
 | `.claude/commands/` | **覆盖** | 从 `template/commands/` 更新 |
 | `.claude/skills/` | **覆盖** | 从 `template/skills/` 更新 |
 | `docs/specs/` | **覆盖** | 从 `docs/specs/` 更新（规范可能有变化） |
-| `docs/requirements/templates/` | **覆盖** | 从 `template/requirements/{type}/` 更新 |
-| `scripts/` | **覆盖** | 更新运行时脚本 |
 | `CLAUDE.md` | **覆盖** | 从模板重新生成 |
 
 **state.json 更新规则**（场景2）：
@@ -338,10 +339,10 @@ solodevflow upgrade .   # 同样识别为自举模式（操作相同）
 
 | 操作 | 常规项目安装 | 常规项目升级 | 自举模式 |
 |------|-------------|-------------|---------|
-| 创建运行时目录 | ✅ 全部创建 | ✅ 更新工具文件 | ✅ 同步运行态 |
-| 复制规范文档 | ✅ 复制 | ✅ 更新 | ❌ 跳过（已有源码） |
-| 复制需求模板 | ✅ 复制 | ✅ 更新 | ❌ 跳过（已有源码） |
-| 复制运行脚本 | ✅ 复制 | ✅ 更新 | ❌ 跳过（已有源码） |
+| `.solodevflow/` 运行时目录 | ✅ 全部创建 | ✅ 更新工具文件 | ✅ 同步运行态 |
+| `.solodevflow/scripts/` | ✅ 复制 | ✅ 更新 | ❌ 跳过（已有源码） |
+| `.solodevflow/templates/` | ✅ 复制 | ✅ 更新 | ❌ 跳过（已有源码） |
+| `docs/specs/` 规范文档 | ✅ 复制 | ✅ 更新 | ❌ 跳过（已有源码） |
 | state.json | 创建空数据 | 保留用户数据 | 保留项目数据 |
 
 ---
@@ -354,13 +355,13 @@ solodevflow upgrade .   # 同样识别为自举模式（操作相同）
 |------|--------------|---------------|
 | 运行时目录 | 检查目标项目 | `.solodevflow/` 目录和 4 个文件存在 |
 | 工作流安装 | 检查目标项目 | `.solodevflow/flows/workflows.md` 存在 |
+| 脚本安装 | 检查目标项目 | `.solodevflow/scripts/` 包含 5 个运行时脚本 |
+| 模板安装 | 检查目标项目 | `.solodevflow/templates/requirements/{type}/` 存在 |
 | 命令安装 | 检查目标项目 | `.claude/commands/` 包含 7 个 write-*.md |
 | 技能安装 | 检查目标项目 | `.claude/skills/requirements-expert/` 存在 |
 | 规范复制 | 检查目标项目 | `docs/specs/` 包含 5 个规范文件 |
-| 模板复制 | 检查目标项目 | `docs/requirements/templates/{type}/` 存在 |
-| 脚本安装 | 检查目标项目 | `scripts/` 包含 5 个运行时脚本 |
 | CLAUDE.md | 检查目标项目 | 文件存在且包含项目信息 |
-| package.json | 检查目标项目 | scripts 字段包含状态管理命令 |
+| package.json | 检查目标项目 | scripts 字段包含状态管理命令（指向 .solodevflow/scripts/） |
 | 功能验证 | 运行 `npm run status` | 输出状态摘要 |
 | 版本记录 | 检查 state.json | `solodevflow` 字段包含 version 和 sourcePath |
 | 幂等性 | 重复运行 | 提示已安装，不破坏现有数据 |
@@ -373,9 +374,10 @@ solodevflow upgrade .   # 同样识别为自举模式（操作相同）
 | 工作流更新 | 检查 `.solodevflow/flows/` | 从 `template/flows/` 同步 |
 | 命令更新 | 检查 `.claude/commands/` | 从 `template/commands/` 同步 |
 | 技能更新 | 检查 `.claude/skills/` | 从 `template/skills/` 同步 |
-| 规范不复制 | 检查 `docs/specs/` | 保持不变（不从源复制） |
-| 模板源不复制 | 检查 `template/` | 保持不变（不复制给自己） |
-| 脚本不复制 | 检查 `scripts/` | 保持不变（不覆盖） |
+| 规范不复制 | 检查 `docs/specs/` | 保持不变（源码不复制给自己） |
+| 模板不复制 | 检查 `template/` | 保持不变（源码不复制给自己） |
+| 脚本不复制 | 检查根目录 `scripts/` | 保持不变（源码不覆盖） |
+| 运行时脚本不复制 | 检查 `.solodevflow/scripts/` | 保持不变（使用根目录源码） |
 | 状态保留 | 检查 state.json | `features`, `domains`, `sparks` 保持不变 |
 | 版本更新 | 检查 state.json | `solodevflow.version` 已更新 |
 | 幂等性 | 重复运行自举 | 可多次执行，不破坏项目数据 |

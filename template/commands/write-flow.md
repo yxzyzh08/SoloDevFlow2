@@ -16,11 +16,11 @@
 
 ### 步骤1: 加载规范和模板
 
-1. 规范文档：`{sourcePath}/docs/specs/spec-requirements.md`
-2. Flow 模板：`{sourcePath}/template/requirements/{projectType}/flow.spec.md`
+1. 规范文档：`docs/specs/spec-requirements.md`
+2. Flow 模板：`.solodevflow/templates/requirements/{projectType}/flow.spec.md`
 3. 现有 Flow Spec：`docs/requirements/_flows/{name}.spec.md`（如存在）
 
-**注意**: 规范文档来自 SoloDevFlow 源目录，为只读文件。
+**注意**: 规范文档和模板已在安装时复制到本项目。
 
 ## 执行步骤
 

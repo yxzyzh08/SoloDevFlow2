@@ -33,12 +33,12 @@
 
 ### 步骤1: 加载规范和模板
 
-1. 设计规范：`{sourcePath}/docs/specs/spec-design.md`
-2. 设计模板：`{sourcePath}/template/requirements/{projectType}/feature.design.md`
+1. 设计规范：`docs/specs/spec-design.md`
+2. 设计模板：`.solodevflow/templates/requirements/{projectType}/feature.design.md`
 3. Feature Spec：对应的 `{name}.spec.md`（必须存在，位于 `docs/requirements/` 树）
 4. 现有 Design Doc：目标路径文件（如存在）
 
-**注意**: 规范文档来自 SoloDevFlow 源目录，为只读文件。
+**注意**: 规范文档和模板已在安装时复制到本项目。
 
 ## 执行步骤
 

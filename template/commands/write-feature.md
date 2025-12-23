@@ -31,11 +31,11 @@
 
 ### 步骤1: 加载规范和模板
 
-1. 规范文档：`{sourcePath}/docs/specs/spec-requirements.md`
-2. Feature 模板：`{sourcePath}/template/requirements/{projectType}/feature.spec.md`
+1. 规范文档：`docs/specs/spec-requirements.md`
+2. Feature 模板：`.solodevflow/templates/requirements/{projectType}/feature.spec.md`
 3. 现有 Feature Spec：目标路径文件（如存在）
 
-**注意**: 规范文档来自 SoloDevFlow 源目录，为只读文件。
+**注意**: 规范文档和模板已在安装时复制到本项目。
 
 ## 执行步骤
 

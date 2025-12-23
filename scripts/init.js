@@ -463,39 +463,39 @@ async function copyToolFiles(config) {
     }
   }
 
-  // 5. Copy template/requirements/{projectType}/ (non-bootstrap mode only)
+  // 5. Copy template/requirements/{projectType}/ to .solodevflow/templates/ (non-bootstrap mode only)
   if (!config.bootstrap && config.projectType) {
-    log('  复制 docs/requirements/templates/（需求模板）...');
+    log('  复制 .solodevflow/templates/requirements/（需求模板）...');
     const templatesSrc = path.join(SOLODEVFLOW_ROOT, 'template/requirements', config.projectType);
-    const templatesDest = path.join(targetPath, 'docs/requirements/templates', config.projectType);
+    const templatesDest = path.join(targetPath, '.solodevflow/templates/requirements', config.projectType);
     if (fs.existsSync(templatesSrc)) {
       copyDir(templatesSrc, templatesDest);
-      log(`    docs/requirements/templates/${config.projectType}/`, 'success');
+      log(`    .solodevflow/templates/requirements/${config.projectType}/`, 'success');
     }
 
     // Copy shared templates for web-app and mobile-app
     if (config.projectType === 'web-app' || config.projectType === 'mobile-app') {
       const sharedSrc = path.join(SOLODEVFLOW_ROOT, 'template/requirements/shared');
-      const sharedDest = path.join(targetPath, 'docs/requirements/templates/shared');
+      const sharedDest = path.join(targetPath, '.solodevflow/templates/requirements/shared');
       if (fs.existsSync(sharedSrc)) {
         copyDir(sharedSrc, sharedDest);
-        log('    docs/requirements/templates/shared/', 'success');
+        log('    .solodevflow/templates/requirements/shared/', 'success');
       }
     }
   }
 
-  // 6. Copy scripts (if not skipped)
+  // 6. Copy scripts to .solodevflow/scripts/ (if not skipped)
   if (!config.skipScripts) {
-    log('  复制 scripts/...');
+    log('  复制 .solodevflow/scripts/...');
     const scriptsToCopy = ['status.js', 'validate-state.js', 'state.js', 'validate-docs.js', 'analyze-impact.js'];
-    ensureDir(path.join(targetPath, 'scripts'));
+    ensureDir(path.join(targetPath, '.solodevflow/scripts'));
 
     for (const script of scriptsToCopy) {
       const srcPath = path.join(SOLODEVFLOW_ROOT, 'scripts', script);
-      const destPath = path.join(targetPath, 'scripts', script);
+      const destPath = path.join(targetPath, '.solodevflow/scripts', script);
       if (fs.existsSync(srcPath)) {
         copyFile(srcPath, destPath);
-        log(`    scripts/${script}`, 'success');
+        log(`    .solodevflow/scripts/${script}`, 'success');
       }
     }
   }
@@ -619,11 +619,11 @@ function finalize(config) {
 
 已更新:
   - .solodevflow/flows/（工作流文件）
+  - .solodevflow/scripts/（运行时脚本）
+  - .solodevflow/templates/（需求模板）
   - .claude/commands/（命令文件）
   - .claude/skills/（技能文件）
   - docs/specs/（规范文档）
-  - docs/requirements/templates/（需求模板）
-  - scripts/（运行时脚本）
   - CLAUDE.md（流程控制器）
 
 已保留:
