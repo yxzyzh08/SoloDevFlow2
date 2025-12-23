@@ -140,12 +140,10 @@ const InstallManifest = {
  */
 const UI_FILES = {
   'web-app': [
-    { src: 'templates/shared/component-registry.md', dest: 'docs/ui/component-registry.md' },
-    { src: 'templates/shared/capability-ui-component.spec.md', dest: 'docs/_capabilities/ui-component-management.spec.md' }
+    { src: 'templates/shared/component-registry.md', dest: 'docs/ui/component-registry.md' }
   ],
   'mobile-app': [
-    { src: 'templates/shared/component-registry.md', dest: 'docs/ui/component-registry.md' },
-    { src: 'templates/shared/capability-ui-component.spec.md', dest: 'docs/_capabilities/ui-component-management.spec.md' }
+    { src: 'templates/shared/component-registry.md', dest: 'docs/ui/component-registry.md' }
   ],
   'backend': []  // 无 UI 文件
 };

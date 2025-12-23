@@ -31,12 +31,10 @@ const PROJECT_TYPES = ['backend', 'web-app', 'mobile-app'];
 
 const UI_FILES = {
   'web-app': [
-    { src: 'template/requirements/shared/component-registry.md', dest: 'docs/ui/component-registry.md' },
-    { src: 'template/requirements/shared/capability-ui-component.spec.md', dest: 'docs/requirements/_capabilities/ui-component-management.spec.md' }
+    { src: 'template/requirements/shared/component-registry.md', dest: 'docs/ui/component-registry.md' }
   ],
   'mobile-app': [
-    { src: 'template/requirements/shared/component-registry.md', dest: 'docs/ui/component-registry.md' },
-    { src: 'template/requirements/shared/capability-ui-component.spec.md', dest: 'docs/requirements/_capabilities/ui-component-management.spec.md' }
+    { src: 'template/requirements/shared/component-registry.md', dest: 'docs/ui/component-registry.md' }
   ],
   'backend': []
 };
