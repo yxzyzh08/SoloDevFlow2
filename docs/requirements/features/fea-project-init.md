@@ -269,47 +269,80 @@ target-project/
 - `upgradedAt`: 最后升级时间（升级时更新）
 - `sourcePath`: SoloDevFlow 源目录的绝对路径（用于引用模板和规范）
 
-#### C10: 自举模式
+#### C10: 升级模式与自举模式
 
-当检测到目标项目为 SoloDevFlow 自身时，启用自举模式。
+**三种操作场景**的差异：
 
-**使用场景**：
-AI 开发完成新的产物（commands、skills、template、flows 等）后，人类审核通过，手动执行升级命令应用变更到运行态。
-
-**操作范围**：
+##### 场景1：常规项目初次安装（`solodevflow init <path>`）
 
 | 文件/目录 | 操作 | 说明 |
 |----------|------|------|
-| `.solodevflow/state.json` | 部分更新 | 只更新版本信息，保留项目数据 |
-| `.solodevflow/flows/` | 覆盖 | 从 `template/flows/` 同步 |
-| `.claude/commands/` | 覆盖 | 从 `template/commands/` 同步 |
-| `.claude/skills/` | 覆盖 | 从 `template/skills/` 同步 |
-| `docs/specs/` | **跳过** | 本项目已有规范，不复制 |
-| `template/` | **跳过** | 本项目已有模板源，不复制 |
-| `scripts/` | **跳过** | 本项目已有脚本，不复制 |
+| `.solodevflow/state.json` | **创建** | 从模板生成，空的 features 列表 |
+| `.solodevflow/flows/` | **创建** | 从 `template/flows/` 复制 |
+| `.claude/commands/` | **创建** | 从 `template/commands/` 复制 |
+| `.claude/skills/` | **创建** | 从 `template/skills/` 复制 |
+| `docs/specs/` | **创建** | 从 `docs/specs/` 复制（完整规范文档） |
+| `docs/requirements/templates/` | **创建** | 从 `template/requirements/{type}/` 复制 |
+| `scripts/` | **创建** | 复制运行时脚本（5个） |
+| `CLAUDE.md` | **创建** | 从模板生成 |
 
-**state.json 更新规则**：
+##### 场景2：常规项目升级（`solodevflow upgrade <path>`）
+
+| 文件/目录 | 操作 | 说明 |
+|----------|------|------|
+| `.solodevflow/state.json` | **部分更新** | 只更新版本信息，**保留用户数据** |
+| `.solodevflow/flows/` | **覆盖** | 从 `template/flows/` 更新 |
+| `.claude/commands/` | **覆盖** | 从 `template/commands/` 更新 |
+| `.claude/skills/` | **覆盖** | 从 `template/skills/` 更新 |
+| `docs/specs/` | **覆盖** | 从 `docs/specs/` 更新（规范可能有变化） |
+| `docs/requirements/templates/` | **覆盖** | 从 `template/requirements/{type}/` 更新 |
+| `scripts/` | **覆盖** | 更新运行时脚本 |
+| `CLAUDE.md` | **覆盖** | 从模板重新生成 |
+
+**state.json 更新规则**（场景2）：
 ```javascript
 // ✅ 只更新版本信息
 state.solodevflow.version = newVersion;
 state.solodevflow.upgradedAt = new Date().toISOString();
+state.solodevflow.sourcePath = SOLODEVFLOW_ROOT;  // 可能变化
 state.lastUpdated = new Date().toISOString();
 
-// ❌ 保留不变
+// ❌ 保留不变（用户数据）
 // state.features, state.domains, state.sparks, state.pendingDocs
-// state.metadata (除版本信息外)
+// state.project（项目配置）
 ```
+
+##### 场景3：自举模式（`solodevflow init . / upgrade .` 在 SoloDevFlow 自身）
+
+**使用场景**：AI 开发完成新的产物（commands、skills、template、flows 等）后，人类审核通过，手动执行命令应用变更到运行态。
+
+| 文件/目录 | 操作 | 说明 |
+|----------|------|------|
+| `.solodevflow/state.json` | **部分更新** | 只更新版本信息，**保留项目数据** |
+| `.solodevflow/flows/` | **覆盖** | 从 `template/flows/` 同步 |
+| `.claude/commands/` | **覆盖** | 从 `template/commands/` 同步 |
+| `.claude/skills/` | **覆盖** | 从 `template/skills/` 同步 |
+| `docs/specs/` | **跳过** | 源码已存在，不复制给自己 |
+| `template/` | **跳过** | 源码已存在，不复制给自己 |
+| `scripts/` | **跳过** | 源码已存在，不覆盖 |
+| `CLAUDE.md` | **跳过** | 保留项目自身的配置 |
 
 **命令示例**：
 ```bash
 # 在 SoloDevFlow 项目根目录
 solodevflow init .      # 自动识别为自举模式
-solodevflow upgrade .   # 同样识别为自举模式
+solodevflow upgrade .   # 同样识别为自举模式（操作相同）
 ```
 
-**核心差异**：
-- 常规项目：复制所有需要的文件（规范、模板、命令、脚本）
-- 自举模式：仅同步运行态文件（.solodevflow/flows/, .claude/），不复制源文件
+**核心差异总结**：
+
+| 操作 | 常规项目安装 | 常规项目升级 | 自举模式 |
+|------|-------------|-------------|---------|
+| 创建运行时目录 | ✅ 全部创建 | ✅ 更新工具文件 | ✅ 同步运行态 |
+| 复制规范文档 | ✅ 复制 | ✅ 更新 | ❌ 跳过（已有源码） |
+| 复制需求模板 | ✅ 复制 | ✅ 更新 | ❌ 跳过（已有源码） |
+| 复制运行脚本 | ✅ 复制 | ✅ 更新 | ❌ 跳过（已有源码） |
+| state.json | 创建空数据 | 保留用户数据 | 保留项目数据 |
 
 ---
 

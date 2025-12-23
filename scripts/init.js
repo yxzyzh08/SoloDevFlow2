@@ -321,15 +321,8 @@ async function upgradeFiles(config) {
   // 2. Preserve other .solodevflow files (don't overwrite)
   log('  保留 .solodevflow/ 用户数据...', 'success');
 
-  // 3. Delete old specs directory (规范现在从源目录读取)
-  const specsDir = path.join(targetPath, 'docs/specs');
-  if (fs.existsSync(specsDir)) {
-    log('  删除旧的 docs/specs/（规范现从源目录读取）...');
-    fs.rmSync(specsDir, { recursive: true, force: true });
-    log('    docs/specs/ 已删除', 'success');
-  }
-
-  // 4. Copy tool files (overwrite)
+  // 3. Copy tool files (overwrite)
+  // Note: copyToolFiles() will update docs/specs/ and templates/ for regular projects
   await copyToolFiles(config);
 
   log('升级完成', 'success');
@@ -609,11 +602,12 @@ function finalize(config) {
   - .solodevflow/flows/（工作流文件）
   - .claude/commands/（命令文件）
   - .claude/skills/（技能文件）
-  - scripts/（工具脚本）
 
 已保留:
   - .solodevflow/state.json（项目状态数据）
-  - docs/（项目文档）
+  - docs/specs/（规范文档源码）
+  - template/（模板源码）
+  - scripts/（脚本源码）
 
 版本已更新至: ${VERSION}
 `);
@@ -627,7 +621,9 @@ function finalize(config) {
   - .solodevflow/flows/（工作流文件）
   - .claude/commands/（命令文件）
   - .claude/skills/（技能文件）
-  - scripts/（工具脚本）
+  - docs/specs/（规范文档）
+  - docs/requirements/templates/（需求模板）
+  - scripts/（运行时脚本）
   - CLAUDE.md（流程控制器）
 
 已保留:
@@ -635,7 +631,7 @@ function finalize(config) {
   - .solodevflow/input-log.md（输入记录）
   - .solodevflow/spark-box.md（灵光收集箱）
   - .solodevflow/pending-docs.md（文档债务）
-  - docs/（用户文档）
+  - docs/requirements/（用户需求文档）
 
 更多信息请查看 CLAUDE.md
 `);
