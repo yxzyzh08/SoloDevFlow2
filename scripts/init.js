@@ -395,9 +395,9 @@ async function bootstrapFiles(config) {
     }
   }
 
-  // 3. 覆盖工作流文件
+  // 3. 覆盖工作流文件（从 template/flows/ 复制）
   log('  更新 .solodevflow/flows/...');
-  const flowsSrc = path.join(SOLODEVFLOW_ROOT, '.solodevflow/flows');
+  const flowsSrc = path.join(SOLODEVFLOW_ROOT, 'template/flows');
   const flowsDest = path.join(targetPath, '.solodevflow/flows');
   if (fs.existsSync(flowsSrc)) {
     copyDir(flowsSrc, flowsDest);
@@ -427,36 +427,74 @@ async function bootstrapFiles(config) {
 }
 
 /**
- * 复制工具文件（commands, skills, templates, scripts）
+ * 复制工具文件（flows, commands, skills, scripts）
  */
 async function copyToolFiles(config) {
   const targetPath = config.targetPath;
 
-  // 1. Copy .claude/commands
+  // 1. Copy .solodevflow/flows/ (from template/flows/)
+  log('  复制 .solodevflow/flows/...');
+  const flowsSrc = path.join(SOLODEVFLOW_ROOT, 'template/flows');
+  const flowsDest = path.join(targetPath, '.solodevflow/flows');
+  if (fs.existsSync(flowsSrc)) {
+    copyDir(flowsSrc, flowsDest);
+    log('    .solodevflow/flows/', 'success');
+  }
+
+  // 2. Copy .claude/commands/ (from template/commands/)
   log('  复制 .claude/commands/...');
-  const commandsSrc = path.join(SOLODEVFLOW_ROOT, '.claude/commands');
+  const commandsSrc = path.join(SOLODEVFLOW_ROOT, 'template/commands');
   const commandsDest = path.join(targetPath, '.claude/commands');
   if (fs.existsSync(commandsSrc)) {
     copyDir(commandsSrc, commandsDest);
     log('    .claude/commands/', 'success');
   }
 
-  // 2. Copy .claude/skills
+  // 3. Copy .claude/skills/ (from template/skills/)
   log('  复制 .claude/skills/...');
-  const skillsSrc = path.join(SOLODEVFLOW_ROOT, '.claude/skills');
+  const skillsSrc = path.join(SOLODEVFLOW_ROOT, 'template/skills');
   const skillsDest = path.join(targetPath, '.claude/skills');
   if (fs.existsSync(skillsSrc)) {
     copyDir(skillsSrc, skillsDest);
     log('    .claude/skills/', 'success');
   }
 
-  // 3. Note: Requirements templates are NOT copied to target project
-  // They remain in SoloDevFlow source and are referenced via sourcePath
+  // 4. Copy docs/specs/ (non-bootstrap mode only)
+  if (!config.bootstrap) {
+    log('  复制 docs/specs/（规范文档）...');
+    const specsSrc = path.join(SOLODEVFLOW_ROOT, 'docs/specs');
+    const specsDest = path.join(targetPath, 'docs/specs');
+    if (fs.existsSync(specsSrc)) {
+      copyDir(specsSrc, specsDest);
+      log('    docs/specs/', 'success');
+    }
+  }
 
-  // 4. Copy scripts (if not skipped)
+  // 5. Copy template/requirements/{projectType}/ (non-bootstrap mode only)
+  if (!config.bootstrap && config.projectType) {
+    log('  复制 docs/requirements/templates/（需求模板）...');
+    const templatesSrc = path.join(SOLODEVFLOW_ROOT, 'template/requirements', config.projectType);
+    const templatesDest = path.join(targetPath, 'docs/requirements/templates', config.projectType);
+    if (fs.existsSync(templatesSrc)) {
+      copyDir(templatesSrc, templatesDest);
+      log(`    docs/requirements/templates/${config.projectType}/`, 'success');
+    }
+
+    // Copy shared templates for web-app and mobile-app
+    if (config.projectType === 'web-app' || config.projectType === 'mobile-app') {
+      const sharedSrc = path.join(SOLODEVFLOW_ROOT, 'template/requirements/shared');
+      const sharedDest = path.join(targetPath, 'docs/requirements/templates/shared');
+      if (fs.existsSync(sharedSrc)) {
+        copyDir(sharedSrc, sharedDest);
+        log('    docs/requirements/templates/shared/', 'success');
+      }
+    }
+  }
+
+  // 6. Copy scripts (if not skipped)
   if (!config.skipScripts) {
     log('  复制 scripts/...');
-    const scriptsToCopy = ['status.js', 'validate-state.js', 'state.js', 'validate-docs.js'];
+    const scriptsToCopy = ['status.js', 'validate-state.js', 'state.js', 'validate-docs.js', 'analyze-impact.js'];
     ensureDir(path.join(targetPath, 'scripts'));
 
     for (const script of scriptsToCopy) {
