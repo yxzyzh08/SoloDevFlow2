@@ -127,6 +127,7 @@ inputs:
 | 新增模块 | 新增模块或涉及跨模块协作 |
 | 引入外部依赖 | 引入第三方服务、SDK、API |
 | 架构变更 | 架构层面的调整 |
+| 单模块内重构 | 影响多个代码文件 |
 
 **不需要设计文档**：
 
@@ -136,7 +137,6 @@ inputs:
 | 已有模型字段增减 | 不改变模型核心结构 |
 | Bug 修复 | 修复缺陷 |
 | 配置/文案修改 | 非逻辑变更 |
-| 单模块内重构 | 不影响外部接口的重构 |
 | UI 样式调整 | 纯展示层变更 |
 
 ### 3.3 判断流程
@@ -149,6 +149,7 @@ inputs:
   □ 新增模块或跨模块协作
   □ 引入外部依赖（第三方服务、SDK）
   □ 架构层面变更
+  □ 单模块内重构（影响多个代码文件）
 
 → 任一勾选 = Design Required（需要设计文档）
 → 全部未勾选 = No Design（不需要设计文档）
@@ -188,7 +189,7 @@ Feature Spec                    No Design: 直接实现
 | Input Requirements | Yes | `design_{name}_input` | 声明输入来源（需求文档引用） |
 | Overview | Yes | `design_{name}_overview` | 设计目标、约束条件 |
 | Technical Approach | Yes | `design_{name}_approach` | 技术方案、架构决策 |
-| Interface Design | Yes | `design_{name}_interface` | 接口定义、数据结构、错误码 |
+| Interface Design | No | `design_{name}_interface` | 接口定义、数据结构、错误码(可选，有接口才需要） |
 | Decision Record | Yes | `design_{name}_decisions` | 关键决策及其理由（ADR） |
 | Implementation Plan | No | `design_{name}_impl` | 实现步骤（复杂场景可选） |
 | Risks | No | `design_{name}_risks` | 技术风险及缓解措施（高风险可选） |
@@ -287,10 +288,10 @@ interface LoginDTO {
 - [ ] `inputs` 字段是否正确引用需求文档？
 - [ ] Overview 是否清晰描述设计目标？
 - [ ] Technical Approach 是否说明技术方案？
-- [ ] Interface Design 是否包含函数签名、数据结构、错误码？
 - [ ] Decision Record 是否记录关键决策及理由？
 
 **可选章节检查**（按需）：
+- [ ] Interface Design 是否包含函数签名、数据结构、错误码？
 - [ ] 复杂场景：是否有 Implementation Plan？
 - [ ] 高风险场景：是否识别 Risks 及缓解措施？
 - [ ] 有外部依赖：是否列出 Dependencies？
@@ -344,14 +345,11 @@ interface LoginDTO {
 
 ### 7.2 Pending Docs
 
-允许在编码时暂时打破"先文档后代码"规则，但必须在 Commit 前清空：
-
-| 场景 | 说明 |
-|------|------|
-| 实现倒逼设计 | 编码时发现必须修改接口才能跑通 |
-| 快速热修复 | 通过对话直接修改代码细节 |
+允许在编码时暂时打破"先文档后代码"规则，通过 `state.json.pendingDocs` 记录待补充的文档任务。
 
 **规则**：必须在当次 Commit 前清空，不允许跨 Commit 累积。
+
+> 具体格式见 `docs/requirements/process/state-management.spec.md`
 
 ---
 

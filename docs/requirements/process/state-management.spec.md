@@ -329,11 +329,41 @@ function buildDomainTree(state) {
 | Field | Type | Description |
 |-------|------|-------------|
 | `sparks` | array | 灵光数组，从 `.flow/spark-box.md` 同步 |
-| `pendingDocs` | array | 文档债务数组 |
+| `pendingDocs` | array | 文档债务数组（Commit 前必须清空） |
 | `metadata.stateFileVersion` | number | state.json 文件版本号（自增） |
 | `metadata.totalStateChanges` | number | 总状态变更次数 |
 | `metadata.lastGitCommit` | string\|null | 最后 Git commit SHA |
 | `lastUpdated` | string | 最后更新时间（ISO 8601） |
+
+**pendingDocs 格式**：
+
+```json
+{
+  "pendingDocs": [
+    {
+      "id": "pd_1703123456789_001",
+      "type": "design",
+      "target": "docs/designs/des-xxx.md",
+      "description": "需补充接口设计章节",
+      "reason": "实现时发现需要新增 API",
+      "createdAt": "2025-12-23T10:00:00Z"
+    }
+  ]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | 唯一标识（`pd_{timestamp}_{seq}`） |
+| `type` | string | 文档类型：`design` / `feature` / `prd` |
+| `target` | string | 目标文档路径 |
+| `description` | string | 待补充的内容描述 |
+| `reason` | string | 产生债务的原因 |
+| `createdAt` | string | 创建时间（ISO 8601） |
+
+**规则**：
+- Commit 前必须清空 pendingDocs 数组
+- 不允许跨 Commit 累积文档债务
 
 ### 5.5 Validation Rules
 
