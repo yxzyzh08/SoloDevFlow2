@@ -1,6 +1,6 @@
 ---
 type: prd
-version: "2.11"
+version: "2.12"
 ---
 
 # SoloDevFlow 2.0 <!-- id: prod_solodevflow -->
@@ -133,7 +133,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 
 规范文档系统，定义各阶段的文档结构和编写标准。
 
-#### meta-spec <!-- id: feat_ref_meta_spec -->
+#### meta <!-- id: feat_ref_meta -->
 
 文档系统元规范，定义文档身份识别、锚点系统、规范映射机制，为文档验证和影响分析提供元数据支持。
 
@@ -142,7 +142,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 - **Type**: document
 - **Feature**: [spec-meta.md](../specs/spec-meta.md)
 
-#### requirements-doc <!-- id: feat_ref_requirements_doc -->
+#### requirements <!-- id: feat_ref_requirements -->
 
 需求文档规范，定义 PRD、Feature、Capability、Flow 的结构、内容要素、编写标准。
 
@@ -151,7 +151,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 - **Type**: document
 - **Feature**: [spec-requirements.md](../specs/spec-requirements.md)
 
-#### design-doc-spec <!-- id: feat_ref_design_doc_spec -->
+#### design <!-- id: feat_ref_design -->
 
 设计文档规范，定义架构设计、接口设计、数据模型的文档结构和编写标准。
 
@@ -160,7 +160,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 - **Type**: document
 - **Feature**: [spec-design.md](../specs/spec-design.md)
 
-#### development-spec <!-- id: feat_ref_development_spec -->
+#### development <!-- id: feat_ref_development -->
 
 开发规范，定义代码结构、命名约定、注释标准，保证代码质量和一致性。
 
@@ -169,7 +169,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 - **Type**: document
 - **Feature**: [spec-backend-dev.md](../specs/spec-backend-dev.md), [spec-frontend-dev.md](../specs/spec-frontend-dev.md)
 
-#### testing-spec <!-- id: feat_ref_testing_spec -->
+#### testing <!-- id: feat_ref_testing -->
 
 测试规范，定义单元测试、集成测试、验收测试的编写标准和覆盖率要求。
 
@@ -320,7 +320,7 @@ AI 行为入口，解决 AI 对话启动时缺乏上下文和导航的问题。�
 
 ---
 
-*Version: v2.11*
+*Version: v2.12*
 *Created: 2024-12-16*
 *Updated: 2025-12-23*
-*Changes: v2.11 移除文档名称中的 doc/spec 后缀（Feature Spec → Feature）; v2.10 细化人机协作描述为两类流程：需求交付流程和功能咨询流程; v2.9 基于 spec-requirements.md v2.3 重构*
+*Changes: v2.12 修正锚点 ID 中的 doc/spec 后缀（feat_ref_meta_spec → feat_ref_meta）; v2.11 移除文档名称中的 doc/spec 后缀; v2.10 细化人机协作描述为两类流程*

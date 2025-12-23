@@ -5,27 +5,14 @@
     "description": "为超级个体打造的自进化人机协作开发系统",
     "type": "backend",
     "createdAt": "2024-12-16",
-    "updatedAt": "2025-12-20"
+    "updatedAt": "2025-12-23"
   },
   "flow": {
     "researchMethod": "bottom-up",
-    "activeFeatures": [
-      "requirements-expert",
-      "design-expert",
-      "project-init"
-    ]
+    "activeFeatures": []
   },
   "features": {
-    "core-collaboration": {
-      "type": "document",
-      "description": "核心协作流程（意图路由/阶段流转/交付流程）",
-      "domain": "process",
-      "docPath": "docs/requirements/flows/flow-core-collaboration.md",
-      "execPath": ".solodevflow/flows/core-collaboration.md",
-      "phase": "done",
-      "status": "completed"
-    },
-    "meta-spec": {
+    "meta": {
       "type": "document",
       "description": "文档系统元规范（文档身份/锚点/目录结构/规范映射）",
       "domain": "specification",
@@ -36,31 +23,44 @@
       "phase": "done",
       "status": "completed"
     },
-    "requirements-doc": {
+    "requirements": {
       "type": "document",
+      "description": "需求文档规范（PRD/Feature/Capability/Flow 结构）",
       "domain": "specification",
       "docPath": "docs/specs/spec-requirements.md",
       "phase": "done",
       "status": "completed"
     },
-    "design-doc-spec": {
+    "design": {
       "type": "document",
+      "description": "设计文档规范（架构/接口/数据模型）",
       "domain": "specification",
       "docPath": "docs/specs/spec-design.md",
       "phase": "done",
       "status": "completed"
     },
-    "development-spec": {
+    "development": {
       "type": "document",
+      "description": "开发规范（后端/前端代码标准）",
       "domain": "specification",
       "docPath": "docs/specs/spec-backend-dev.md",
-      "phase": "pending",
-      "status": "not_started"
+      "phase": "done",
+      "status": "completed"
     },
-    "testing-spec": {
+    "testing": {
       "type": "document",
+      "description": "测试规范（E2E/性能/破坏性/安全测试）",
       "domain": "specification",
       "docPath": "docs/specs/spec-test.md",
+      "phase": "done",
+      "status": "completed"
+    },
+    "core-collaboration": {
+      "type": "document",
+      "description": "核心协作流程（意图路由/阶段流转/交付流程）",
+      "domain": "process",
+      "docPath": "docs/requirements/flows/flow-core-collaboration.md",
+      "execPath": ".solodevflow/flows/workflows.md",
       "phase": "pending",
       "status": "not_started"
     },
@@ -74,31 +74,8 @@
         "scripts/status.js",
         "scripts/state.js"
       ],
-      "phase": "done",
-      "status": "completed",
-      "subtasks": [
-        {
-          "id": "st_1766305430477_001",
-          "description": "添加依赖关系支持",
-          "status": "skipped",
-          "createdAt": "2025-12-21T08:23:50.477Z",
-          "source": "ai"
-        },
-        {
-          "id": "st_1766305430477_002",
-          "description": "实现 state.js CLI（查询/更新接口，含并发锁）",
-          "status": "completed",
-          "createdAt": "2025-12-21T08:30:00.000Z",
-          "source": "ai"
-        },
-        {
-          "id": "st_1766308272182_003",
-          "description": "实现 record-commit 命令（auto-commit 功能）",
-          "status": "completed",
-          "createdAt": "2025-12-21T09:11:12.182Z",
-          "source": "ai"
-        }
-      ]
+      "phase": "pending",
+      "status": "not_started"
     },
     "change-impact-tracking": {
       "type": "document",
@@ -109,69 +86,74 @@
         "scripts/analyze-impact.js",
         "scripts/validate-docs.js"
       ],
-      "phase": "done",
-      "status": "completed"
+      "phase": "pending",
+      "status": "not_started"
     },
     "input-capture": {
       "type": "document",
+      "description": "输入捕获机制（记录关键人类输入）",
       "domain": "process",
       "docPath": ".solodevflow/input-log.md",
-      "phase": "done",
-      "status": "completed"
+      "phase": "pending",
+      "status": "not_started"
     },
     "spark-box": {
       "type": "document",
+      "description": "灵光收集与处理机制",
       "domain": "process",
       "docPath": ".solodevflow/spark-box.md",
-      "phase": "done",
-      "status": "completed"
-    },
-    "claude-md": {
-      "type": "document",
-      "domain": "ai-config",
-      "docPath": "CLAUDE.md",
-      "phase": "done",
-      "status": "completed"
-    },
-    "write-commands": {
-      "type": "document",
-      "domain": "ai-config",
-      "docPath": ".claude/commands/",
-      "phase": "done",
-      "status": "completed"
-    },
-    "requirements-expert": {
-      "type": "document",
-      "domain": "ai-config",
-      "docPath": ".claude/skills/requirements-expert/",
-      "phase": "drafting",
-      "status": "in_progress"
-    },
-    "design-expert": {
-      "type": "document",
-      "domain": "ai-config",
-      "docPath": ".claude/skills/design-expert/",
       "phase": "pending",
-      "status": "in_progress",
-      "description": "设计专家技能（根据产品远景提供合适设计，避免过度设计）"
+      "status": "not_started"
     },
     "project-init": {
       "type": "code",
       "domain": "tooling",
-      "docPath": "docs/requirements/features/fea-project-init.md",
-      "phase": "feature_design",
-      "status": "in_progress",
       "description": "项目初始化工具（将 SoloDevFlow 安装到其他项目）",
-      "designDepth": "required",
+      "docPath": "docs/requirements/features/fea-project-init.md",
+      "designDepth": "none",
       "artifacts": {
-        "design": "docs/tooling/project-init.design.md",
+        "design": null,
         "code": [
           "scripts/init.js"
         ],
         "tests": [
           "tests/e2e/project-init.test.js"
         ]
-      }
+      },
+      "phase": "pending",
+      "status": "not_started"
+    },
+    "claude-md": {
+      "type": "document",
+      "description": "AI 行为入口配置",
+      "domain": "ai-config",
+      "docPath": "CLAUDE.md",
+      "phase": "pending",
+      "status": "not_started"
+    },
+    "write-commands": {
+      "type": "document",
+      "description": "文档编写命令集",
+      "domain": "ai-config",
+      "docPath": ".claude/commands/",
+      "phase": "pending",
+      "status": "not_started"
+    },
+    "requirements-expert": {
+      "type": "document",
+      "description": "需求专家技能（澄清需求/判断文档类型）",
+      "domain": "ai-config",
+      "docPath": ".claude/skills/requirements-expert/",
+      "phase": "pending",
+      "status": "not_started"
+    },
+    "design-expert": {
+      "type": "document",
+      "description": "设计专家技能（根据产品远景提供合适设计，避免过度设计）",
+      "domain": "ai-config",
+      "docPath": ".claude/skills/design-expert/",
+      "phase": "pending",
+      "status": "not_started"
     }
   },
   "domains": {
@@ -183,11 +165,11 @@
   "sparks": [],
   "pendingDocs": [],
   "metadata": {
-    "lastGitCommit": "587042352d0d815268934e61b180af5c619622b4",
-    "lastGitCommitMessage": "refactor(claude-md): 重构为索引文件，流程定义迁移至规范文档",
-    "lastGitCommitAt": "2025-12-22T01:20:25.923Z",
-    "stateFileVersion": 27,
-    "totalStateChanges": 27
+    "lastGitCommit": "",
+    "lastGitCommitMessage": "",
+    "lastGitCommitAt": "",
+    "stateFileVersion": 1,
+    "totalStateChanges": 1
   },
   "lastUpdated": "2025-12-23T00:00:00.000Z"
 }
