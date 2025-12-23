@@ -325,7 +325,7 @@ function main() {
 
   // Check if file exists
   if (!fs.existsSync(STATE_FILE)) {
-    console.error('ERROR: .flow/state.json not found');
+    console.error('ERROR: .solodevflow/state.json not found');
     process.exit(1);
   }
 
