@@ -31,19 +31,19 @@ const PROJECT_TYPES = ['backend', 'web-app', 'mobile-app'];
 
 const UI_FILES = {
   'web-app': [
-    { src: 'docs/requirements/templates/shared/component-registry.md', dest: 'docs/ui/component-registry.md' },
-    { src: 'docs/requirements/templates/shared/capability-ui-component.spec.md', dest: 'docs/requirements/_capabilities/ui-component-management.spec.md' }
+    { src: 'template/requirements/shared/component-registry.md', dest: 'docs/ui/component-registry.md' },
+    { src: 'template/requirements/shared/capability-ui-component.spec.md', dest: 'docs/requirements/_capabilities/ui-component-management.spec.md' }
   ],
   'mobile-app': [
-    { src: 'docs/requirements/templates/shared/component-registry.md', dest: 'docs/ui/component-registry.md' },
-    { src: 'docs/requirements/templates/shared/capability-ui-component.spec.md', dest: 'docs/requirements/_capabilities/ui-component-management.spec.md' }
+    { src: 'template/requirements/shared/component-registry.md', dest: 'docs/ui/component-registry.md' },
+    { src: 'template/requirements/shared/capability-ui-component.spec.md', dest: 'docs/requirements/_capabilities/ui-component-management.spec.md' }
   ],
   'backend': []
 };
 
 const CLAUDE_RULES = {
-  'web-app': 'docs/requirements/templates/web-app/CLAUDE.md',
-  'mobile-app': 'docs/requirements/templates/mobile-app/CLAUDE.md',
+  'web-app': 'template/requirements/web-app/CLAUDE.md',
+  'mobile-app': 'template/requirements/mobile-app/CLAUDE.md',
   'backend': null
 };
 
@@ -111,7 +111,7 @@ async function question(rl, prompt) {
  * 获取已安装的版本信息
  */
 function getInstalledInfo(targetPath) {
-  const stateFile = path.join(targetPath, '.flow/state.json');
+  const stateFile = path.join(targetPath, '.solodevflow/state.json');
   if (!fs.existsSync(stateFile)) {
     return null;
   }
@@ -252,9 +252,9 @@ async function copyFiles(config) {
 
   const targetPath = config.targetPath;
 
-  // 1. Create .flow directory and generate template files
-  log('  创建 .flow/ 目录...');
-  ensureDir(path.join(targetPath, '.flow'));
+  // 1. Create .solodevflow directory and generate template files
+  log('  创建 .solodevflow/ 目录...');
+  ensureDir(path.join(targetPath, '.solodevflow'));
 
   const now = new Date().toISOString().split('T')[0];
   const projectName = path.basename(targetPath);
@@ -268,12 +268,12 @@ async function copyFiles(config) {
     sourcePath: SOLODEVFLOW_ROOT
   };
 
-  // Generate .flow files from templates
+  // Generate .solodevflow files from templates
   const flowTemplates = [
-    { template: 'state.json.template', dest: '.flow/state.json' },
-    { template: 'input-log.md.template', dest: '.flow/input-log.md' },
-    { template: 'spark-box.md.template', dest: '.flow/spark-box.md' },
-    { template: 'pending-docs.md.template', dest: '.flow/pending-docs.md' }
+    { template: 'state.json.template', dest: '.solodevflow/state.json' },
+    { template: 'input-log.md.template', dest: '.solodevflow/input-log.md' },
+    { template: 'spark-box.md.template', dest: '.solodevflow/spark-box.md' },
+    { template: 'pending-docs.md.template', dest: '.solodevflow/pending-docs.md' }
   ];
 
   for (const { template, dest } of flowTemplates) {
@@ -303,7 +303,7 @@ async function upgradeFiles(config) {
 
   // 1. Update state.json version info (preserve user data)
   log('  更新 state.json 版本信息...');
-  const stateFile = path.join(targetPath, '.flow/state.json');
+  const stateFile = path.join(targetPath, '.solodevflow/state.json');
   const state = JSON.parse(fs.readFileSync(stateFile, 'utf-8'));
 
   // Update solodevflow info
@@ -316,10 +316,10 @@ async function upgradeFiles(config) {
   state.lastUpdated = now;
 
   fs.writeFileSync(stateFile, JSON.stringify(state, null, 2));
-  log('    .flow/state.json（版本信息已更新，用户数据已保留）', 'success');
+  log('    .solodevflow/state.json（版本信息已更新，用户数据已保留）', 'success');
 
-  // 2. Preserve other .flow files (don't overwrite)
-  log('  保留 .flow/ 用户数据...', 'success');
+  // 2. Preserve other .solodevflow files (don't overwrite)
+  log('  保留 .solodevflow/ 用户数据...', 'success');
 
   // 3. Delete old specs directory (规范现在从源目录读取)
   const specsDir = path.join(targetPath, 'docs/specs');
@@ -404,13 +404,20 @@ async function bootstrapFiles(config) {
     log('    .solodevflow/flows/', 'success');
   }
 
-  // 4. 覆盖 .solodevflow/templates/
-  log('  更新 .solodevflow/templates/...');
-  const templatesSrc = path.join(SOLODEVFLOW_ROOT, '.solodevflow/templates');
-  const templatesDest = path.join(targetPath, '.solodevflow/templates');
-  if (fs.existsSync(templatesSrc)) {
-    copyDir(templatesSrc, templatesDest);
-    log('    .solodevflow/templates/', 'success');
+  // 4. 覆盖 .claude/commands/ 和 .claude/skills/ (从 template/ 复制)
+  log('  更新 .claude/commands/ 和 .claude/skills/...');
+  const commandsSrc = path.join(SOLODEVFLOW_ROOT, 'template/commands');
+  const commandsDest = path.join(targetPath, '.claude/commands');
+  if (fs.existsSync(commandsSrc)) {
+    copyDir(commandsSrc, commandsDest);
+    log('    .claude/commands/', 'success');
+  }
+
+  const skillsSrc = path.join(SOLODEVFLOW_ROOT, 'template/skills');
+  const skillsDest = path.join(targetPath, '.claude/skills');
+  if (fs.existsSync(skillsSrc)) {
+    copyDir(skillsSrc, skillsDest);
+    log('    .claude/skills/', 'success');
   }
 
   // 5. 复制工具文件（commands, skills, templates, scripts）
@@ -443,14 +450,8 @@ async function copyToolFiles(config) {
     log('    .claude/skills/', 'success');
   }
 
-  // 3. Copy project-type specific templates
-  log(`  复制 docs/requirements/templates/${config.projectType}/...`);
-  const templatesSrc = path.join(SOLODEVFLOW_ROOT, 'docs/requirements/templates', config.projectType);
-  const templatesDest = path.join(targetPath, 'docs/requirements/templates');
-  if (fs.existsSync(templatesSrc)) {
-    copyDir(templatesSrc, templatesDest);
-    log(`    docs/requirements/templates/`, 'success');
-  }
+  // 3. Note: Requirements templates are NOT copied to target project
+  // They remain in SoloDevFlow source and are referenced via sourcePath
 
   // 4. Copy scripts (if not skipped)
   if (!config.skipScripts) {
@@ -567,12 +568,9 @@ function finalize(config) {
 路径: ${config.targetPath}
 
 已更新:
-  - .solodevflow/*.md（模板文件）
   - .solodevflow/flows/（工作流文件）
-  - .solodevflow/templates/（模板）
   - .claude/commands/（命令文件）
   - .claude/skills/（技能文件）
-  - docs/requirements/templates/（需求模板）
   - scripts/（工具脚本）
 
 已保留:
@@ -588,17 +586,17 @@ function finalize(config) {
 路径: ${config.targetPath}
 
 已更新:
+  - .solodevflow/flows/（工作流文件）
   - .claude/commands/（命令文件）
   - .claude/skills/（技能文件）
-  - docs/templates/（模板文件）
   - scripts/（工具脚本）
   - CLAUDE.md（流程控制器）
 
 已保留:
-  - .flow/state.json（项目状态）
-  - .flow/input-log.md（输入记录）
-  - .flow/spark-box.md（灵光收集箱）
-  - .flow/pending-docs.md（文档债务）
+  - .solodevflow/state.json（项目状态）
+  - .solodevflow/input-log.md（输入记录）
+  - .solodevflow/spark-box.md（灵光收集箱）
+  - .solodevflow/pending-docs.md（文档债务）
   - docs/（用户文档）
 
 更多信息请查看 CLAUDE.md

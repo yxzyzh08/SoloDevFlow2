@@ -55,7 +55,7 @@ function getStatusEmoji(status) {
 function main() {
   // Check if state file exists
   if (!fs.existsSync(STATE_FILE)) {
-    console.error('Error: .flow/state.json not found');
+    console.error('Error: .solodevflow/state.json not found');
     process.exit(1);
   }
 

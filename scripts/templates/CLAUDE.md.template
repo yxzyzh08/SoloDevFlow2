@@ -34,7 +34,7 @@
 
 每次对话开始**必须**执行：
 
-1. 读取 `.flow/state.json` 恢复状态
+1. 读取 `.solodevflow/state.json` 恢复状态
 2. 汇报：当前 Feature、阶段、待处理灵光数
 3. 等待人类指示
 
@@ -115,7 +115,7 @@ Feature Spec 完成 → 评估 Design Depth → none? ─是→ 直接进入实�
 ## 5. 注意事项
 
 **规范文档是只读的**：
-- 所有规范文档位于 SoloDevFlow 源目录（`.flow/state.json` 中的 `solodevflow.sourcePath`）
+- 所有规范文档位于 SoloDevFlow 源目录（`.solodevflow/state.json` 中的 `solodevflow.sourcePath`）
 - `/write-*` 命令会自动从源目录读取规范
 - 新项目不应修改规范，如需修改请在 SoloDevFlow 主项目中进行
 
@@ -123,10 +123,10 @@ Feature Spec 完成 → 评估 Design Depth → none? ─是→ 直接进入实�
 
 | 文件 | 用途 |
 |------|------|
-| `.flow/state.json` | **唯一状态源**（Schema v9.0） |
-| `.flow/input-log.md` | 关键输入记录（需求/决策/反馈/变更） |
-| `.flow/spark-box.md` | 灵光收集箱 |
-| `.flow/pending-docs.md` | 文档债务追踪 |
+| `.solodevflow/state.json` | **唯一状态源**（Schema v9.0） |
+| `.solodevflow/input-log.md` | 关键输入记录（需求/决策/反馈/变更） |
+| `.solodevflow/spark-box.md` | 灵光收集箱 |
+| `.solodevflow/pending-docs.md` | 文档债务追踪 |
 
 ## 7. 工具索引
 
@@ -152,7 +152,7 @@ Feature Spec 完成 → 评估 Design Depth → none? ─是→ 直接进入实�
 
 ```bash
 npm run status           # 状态摘要
-npm run validate         # 校验 .flow/ 格式
+npm run validate         # 校验 .solodevflow/ 格式
 npm run validate:state   # 校验 state.json Schema
 npm run validate:docs    # 校验文档规范
 node scripts/analyze-impact.js <file>  # 影响分析
@@ -227,7 +227,7 @@ node scripts/state.js record-commit
 │   ├── _capabilities/     # 横向能力
 │   └── _flows/            # 跨域流程
 ├── scripts/               # 工具脚本
-└── .flow/                 # 状态文件
+└── .solodevflow/          # 状态文件
 ```
 
 ---

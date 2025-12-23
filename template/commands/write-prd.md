@@ -6,14 +6,14 @@
 
 ### 步骤0: 获取规范路径
 
-1. 读取 `.flow/state.json` 获取:
+1. 读取 `.solodevflow/state.json` 获取:
    - `project.type`（项目类型：`backend` | `web-app` | `mobile-app`）
    - `solodevflow.sourcePath`（SoloDevFlow 源路径）
 
 ### 步骤1: 加载规范和模板
 
-1. 规范文档：`{sourcePath}/docs/requirements/specs/requirements-doc.spec.md`
-2. PRD 模板：`docs/requirements/templates/{projectType}/prd.md`
+1. 规范文档：`{sourcePath}/docs/specs/spec-requirements.md`
+2. PRD 模板：`{sourcePath}/template/requirements/{projectType}/prd.md`
 3. 现有 PRD：`docs/requirements/prd.md`（如存在）
 
 **注意**: 规范文档来自 SoloDevFlow 源目录，为只读文件。

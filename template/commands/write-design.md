@@ -27,14 +27,14 @@
 
 ### 步骤0: 获取规范路径
 
-1. 读取 `.flow/state.json` 获取:
+1. 读取 `.solodevflow/state.json` 获取:
    - `project.type`（项目类型：`backend` | `web-app` | `mobile-app`）
    - `solodevflow.sourcePath`（SoloDevFlow 源路径）
 
 ### 步骤1: 加载规范和模板
 
-1. 设计规范：`{sourcePath}/docs/requirements/specs/design-doc-spec.md`
-2. 设计模板：`docs/requirements/templates/{projectType}/feature.design.md`
+1. 设计规范：`{sourcePath}/docs/specs/spec-design.md`
+2. 设计模板：`{sourcePath}/template/requirements/{projectType}/feature.design.md`
 3. Feature Spec：对应的 `{name}.spec.md`（必须存在，位于 `docs/requirements/` 树）
 4. 现有 Design Doc：目标路径文件（如存在）
 

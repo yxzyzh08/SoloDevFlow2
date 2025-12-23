@@ -15,10 +15,114 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const STATE_FILE = path.join(__dirname, '..', '.solodevflow', 'state.json');
-const LOCK_FILE = path.join(__dirname, '..', '.solodevflow', 'state.lock');
-const REPORT_FILE = path.join(__dirname, '..', '.solodevflow', 'state.report.md');
+const PROJECT_ROOT = path.join(__dirname, '..');
 const LOCK_TIMEOUT = 5000; // 5 seconds
+
+// 动态路径（支持向后兼容）
+let STATE_FILE, LOCK_FILE, REPORT_FILE;
+
+/**
+ * 查找状态文件（支持遗留路径 .flow/）
+ */
+function findStateFile(projectPath) {
+  const paths = [
+    path.join(projectPath, '.solodevflow/state.json'),  // 新标准路径
+    path.join(projectPath, '.flow/state.json')          // 遗留路径
+  ];
+
+  for (const p of paths) {
+    if (fs.existsSync(p)) {
+      // 静默迁移：如果在遗留路径，自动迁移到新路径
+      if (p.includes('.flow/')) {
+        console.log('检测到遗留的 .flow/ 目录，正在自动迁移到 .solodevflow/...');
+        migrateFromLegacyFlow(projectPath);
+        return path.join(projectPath, '.solodevflow/state.json');
+      }
+      return p;
+    }
+  }
+
+  throw new Error('未找到 state.json 文件（检查了 .solodevflow/ 和 .flow/）');
+}
+
+/**
+ * 从遗留的 .flow/ 迁移到 .solodevflow/
+ */
+function migrateFromLegacyFlow(projectPath) {
+  const flowDir = path.join(projectPath, '.flow');
+  const solodevflowDir = path.join(projectPath, '.solodevflow');
+
+  // 创建 .solodevflow 目录
+  if (!fs.existsSync(solodevflowDir)) {
+    fs.mkdirSync(solodevflowDir, { recursive: true });
+  }
+
+  // 移动文件
+  const files = ['state.json', 'input-log.md', 'spark-box.md', 'state.report.md', 'pending-docs.md'];
+  for (const file of files) {
+    const src = path.join(flowDir, file);
+    const dest = path.join(solodevflowDir, file);
+    if (fs.existsSync(src)) {
+      fs.renameSync(src, dest);
+      console.log(`  已迁移: .flow/${file} → .solodevflow/${file}`);
+    }
+  }
+
+  // 复制 flows（如果存在）
+  const flowsSrc = path.join(flowDir, 'flows');
+  const flowsDest = path.join(solodevflowDir, 'flows');
+  if (fs.existsSync(flowsSrc) && !fs.existsSync(flowsDest)) {
+    copyDir(flowsSrc, flowsDest);
+    console.log(`  已迁移: .flow/flows/ → .solodevflow/flows/`);
+  }
+
+  // 删除空的 .flow 目录
+  try {
+    const remaining = fs.readdirSync(flowDir);
+    if (remaining.length === 0) {
+      fs.rmdirSync(flowDir);
+      console.log('  已删除空的 .flow/ 目录');
+    } else {
+      console.log(`  保留 .flow/ 目录（包含 ${remaining.length} 个文件）`);
+    }
+  } catch (e) {
+    // 目录可能已被删除
+  }
+
+  console.log('✓ 迁移完成！');
+}
+
+/**
+ * 复制目录
+ */
+function copyDir(src, dest) {
+  fs.mkdirSync(dest, { recursive: true });
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+
+    if (entry.isDirectory()) {
+      copyDir(srcPath, destPath);
+    } else {
+      fs.copyFileSync(srcPath, destPath);
+    }
+  }
+}
+
+// 初始化路径
+try {
+  STATE_FILE = findStateFile(PROJECT_ROOT);
+  const stateDir = path.dirname(STATE_FILE);
+  LOCK_FILE = path.join(stateDir, 'state.lock');
+  REPORT_FILE = path.join(stateDir, 'state.report.md');
+} catch (e) {
+  // 文件不存在时的默认路径
+  STATE_FILE = path.join(PROJECT_ROOT, '.solodevflow/state.json');
+  LOCK_FILE = path.join(PROJECT_ROOT, '.solodevflow/state.lock');
+  REPORT_FILE = path.join(PROJECT_ROOT, '.solodevflow/state.report.md');
+}
 
 // ============ Lock Mechanism ============
 
@@ -70,7 +174,7 @@ function releaseLock() {
 
 function readState() {
   if (!fs.existsSync(STATE_FILE)) {
-    console.error('Error: .flow/state.json not found');
+    console.error(`Error: state.json not found at ${STATE_FILE}`);
     process.exit(1);
   }
 
