@@ -5,7 +5,7 @@
  * Analyzes the impact of changes to specification documents and templates
  *
  * Usage: node scripts/analyze-impact.js <changed-file>
- * Example: node scripts/analyze-impact.js docs/specs/requirements-doc.spec.md
+ * Example: node scripts/analyze-impact.js docs/specs/spec-requirements.md
  */
 
 const fs = require('fs');
@@ -483,7 +483,7 @@ function main() {
     console.log('Usage: node scripts/analyze-impact.js <changed-file>[#anchor]');
     console.log('');
     console.log('Examples:');
-    console.log('  node scripts/analyze-impact.js docs/specs/requirements-doc.spec.md');
+    console.log('  node scripts/analyze-impact.js docs/specs/spec-requirements.md');
     console.log('  node scripts/analyze-impact.js docs/templates/backend/feature.spec.md');
     console.log('  node scripts/analyze-impact.js "docs/prd.md#feat_ref_change_impact_tracking"');
     process.exit(0);

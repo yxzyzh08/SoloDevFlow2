@@ -4,7 +4,7 @@
  * Documentation Separation Migration Script
  * Migrates from unified docs/ structure to separated docs/requirements/ and docs/designs/
  *
- * Implements: requirements-doc.spec.md v4.1 migration
+ * Implements: spec-meta.md v2.1 directory structure
  *
  * Usage:
  *   node scripts/migrate-docs-separation.js [options]
@@ -166,7 +166,7 @@ function createBackup() {
   ensureDir(BACKUP_DIR);
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-  const backupName = `migration-v4.1-${timestamp}`;
+  const backupName = `migration-v2.1-${timestamp}`;
   const backupPath = path.join(BACKUP_DIR, backupName);
 
   ensureDir(backupPath);
@@ -475,7 +475,7 @@ function rollback(backupPath) {
 
 function main() {
   console.log('═══════════════════════════════════════════════════════════');
-  console.log('  Documentation Separation Migration v4.1');
+  console.log('  Documentation Separation Migration (spec-meta v2.1)');
   console.log('═══════════════════════════════════════════════════════════\n');
 
   if (DRY_RUN) {

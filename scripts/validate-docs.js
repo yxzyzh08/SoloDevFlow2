@@ -4,11 +4,11 @@
  * Document Contract Validation Script
  * Validates documents against their specification definitions
  *
- * Implements: meta-spec.md v1.0
+ * Implements: spec-meta.md v2.1
  *
  * Usage:
  *   node scripts/validate-docs.js [doc-path]
- *   node scripts/validate-docs.js docs/prd.md
+ *   node scripts/validate-docs.js docs/requirements/prd.md
  *   node scripts/validate-docs.js  # validates all documents
  */
 
@@ -16,29 +16,50 @@ const fs = require('fs');
 const path = require('path');
 
 // ═══════════════════════════════════════════════════════════════════════════
-// META-SPEC v1.0 (硬编码，不从文档读取)
+// META-SPEC v2.1 (硬编码，不从文档读取)
 // ═══════════════════════════════════════════════════════════════════════════
 
 const META_SPEC = {
-  // 1. Document Identity
+  version: '2.1',
+
+  // 1. Document Identity (Section 3.1)
   frontmatter: {
     required: true,
-    requiredFields: ['type', 'version']
+    requiredFields: ['type', 'version'],
+    optionalFields: ['inputs']  // Design 文档必填
   },
 
-  // 2. Anchor Format
+  // 2. Anchor Format (Section 6)
   anchor: {
     pattern: /<!--\s*id:\s*([a-z][a-z0-9_]*)\s*-->/g,
     identifierPattern: /^[a-z][a-z0-9_]*$/
   },
 
-  // 3. Specification Mapping
+  // 3. Document Type Registry (Section 2)
+  // 基于元规范第2章定义的文档类型
+  typeRegistry: {
+    // Requirements Documents
+    'prd': { prefix: null, dir: 'docs/requirements/', specFile: 'spec-requirements.md', inputRequired: false },
+    'feature': { prefix: 'fea-', dir: 'docs/requirements/features/', specFile: 'spec-requirements.md', inputRequired: false },
+    'capability': { prefix: 'cap-', dir: 'docs/requirements/capabilities/', specFile: 'spec-requirements.md', inputRequired: false },
+    'flow': { prefix: 'flow-', dir: 'docs/requirements/flows/', specFile: 'spec-requirements.md', inputRequired: false },
+    // Design Documents
+    'design': { prefix: 'des-', dir: 'docs/designs/', specFile: 'spec-design.md', inputRequired: true },
+    // Test Documents
+    'test-e2e': { prefix: 'test-', dir: 'docs/tests/e2e/', specFile: 'spec-test.md', inputRequired: true },
+    'test-performance': { prefix: 'test-', dir: 'docs/tests/performance/', specFile: 'spec-test.md', inputRequired: true },
+    'test-destructive': { prefix: 'test-', dir: 'docs/tests/destructive/', specFile: 'spec-test.md', inputRequired: true },
+    // Spec Documents (不验证结构)
+    'meta-spec': { prefix: 'spec-', dir: 'docs/specs/', specFile: null, inputRequired: false },
+  },
+
+  // 4. Specification Mapping (Section 7)
   specMapping: {
     declarationPattern: /<!--\s*defines:\s*(\S+)\s*-->/,
     // 项目类型（用于推断文档类型）
     projectTypes: ['backend', 'web-app', 'cli-tool', 'library', 'api-service', 'mobile-app'],
     // 不验证的类型（规范文档本身）
-    skipTypes: ['spec']
+    skipTypes: ['meta-spec', 'requirements-spec', 'design-spec', 'test-spec', 'backend-dev-spec', 'frontend-dev-spec']
   }
 };
 
@@ -46,9 +67,18 @@ const META_SPEC = {
 // Constants
 // ═══════════════════════════════════════════════════════════════════════════
 
-const REQUIREMENTS_DIR = path.join(__dirname, '..', 'docs', 'requirements');
-const DESIGNS_DIR = path.join(__dirname, '..', 'docs', 'designs');
-const SPEC_FILE = path.join(REQUIREMENTS_DIR, 'specs', 'requirements-doc.spec.md');
+const DOCS_DIR = path.join(__dirname, '..', 'docs');
+const REQUIREMENTS_DIR = path.join(DOCS_DIR, 'requirements');
+const DESIGNS_DIR = path.join(DOCS_DIR, 'designs');
+const TESTS_DIR = path.join(DOCS_DIR, 'tests');
+const SPECS_DIR = path.join(DOCS_DIR, 'specs');
+
+// 规范文件映射（基于元规范第5.5节）
+const SPEC_FILES = {
+  'spec-requirements.md': path.join(SPECS_DIR, 'spec-requirements.md'),
+  'spec-design.md': path.join(SPECS_DIR, 'spec-design.md'),
+  'spec-test.md': path.join(SPECS_DIR, 'spec-test.md'),
+};
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Parsing Functions
@@ -101,7 +131,7 @@ function parseAnchors(content) {
 }
 
 /**
- * Parse specification definitions from requirements-doc.spec.md
+ * Parse specification definitions from spec files
  * Returns a map of docType -> { sections: [...], definedAt: string }
  */
 function parseSpecDefinitions(specContent) {
@@ -130,7 +160,7 @@ function parseSpecDefinitions(specContent) {
       currentDefines = definesMatch[1];
       currentSection = line.match(/^##\s+[\d.]*\s*(.+?)\s*<!--/)?.[1]?.trim() || 'Unknown';
       definitions.set(currentDefines, {
-        definedAt: `requirements-doc.spec.md#${currentSection}`,
+        definedAt: `spec-requirements.md#${currentSection}`,
         sections: []
       });
       continue;
@@ -202,44 +232,62 @@ function getDocName(filePath) {
 }
 
 /**
- * Infer document type from file path
- * Used when frontmatter.type is a project type (backend, web-app, etc.)
+ * Infer document type from file path and prefix
+ * Based on meta-spec v2.1 Section 5.6.1 Naming Rules
  */
 function inferDocType(filePath, frontmatterType) {
   const basename = path.basename(filePath);
+  const normalizedPath = filePath.replace(/\\/g, '/');
 
-  // Determine which tree the file is in
-  let relativePath;
-  if (filePath.includes('requirements')) {
-    relativePath = path.relative(REQUIREMENTS_DIR, filePath).replace(/\\/g, '/');
-  } else if (filePath.includes('designs')) {
-    // Design documents
-    return 'design-doc';
-  } else {
-    // Fallback for old structure or other files
-    relativePath = path.relative(path.join(__dirname, '..', 'docs'), filePath).replace(/\\/g, '/');
+  // 1. 如果 frontmatter.type 是有效的文档类型，直接使用
+  if (META_SPEC.typeRegistry[frontmatterType]) {
+    return frontmatterType;
   }
 
-  // PRD
+  // 2. 基于文件名前缀推断类型（元规范5.6.1节）
   if (basename === 'prd.md') {
     return 'prd';
   }
-
-  // Feature Spec (in domain directory or _features)
-  if (basename.endsWith('.spec.md') && !basename.startsWith('_')) {
-    if (relativePath.includes('_capabilities/')) {
-      return 'capability-spec';
+  if (basename.startsWith('fea-')) {
+    return 'feature';
+  }
+  if (basename.startsWith('cap-')) {
+    return 'capability';
+  }
+  if (basename.startsWith('flow-')) {
+    return 'flow';
+  }
+  if (basename.startsWith('des-')) {
+    return 'design';
+  }
+  if (basename.startsWith('test-')) {
+    // 根据目录区分测试类型
+    if (normalizedPath.includes('/tests/e2e/')) {
+      return 'test-e2e';
     }
-    if (relativePath.includes('_flows/')) {
-      return 'flow-spec';
+    if (normalizedPath.includes('/tests/performance/')) {
+      return 'test-performance';
     }
-    // Default to feature-spec for other .spec.md files
-    return 'feature-spec';
+    if (normalizedPath.includes('/tests/destructive/')) {
+      return 'test-destructive';
+    }
+    return 'test-e2e'; // 默认
+  }
+  if (basename.startsWith('spec-')) {
+    return 'meta-spec'; // 所有规范文档归为此类，不验证结构
   }
 
-  // If frontmatter type is a project type, we can't determine doc type
+  // 3. 基于目录路径推断
+  if (normalizedPath.includes('/docs/designs/')) {
+    return 'design';
+  }
+  if (normalizedPath.includes('/docs/specs/')) {
+    return 'meta-spec';
+  }
+
+  // 4. 如果 frontmatter type 是项目类型，无法推断
   if (META_SPEC.specMapping.projectTypes.includes(frontmatterType)) {
-    return null; // Can't infer, skip validation
+    return null;
   }
 
   return frontmatterType;
@@ -296,24 +344,33 @@ function validateDocument(filePath, specDefinitions) {
     return results;
   }
 
-  if (META_SPEC.specMapping.skipTypes.includes(docType)) {
-    results.info.push(`Type "${docType}" is not validated (spec type)`);
+  // 4. Check if this is a spec type (skip structure validation)
+  if (META_SPEC.specMapping.skipTypes.includes(docType) || docType === 'meta-spec') {
+    results.info.push(`Type "${docType}" is a spec type, skipping structure validation`);
     return results;
   }
 
-  // 4. Find specification definition for this type
+  // 5. Check inputs field for types that require it
+  const typeConfig = META_SPEC.typeRegistry[docType];
+  if (typeConfig && typeConfig.inputRequired) {
+    if (!frontmatter.inputs) {
+      results.errors.push(`Missing required 'inputs' field for type: ${docType}`);
+    }
+  }
+
+  // 6. Find specification definition for this type
   const specDef = specDefinitions.get(docType);
   if (!specDef) {
     results.warnings.push(`No specification found for type: ${docType}`);
     return results;
   }
 
-  // 4. Parse anchors in document
+  // 7. Parse anchors in document
   const docAnchors = parseAnchors(content);
   const docAnchorIds = new Set(docAnchors.map(a => a.id));
   const docName = getDocName(filePath);
 
-  // 5. Validate required sections by checking anchors
+  // 8. Validate required sections by checking anchors
   for (const section of specDef.sections) {
     if (!section.anchor) continue;
 
@@ -337,7 +394,7 @@ function validateDocument(filePath, specDefinitions) {
     }
   }
 
-  // 6. Validate anchor format
+  // 9. Validate anchor format
   for (const anchor of docAnchors) {
     if (!META_SPEC.anchor.identifierPattern.test(anchor.id)) {
       results.warnings.push(`Invalid anchor format: ${anchor.id} (should match ${META_SPEC.anchor.identifierPattern})`);
@@ -349,6 +406,7 @@ function validateDocument(filePath, specDefinitions) {
 
 /**
  * Find all documents to validate
+ * Based on meta-spec v2.1 Section 5 Directory Structure
  */
 function findDocuments(targetPath) {
   const docs = [];
@@ -365,7 +423,7 @@ function findDocuments(targetPath) {
   }
 
   // Find all markdown files in docs/
-  function scanDir(dir) {
+  function scanDir(dir, skipDirs = []) {
     if (!fs.existsSync(dir)) {
       return;
     }
@@ -387,9 +445,9 @@ function findDocuments(targetPath) {
       }
 
       if (stat.isDirectory()) {
-        // Skip templates, specs, and referenceProducts directories
-        if (!['templates', 'specs', 'referenceProducts'].includes(item)) {
-          scanDir(fullPath);
+        // Skip specified directories
+        if (!skipDirs.includes(item)) {
+          scanDir(fullPath, skipDirs);
         }
       } else if (item.endsWith('.md') && !item.startsWith('_archive')) {
         docs.push(fullPath);
@@ -397,11 +455,37 @@ function findDocuments(targetPath) {
     }
   }
 
-  // Scan both requirements and designs directories
-  scanDir(REQUIREMENTS_DIR);
-  scanDir(DESIGNS_DIR);
+  // Scan all documentation directories (based on meta-spec v2.1 Section 5.1)
+  // Skip templates, referenceProducts, but include specs for validation
+  scanDir(REQUIREMENTS_DIR, ['templates', 'referenceProducts']);
+  scanDir(DESIGNS_DIR, ['templates']);
+  scanDir(TESTS_DIR, []);
+  scanDir(SPECS_DIR, []);  // Include specs directory
 
   return docs;
+}
+
+/**
+ * Load all specification definitions from multiple spec files
+ */
+function loadAllSpecDefinitions() {
+  const allDefinitions = new Map();
+
+  for (const [specName, specPath] of Object.entries(SPEC_FILES)) {
+    if (fs.existsSync(specPath)) {
+      const specContent = fs.readFileSync(specPath, 'utf8');
+      const definitions = parseSpecDefinitions(specContent);
+
+      for (const [type, def] of definitions) {
+        allDefinitions.set(type, {
+          ...def,
+          sourceFile: specName
+        });
+      }
+    }
+  }
+
+  return allDefinitions;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -415,21 +499,24 @@ function main() {
   const verbose = args.includes('--verbose');
 
   console.log('=== Document Contract Validation ===\n');
-  console.log('Meta-Spec: v1.0 (hardcoded)');
-  console.log(`Spec File: ${path.relative(process.cwd(), SPEC_FILE)}\n`);
+  console.log(`Meta-Spec: v${META_SPEC.version} (hardcoded)`);
+  console.log(`Specs Directory: ${path.relative(process.cwd(), SPECS_DIR)}\n`);
 
-  // Load specification definitions
-  if (!fs.existsSync(SPEC_FILE)) {
-    console.error('ERROR: requirements-doc.spec.md not found');
-    process.exit(1);
+  // Load specification definitions from all spec files
+  const specDefinitions = loadAllSpecDefinitions();
+
+  // Show loaded spec files
+  console.log('Spec files checked:');
+  for (const [specName, specPath] of Object.entries(SPEC_FILES)) {
+    const exists = fs.existsSync(specPath);
+    console.log(`  - ${specName}: ${exists ? '✓' : '✗ (not found)'}`);
   }
-
-  const specContent = fs.readFileSync(SPEC_FILE, 'utf8');
-  const specDefinitions = parseSpecDefinitions(specContent);
+  console.log('');
 
   console.log('Loaded specifications for types:');
   for (const [type, def] of specDefinitions) {
-    console.log(`  - ${type}: ${def.sections.length} sections defined`);
+    const source = def.sourceFile ? ` (from ${def.sourceFile})` : '';
+    console.log(`  - ${type}: ${def.sections.length} sections defined${source}`);
   }
   console.log('');
 
