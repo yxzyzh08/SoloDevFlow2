@@ -1,6 +1,6 @@
 ---
 type: prd
-version: "2.10"
+version: "2.11"
 ---
 
 # SoloDevFlow 2.0 <!-- id: prod_solodevflow -->
@@ -59,7 +59,7 @@ version: "2.10"
 ```
 
 **关键点**：
-- AI 主动加载相关 Feature Spec、设计文档、代码文件等上下文
+- AI 主动加载相关 Feature、设计文档、代码文件等上下文
 - AI 识别需求模糊点，主动发起澄清对话
 - 文档先行：先更新规格文档，后实现代码
 
@@ -140,16 +140,16 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature Spec**: [spec-meta.md](../specs/spec-meta.md)
+- **Feature**: [spec-meta.md](../specs/spec-meta.md)
 
 #### requirements-doc <!-- id: feat_ref_requirements_doc -->
 
-需求文档规范，定义 PRD、Domain Spec、Feature Spec、Capability Spec、Flow Spec 的结构、内容要素、编写标准。
+需求文档规范，定义 PRD、Feature、Capability、Flow 的结构、内容要素、编写标准。
 
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature Spec**: [spec-requirements.md](../specs/spec-requirements.md)
+- **Feature**: [spec-requirements.md](../specs/spec-requirements.md)
 
 #### design-doc-spec <!-- id: feat_ref_design_doc_spec -->
 
@@ -158,7 +158,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature Spec**: [spec-design.md](../specs/spec-design.md)
+- **Feature**: [spec-design.md](../specs/spec-design.md)
 
 #### development-spec <!-- id: feat_ref_development_spec -->
 
@@ -167,7 +167,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P1
 - **Type**: document
-- **Feature Spec**: [spec-backend-dev.md](../specs/spec-backend-dev.md), [spec-frontend-dev.md](../specs/spec-frontend-dev.md)
+- **Feature**: [spec-backend-dev.md](../specs/spec-backend-dev.md), [spec-frontend-dev.md](../specs/spec-frontend-dev.md)
 
 #### testing-spec <!-- id: feat_ref_testing_spec -->
 
@@ -176,7 +176,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P1
 - **Type**: document
-- **Feature Spec**: [spec-test.md](../specs/spec-test.md)
+- **Feature**: [spec-test.md](../specs/spec-test.md)
 
 ### 4.2 Domain: process <!-- id: domain_process -->
 
@@ -189,7 +189,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature Spec**: [flow-core-collaboration.md](flows/flow-core-collaboration.md)
+- **Feature**: [flow-core-collaboration.md](flows/flow-core-collaboration.md)
 
 #### state-management <!-- id: feat_ref_state_management -->
 
@@ -198,7 +198,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature Spec**: [fea-state-management.md](features/fea-state-management.md)
+- **Feature**: [fea-state-management.md](features/fea-state-management.md)
 
 #### change-impact-tracking <!-- id: feat_ref_change_impact_tracking -->
 
@@ -207,7 +207,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature Spec**: [fea-change-impact-tracking.md](features/fea-change-impact-tracking.md)
+- **Feature**: [fea-change-impact-tracking.md](features/fea-change-impact-tracking.md)
 
 #### input-capture <!-- id: feat_ref_input_capture -->
 
@@ -216,7 +216,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature Spec**: [input-log.md](../../.solodevflow/input-log.md)
+- **Feature**: [input-log.md](../../.solodevflow/input-log.md)
 
 #### spark-box <!-- id: feat_ref_spark_box -->
 
@@ -225,7 +225,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature Spec**: [spark-box.md](../../.solodevflow/spark-box.md)
+- **Feature**: [spark-box.md](../../.solodevflow/spark-box.md)
 
 ### 4.3 Domain: tooling <!-- id: domain_tooling -->
 
@@ -240,7 +240,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P0
 - **Type**: code
-- **Feature Spec**: [fea-project-init.md](features/fea-project-init.md)
+- **Feature**: [fea-project-init.md](features/fea-project-init.md)
 
 ### 4.4 Domain: ai-config <!-- id: domain_ai_config -->
 
@@ -253,7 +253,7 @@ AI 行为入口，解决 AI 对话启动时缺乏上下文和导航的问题。�
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature Spec**: [CLAUDE.md](../CLAUDE.md)
+- **Feature**: [CLAUDE.md](../CLAUDE.md)
 
 #### write-commands <!-- id: feat_ref_write_commands -->
 
@@ -262,7 +262,7 @@ AI 行为入口，解决 AI 对话启动时缺乏上下文和导航的问题。�
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature Spec**: [.claude/commands/](../.claude/commands/)
+- **Feature**: [.claude/commands/](../.claude/commands/)
 
 #### requirements-expert <!-- id: feat_ref_requirements_expert -->
 
@@ -271,7 +271,7 @@ AI 行为入口，解决 AI 对话启动时缺乏上下文和导航的问题。�
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature Spec**: [.claude/skills/requirements-expert/](../.claude/skills/requirements-expert/)
+- **Feature**: [.claude/skills/requirements-expert/](../.claude/skills/requirements-expert/)
 
 ---
 
@@ -320,7 +320,7 @@ AI 行为入口，解决 AI 对话启动时缺乏上下文和导航的问题。�
 
 ---
 
-*Version: v2.10*
+*Version: v2.11*
 *Created: 2024-12-16*
 *Updated: 2025-12-23*
-*Changes: v2.10 细化人机协作描述为两类流程：需求交付流程和功能咨询流程; v2.9 基于 spec-requirements.md v2.3 重构：(1) Frontmatter 修正为 type: prd; (2) 目录结构适配规范（features/, flows/）; (3) 所有 Feature Spec 引用路径更新*
+*Changes: v2.11 移除文档名称中的 doc/spec 后缀（Feature Spec → Feature）; v2.10 细化人机协作描述为两类流程：需求交付流程和功能咨询流程; v2.9 基于 spec-requirements.md v2.3 重构*
