@@ -129,6 +129,22 @@ function getInstalledInfo(targetPath) {
   }
 }
 
+/**
+ * 检测目标项目是否为 SoloDevFlow 自身
+ */
+function isSelfProject(targetPath) {
+  try {
+    const packagePath = path.join(targetPath, 'package.json');
+    if (!fs.existsSync(packagePath)) {
+      return false;
+    }
+    const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf-8'));
+    return packageJson.name === 'solodevflow';
+  } catch (e) {
+    return false;
+  }
+}
+
 // ============================================================================
 // Checker Component
 // ============================================================================
@@ -154,6 +170,23 @@ async function checkPrerequisites(config, rl) {
   const stat = fs.statSync(config.targetPath);
   if (!stat.isDirectory()) {
     throw new Error('目标路径不是目录');
+  }
+
+  // Check if self project (bootstrap mode)
+  if (isSelfProject(config.targetPath)) {
+    config.bootstrap = true;
+    config.projectType = 'backend'; // 固定为 backend
+    log('检测到 SoloDevFlow 自身项目，启用自举模式', 'info');
+
+    if (!config.upgrade && !config.force) {
+      const answer = await question(rl, '自举模式将更新工具文件但保留项目数据，是否继续? (y/n): ');
+      if (answer.toLowerCase() !== 'y') {
+        throw new Error('操作取消');
+      }
+    }
+
+    log('自举模式已启用', 'success');
+    return true;
   }
 
   // Check if already initialized
@@ -302,6 +335,90 @@ async function upgradeFiles(config) {
   log('升级完成', 'success');
 }
 
+// ============================================================================
+// Bootstrap Component
+// ============================================================================
+
+/**
+ * 自举模式：更新工具文件，保留项目数据
+ */
+async function bootstrapFiles(config) {
+  log('自举模式：更新工具文件...');
+
+  const targetPath = config.targetPath;
+  const now = new Date().toISOString();
+
+  // 1. 部分更新 state.json（只更新版本信息）
+  log('  更新 .solodevflow/state.json 版本信息...');
+  const stateFile = path.join(targetPath, '.solodevflow/state.json');
+
+  if (fs.existsSync(stateFile)) {
+    const state = JSON.parse(fs.readFileSync(stateFile, 'utf-8'));
+
+    // ✅ 只更新版本信息
+    state.solodevflow = state.solodevflow || {};
+    state.solodevflow.version = VERSION;
+    state.solodevflow.upgradedAt = now;
+    state.lastUpdated = now;
+
+    // ❌ 保留用户数据：features, domains, sparks, pendingDocs, metadata
+
+    fs.writeFileSync(stateFile, JSON.stringify(state, null, 2));
+    log('    版本信息已更新', 'success');
+  }
+
+  // 2. 覆盖模板文件
+  log('  更新 .solodevflow/ 模板文件...');
+  const templates = [
+    { template: 'input-log.md.template', dest: '.solodevflow/input-log.md' },
+    { template: 'spark-box.md.template', dest: '.solodevflow/spark-box.md' },
+    { template: 'pending-docs.md.template', dest: '.solodevflow/pending-docs.md' }
+  ];
+
+  const projectName = path.basename(targetPath);
+  const templateVars = {
+    projectName,
+    projectType: 'backend',
+    version: VERSION,
+    createdAt: now.split('T')[0],
+    installedAt: now,
+    sourcePath: SOLODEVFLOW_ROOT
+  };
+
+  for (const { template, dest } of templates) {
+    const templatePath = path.join(SOLODEVFLOW_ROOT, 'scripts/templates', template);
+    const destPath = path.join(targetPath, dest);
+    if (fs.existsSync(templatePath)) {
+      const content = renderTemplate(templatePath, templateVars);
+      fs.writeFileSync(destPath, content);
+      log(`    ${dest}`, 'success');
+    }
+  }
+
+  // 3. 覆盖工作流文件
+  log('  更新 .solodevflow/flows/...');
+  const flowsSrc = path.join(SOLODEVFLOW_ROOT, '.solodevflow/flows');
+  const flowsDest = path.join(targetPath, '.solodevflow/flows');
+  if (fs.existsSync(flowsSrc)) {
+    copyDir(flowsSrc, flowsDest);
+    log('    .solodevflow/flows/', 'success');
+  }
+
+  // 4. 覆盖 .solodevflow/templates/
+  log('  更新 .solodevflow/templates/...');
+  const templatesSrc = path.join(SOLODEVFLOW_ROOT, '.solodevflow/templates');
+  const templatesDest = path.join(targetPath, '.solodevflow/templates');
+  if (fs.existsSync(templatesSrc)) {
+    copyDir(templatesSrc, templatesDest);
+    log('    .solodevflow/templates/', 'success');
+  }
+
+  // 5. 复制工具文件（commands, skills, templates, scripts）
+  await copyToolFiles(config);
+
+  log('自举模式更新完成', 'success');
+}
+
 /**
  * 复制工具文件（commands, skills, templates, scripts）
  */
@@ -432,7 +549,9 @@ function finalize(config) {
 
   console.log('\n' + '='.repeat(60));
 
-  if (config.upgrade) {
+  if (config.bootstrap) {
+    log(`SoloDevFlow ${VERSION} 自举更新成功!`, 'success');
+  } else if (config.upgrade) {
     const oldVersion = config.existingInfo?.version || 'unknown';
     log(`SoloDevFlow ${oldVersion} → ${VERSION} 升级成功!`, 'success');
   } else {
@@ -441,7 +560,28 @@ function finalize(config) {
 
   console.log('='.repeat(60));
 
-  if (config.upgrade) {
+  if (config.bootstrap) {
+    console.log(`
+项目: ${projectName}
+模式: 自举更新
+路径: ${config.targetPath}
+
+已更新:
+  - .solodevflow/*.md（模板文件）
+  - .solodevflow/flows/（工作流文件）
+  - .solodevflow/templates/（模板）
+  - .claude/commands/（命令文件）
+  - .claude/skills/（技能文件）
+  - docs/requirements/templates/（需求模板）
+  - scripts/（工具脚本）
+
+已保留:
+  - .solodevflow/state.json（项目状态数据）
+  - docs/（项目文档）
+
+版本已更新至: ${VERSION}
+`);
+  } else if (config.upgrade) {
     console.log(`
 项目: ${projectName}
 类型: ${config.projectType}
@@ -628,18 +768,23 @@ async function main() {
     // Check prerequisites
     await checkPrerequisites(config, rl);
 
-    // Select project type if not specified (and not upgrading)
-    if (!config.projectType) {
+    // Select project type if not specified (and not upgrading or bootstrapping)
+    if (!config.projectType && !config.bootstrap) {
       config.projectType = await selectProjectType(rl);
-    } else if (!PROJECT_TYPES.includes(config.projectType)) {
+    } else if (config.projectType && !PROJECT_TYPES.includes(config.projectType)) {
       log(`无效的项目类型: ${config.projectType}`, 'error');
       log(`支持的类型: ${PROJECT_TYPES.join(', ')}`);
       process.exit(1);
     }
 
-    log(`项目类型: ${config.projectType}`);
+    if (!config.bootstrap) {
+      log(`项目类型: ${config.projectType}`);
+    }
 
-    if (config.upgrade) {
+    if (config.bootstrap) {
+      // Bootstrap mode (self-project)
+      await bootstrapFiles(config);
+    } else if (config.upgrade) {
       // Upgrade mode
       await upgradeFiles(config);
     } else {
@@ -647,8 +792,10 @@ async function main() {
       await copyFiles(config);
     }
 
-    // Generate config (always regenerate CLAUDE.md)
-    await generateConfig(config);
+    // Generate config (skip for bootstrap mode)
+    if (!config.bootstrap) {
+      await generateConfig(config);
+    }
 
     // Finalize
     finalize(config);

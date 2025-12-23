@@ -9,7 +9,9 @@
   },
   "flow": {
     "researchMethod": "bottom-up",
-    "activeFeatures": []
+    "activeFeatures": [
+      "project-init"
+    ]
   },
   "features": {
     "meta": {
@@ -65,15 +67,20 @@
       "status": "not_started"
     },
     "state-management": {
-      "type": "document",
-      "description": "状态管理机制（state.json Schema）",
+      "type": "code",
+      "description": "状态管理系统（Schema + CLI 工具）",
       "domain": "process",
       "docPath": "docs/requirements/features/fea-state-management.md",
-      "scripts": [
-        "scripts/validate-state.js",
-        "scripts/status.js",
-        "scripts/state.js"
-      ],
+      "designDepth": "none",
+      "artifacts": {
+        "design": null,
+        "code": [
+          "scripts/validate-state.js",
+          "scripts/state.js",
+          "scripts/status.js"
+        ],
+        "tests": []
+      },
       "phase": "pending",
       "status": "not_started"
     },
@@ -121,7 +128,7 @@
         ]
       },
       "phase": "pending",
-      "status": "not_started"
+      "status": "in_progress"
     },
     "claude-md": {
       "type": "document",
@@ -168,8 +175,8 @@
     "lastGitCommit": "",
     "lastGitCommitMessage": "",
     "lastGitCommitAt": "",
-    "stateFileVersion": 1,
-    "totalStateChanges": 1
+    "stateFileVersion": 2,
+    "totalStateChanges": 2
   },
-  "lastUpdated": "2025-12-23T00:00:00.000Z"
+  "lastUpdated": "2025-12-23T10:28:48.390Z"
 }

@@ -100,15 +100,17 @@ Feature 分为两种类型，工作流不同：
 
 **code 类型**：
 - 完整生命周期：需求 → 设计 → 实现 → 验证
-- 有代码、测试、设计文档
-- 示例：prd-validator
+- 有代码、测试、设计文档（根据 `designDepth` 决定是否需要设计文档）
+- 示例：
+  - 需要设计：prd-validator（designDepth: required）
+  - 无需设计：state-management（designDepth: none，简单 CLI 工具）
 
 **document 类型**：
 - 简化生命周期：起草 → 完成
 - Markdown 内容，可选包含辅助脚本（通过 `scripts` 字段记录）
 - 示例：
   - 纯文档：requirements-doc、requirements-expert
-  - 文档+脚本：state-management（含 validate-state.js、migrate-state.js）
+  - 文档+脚本：change-impact-tracking（含 analyze-impact.js）
 
 ### 5.3 Top-Level Structure
 
@@ -507,12 +509,17 @@ document 类型：pending → drafting → done
       "status": "in_progress"
     },
     "state-management": {
-      "type": "document",
-      "description": "状态管理机制（state.json Schema）",
+      "type": "code",
+      "description": "状态管理系统（Schema + CLI 工具）",
       "domain": "process",
       "docPath": "docs/requirements/features/fea-state-management.md",
-      "scripts": ["scripts/validate-state.js", "scripts/state.js"],
-      "phase": "drafting",
+      "designDepth": "none",
+      "artifacts": {
+        "design": null,
+        "code": ["scripts/validate-state.js", "scripts/state.js", "scripts/status.js"],
+        "tests": []
+      },
+      "phase": "implementation",
       "status": "in_progress"
     },
     "requirements-doc": {
@@ -542,8 +549,8 @@ document 类型：pending → drafting → done
 
 ---
 
-*Version: v5.0*
+*Version: v5.1*
 *Created: 2024-12-20*
-*Updated: 2024-12-22*
-*Changes: v5.0 Schema v10.0.0 - 简化 designDepth 为 2 级（none/required）*
+*Updated: 2024-12-23*
+*Changes: v5.1 - 更新 state-management 自身类型定义为 code（designDepth: none）*
 *Applies to: SoloDevFlow 2.0*

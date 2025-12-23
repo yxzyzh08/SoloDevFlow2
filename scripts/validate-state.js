@@ -240,13 +240,13 @@ function validateState(state) {
             });
           }
 
-          // tests: required, must be non-empty array
+          // tests: required, must be array (empty array allowed but warned)
           if (!artifacts.tests) {
             error(`${artifactsPath}.tests is required`);
           } else if (!Array.isArray(artifacts.tests)) {
             error(`${artifactsPath}.tests must be an array`);
           } else if (artifacts.tests.length === 0) {
-            error(`${artifactsPath}.tests cannot be empty`);
+            warn(`${artifactsPath}.tests is empty - consider adding tests for code quality`);
           } else {
             artifacts.tests.forEach((testPath, index) => {
               if (typeof testPath !== 'string') {

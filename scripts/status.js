@@ -10,7 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const STATE_FILE = path.join(__dirname, '..', '.flow', 'state.json');
+const STATE_FILE = path.join(__dirname, '..', '.solodevflow', 'state.json');
 
 /**
  * Build domain tree from features (v8.0 派生逻辑)

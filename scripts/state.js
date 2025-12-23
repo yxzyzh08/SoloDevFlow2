@@ -15,9 +15,9 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const STATE_FILE = path.join(__dirname, '..', '.flow', 'state.json');
-const LOCK_FILE = path.join(__dirname, '..', '.flow', 'state.lock');
-const REPORT_FILE = path.join(__dirname, '..', '.flow', 'state.report.md');
+const STATE_FILE = path.join(__dirname, '..', '.solodevflow', 'state.json');
+const LOCK_FILE = path.join(__dirname, '..', '.solodevflow', 'state.lock');
+const REPORT_FILE = path.join(__dirname, '..', '.solodevflow', 'state.report.md');
 const LOCK_TIMEOUT = 5000; // 5 seconds
 
 // ============ Lock Mechanism ============
@@ -550,6 +550,37 @@ function completeSubtask(featureName, subtaskId) {
   }
 }
 
+function skipSubtask(featureName, subtaskId) {
+  acquireLock();
+  try {
+    const state = readState();
+
+    if (!state.features[featureName]) {
+      console.error(`Error: Feature "${featureName}" not found`);
+      process.exit(1);
+    }
+
+    const feature = state.features[featureName];
+    if (!feature.subtasks) {
+      console.error(`Error: Feature "${featureName}" has no subtasks`);
+      process.exit(1);
+    }
+
+    const subtask = feature.subtasks.find(s => s.id === subtaskId);
+    if (!subtask) {
+      console.error(`Error: Subtask "${subtaskId}" not found`);
+      process.exit(1);
+    }
+
+    subtask.status = 'skipped';
+
+    writeState(state);
+    console.log(JSON.stringify({ success: true, subtask }, null, 2));
+  } finally {
+    releaseLock();
+  }
+}
+
 function addDomain(name, options) {
   acquireLock();
   try {
@@ -758,6 +789,7 @@ UPDATE COMMANDS:
   deactivate-feature <name>    Remove from activeFeatures
   add-subtask <feature> --description <desc> [--target <path>] [--source <src>]
   complete-subtask <feature> <subtask-id>
+  skip-subtask <feature> <subtask-id>
   add-domain <name> --description <desc>
   record-commit                Record latest git commit to metadata
   set-artifacts <name> [--designDepth none|required] [--design <path>] [--code <paths>] [--tests <paths>]
@@ -894,6 +926,18 @@ function main() {
         process.exit(1);
       }
       completeSubtask(restArgs[0], restArgs[1]);
+      break;
+
+    case 'skip-subtask':
+      if (!restArgs[0] || restArgs[0].startsWith('--')) {
+        console.error('Error: Feature name required');
+        process.exit(1);
+      }
+      if (!restArgs[1] || restArgs[1].startsWith('--')) {
+        console.error('Error: Subtask ID required');
+        process.exit(1);
+      }
+      skipSubtask(restArgs[0], restArgs[1]);
       break;
 
     case 'add-domain':
