@@ -1,4 +1,4 @@
-# Requirements Document Specification v2.3 <!-- id: spec_requirements -->
+# Requirements Document Specification v2.5 <!-- id: spec_requirements -->
 
 > 定义需求文档（PRD、Feature、Capability、Flow）的结构和编写标准
 
@@ -9,7 +9,7 @@
 - 此规范定义需求文档的**具体章节结构**
 - 元规范 `spec-meta.md` 定义文档类型和验证规则
 - 设计文档规范见 `spec-design.md`
-- **版本 v2.4**：增加 `Condition` 列支持项目类型差异，消除模板层
+- **版本 v2.5**：新增知识库解析支持（Summary 提取、Dependencies/Consumers 格式、可选 frontmatter）
 - **模板已消除**：AI 直接从本规范生成文档，不再使用 `template/requirements/` 模板
 
 ---
@@ -65,6 +65,32 @@ docs/requirements/
 
 方法选择记录在 `.solodevflow/state.json` 的 `flow.researchMethod` 字段。
 
+### 1.5 Summary Extraction Rule
+
+知识库从以下位置提取文档摘要（Summary）：
+
+| 文档类型 | 摘要来源 | 提取规则 |
+|----------|----------|----------|
+| PRD | Product Vision 章节 | 第一段（Core Value 之前） |
+| Feature | 标题后 `>` 引用 | 或 Intent 章节 Problem/Value 首段 |
+| Capability | Intent 章节 | 首段 |
+| Flow | Flow Overview 章节 | 首段 |
+
+**提取规则**：
+1. 定位目标章节（按优先级）
+2. 提取首个非空段落（排除标题、表格、代码块）
+3. 截取前 200 字符作为摘要
+
+**示例**：
+
+```markdown
+# Feature: State Management <!-- id: feat_state_management -->
+
+> 项目状态的唯一真实来源，定义 state.json 的结构、校验规则、使用指南
+```
+
+摘要提取结果：`项目状态的唯一真实来源，定义 state.json 的结构、校验规则、使用指南`
+
 ---
 
 ## 2. Frontmatter <!-- id: spec_req_frontmatter -->
@@ -82,6 +108,29 @@ version: {version}
 |------|------|------|
 | `type` | 是 | 文档类型：`prd`, `feature`, `capability`, `flow` |
 | `version` | 是 | 文档版本号 |
+
+### 2.1 Optional Frontmatter Fields
+
+以下字段为可选，用于增强知识库索引和查询：
+
+```yaml
+---
+type: feature
+version: "1.0"
+priority: P0         # 可选：优先级
+domain: process      # 可选：所属 Domain
+---
+```
+
+| 字段 | 必填 | 说明 |
+|------|------|------|
+| `priority` | 否 | 优先级：`P0` / `P1` / `P2` |
+| `domain` | 否 | 所属 Domain 名称（与 PRD 中的 Domain 对应） |
+
+**说明**：
+- 这些字段在元信息章节中通常已有体现
+- frontmatter 中声明可加速知识库索引
+- 知识库解析器应容错处理缺失情况
 
 ---
 
@@ -118,7 +167,7 @@ Feature Roadmap 按 Domain 组织，每个 Feature 以子章节形式呈现：
 **元信息**：
 - **Priority**: P0/P1/P2
 - **Type**: code / document
-- **Spec**: [链接到 Feature Spec 文档]（如有独立文档）
+- **Feature**: [链接到 Feature Spec 文档]（如有独立文档）
 ```
 
 ### 3.2 Domain Collaboration (Optional)
@@ -308,6 +357,35 @@ PageComponent
 - 优先复用现有组件
 - 新建组件实现后需更新组件注册表
 
+### 4.6 Dependencies Section Format
+
+Dependencies 章节声明 Feature 的前置依赖，支持知识库关系提取：
+
+```markdown
+## Dependencies <!-- id: feat_{name}_dependencies -->
+
+| Dependency | Type | 说明 |
+|------------|------|------|
+| spec-meta | hard | 依赖元规范锚点系统 |
+| feat_auth | soft | 可选依赖认证功能 |
+```
+
+| 列 | 必填 | 说明 |
+|----|------|------|
+| Dependency | 是 | 依赖项锚点 ID 或文档名（不含路径后缀） |
+| Type | 是 | `hard`（必须先完成）/ `soft`（可选增强） |
+| 说明 | 否 | 依赖原因 |
+
+**解析规则**：
+- `Type=hard` → 关系类型 `depends`
+- `Type=soft` → 关系类型 `extends`
+- 方向：当前文档 → 依赖项
+
+**使用场景**：
+- 声明需求依赖（如 Feature A 需要 Feature B 先完成）
+- 声明规范依赖（如 Feature 依赖某个规范定义）
+- 声明能力依赖（如 Feature 使用某个 Capability）
+
 ---
 
 ## 5. Capability Spec Structure <!-- id: spec_req_capability --> <!-- defines: capability -->
@@ -320,6 +398,7 @@ PageComponent
 | Acceptance Criteria | Yes | `cap_{name}_acceptance` | 可验证的完成条件 |
 | Boundaries | No | `cap_{name}_boundaries` | 需要明确排除项 |
 | Constraints | No | `cap_{name}_constraints` | 有性能/安全等约束 |
+| Artifacts | No | `cap_{name}_artifacts` | 产物记录（代码/测试路径） |
 
 ### 5.1 Creation Criteria
 
@@ -327,6 +406,36 @@ PageComponent
 - 横向功能被 2 个以上 Feature 使用
 - 横向功能有复杂需求需要独立描述
 - 横向功能需要定义统一的使用规范
+
+### 5.2 Consumers Section Format
+
+Consumers 章节声明哪些 Feature/Domain 使用该 Capability，支持知识库关系提取：
+
+```markdown
+## Consumers <!-- id: cap_{name}_consumers -->
+
+| Consumer | Type | 使用场景 |
+|----------|------|----------|
+| feat_user_login | feature | 用户登录时调用认证能力 |
+| feat_user_register | feature | 注册后自动登录 |
+| domain_payment | domain | 支付前验证用户身份 |
+```
+
+| 列 | 必填 | 说明 |
+|----|------|------|
+| Consumer | 是 | 消费者锚点 ID（Feature 用 `feat_xxx`，Domain 用 `domain_xxx`） |
+| Type | 是 | 消费者类型：`feature` / `domain` / `flow` |
+| 使用场景 | 否 | 描述如何使用该能力 |
+
+**解析规则**：
+- Consumer 列 → 关系来源（谁使用）
+- 当前 Capability → 关系目标（被使用）
+- 关系类型：`consumes`
+- 方向：Consumer → Capability
+
+**与 Dependencies 的区别**：
+- Dependencies：声明"我依赖谁"（在 Feature 中声明）
+- Consumers：声明"谁使用我"（在 Capability 中声明）
 
 ---
 
@@ -447,7 +556,7 @@ minor: 内容更新（修改描述）
 
 ---
 
-*Version: v2.4*
+*Version: v2.6*
 *Created: 2024-12-20 (v1.0)*
-*Updated: 2025-12-23 (v2.4)*
-*Changes: v2.4 增加 Condition 列支持项目类型差异，消除模板层*
+*Updated: 2025-12-24 (v2.6)*
+*Changes: v2.6 统一元信息标签为 Feature（与 PRD 实际使用一致）；v2.5 新增 Summary 提取规则、Dependencies/Consumers 章节格式、可选 frontmatter 字段*

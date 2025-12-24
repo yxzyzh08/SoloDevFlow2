@@ -1,4 +1,4 @@
-# Meta-Spec v2.2 <!-- 元规范 -->
+# Meta-Spec v2.3 <!-- 元规范 -->
 
 > 定义文档系统的基础规则，是验证系统的"宪法层"
 
@@ -9,7 +9,7 @@
 - 此文档是验证系统的"根"，**不被程序验证**
 - 变更此文档需同步更新 `scripts/validate-docs.js`
 - 变更历史通过 Git 追踪
-- **版本 v2.1**：精简冗余章节，统一规范文件名引用
+- **版本 v2.3**：新增知识库解析支持（链接解析规则、defines 关系提取、关键词权重定义）
 
 ---
 
@@ -177,6 +177,45 @@ inputs: [path/to/doc.md#anchor]  # Design 文档必填
 ```markdown
 [工作流执行规范](.solodevflow/flows/workflows.md)
 ```
+
+#### 3.2.4 Reference Parsing Rules (for Knowledge Base)
+
+知识库解析 Markdown 链接时使用以下规则：
+
+**链接格式**：
+```
+[display_text](path)
+[display_text](path#anchor)
+```
+
+**解析规则**：
+
+| 组成部分 | 提取方法 | 示例 |
+|----------|----------|------|
+| 目标路径 | 括号内 `#` 之前的部分 | `docs/requirements/prd.md` |
+| 锚点 ID | `#` 之后的部分（可选） | `prod_vision` |
+| 完整引用 | `path#anchor` | `docs/requirements/prd.md#prod_vision` |
+
+**路径规范化**：
+1. 相对路径转换为项目绝对路径
+2. 移除 `./` 前缀
+3. 移除 `../` 并计算实际路径
+
+**关系类型判断**：
+
+| 上下文 | 关系类型 | 说明 |
+|--------|----------|------|
+| Dependencies 表格 | `depends` / `extends` | 根据 Type 列判断 |
+| Consumers 表格 | `consumes` | Capability 消费关系 |
+| inputs frontmatter | `references` | 设计文档输入来源 |
+| 其他位置 | `references` | 一般引用关系 |
+
+**特殊关系类型**：
+
+| 关系类型 | 来源 | 说明 |
+|----------|------|------|
+| `impacts` | 影响分析工具计算 | 非文档声明，由 `analyze-impact.js` 基于依赖图反向计算 |
+| `defines` | `<!-- defines: xxx -->` 注释 | 规范文档声明其定义的文档类型 |
 
 ---
 
@@ -427,6 +466,37 @@ docs/specs/
 | `{name}` | 文档名称（从文件名推断） | `feat_{name}_intent` → `feat_login_intent` |
 | `{domain}` | Domain 名称 | `domain_{domain}` → `domain_user_management` |
 
+### 7.4 Defines Relation Extraction
+
+`<!-- defines: {type} -->` 声明用于建立规范到文档类型的映射关系。
+
+**声明格式**：
+```markdown
+## 3. PRD Structure <!-- id: spec_req_prd --> <!-- defines: prd -->
+```
+
+**解析规则**：
+- 扫描所有规范文档中的 `<!-- defines: xxx -->` 注释
+- 提取 `type` 值作为被定义的文档类型
+- 生成关系记录
+
+**关系结构**：
+
+| 字段 | 值 |
+|------|------|
+| source_id | 规范文档锚点（如 `spec_req_prd`） |
+| target_type | 被定义的文档类型（如 `prd`） |
+| relation_type | `defines` |
+
+**示例**：
+- `spec-requirements.md#spec_req_prd` → defines → `prd`
+- `spec-requirements.md#spec_req_feature` → defines → `feature`
+- `spec-test.md#spec_test_e2e` → defines → `test-e2e`
+
+**用途**：
+- 知识库可查询"哪个规范定义了某类文档"
+- 验证器可定位结构定义位置
+
 ---
 
 ## 8. Validation Behavior <!-- id: meta_validation -->
@@ -510,7 +580,61 @@ docs/specs/
 
 ---
 
-*Version: v2.2*
+## Appendix A: Keyword Extraction <!-- id: meta_keyword_extraction -->
+
+知识库关键词索引的提取规则。
+
+### A.1 Keyword Sources and Weights
+
+| 来源 | 权重 | 说明 |
+|------|------|------|
+| 文档标题（H1） | 1.0 | 最高权重，核心标识 |
+| 一级章节标题（H2） | 0.8 | 主要章节名称 |
+| 二级章节标题（H3） | 0.7 | 次要章节名称 |
+| 表格标题列 | 0.5 | 结构化数据的标识 |
+| 正文首段 | 0.3 | 描述性内容 |
+| 其他正文 | 0.1 | 背景信息 |
+
+### A.2 Extraction Rules
+
+**分词规则**：
+- 中文：按字符切分 + 常用词组识别
+- 英文：按空格/标点切分 + 驼峰拆分
+- 代码标识符：按下划线/驼峰拆分
+
+**过滤规则**：
+- 过滤停用词（的、是、在、the、is、a 等）
+- 过滤单字符
+- 过滤纯数字
+
+**权重计算**：
+- 同一关键词多次出现取最高权重
+- 锚点 ID 中的词使用 0.9 权重
+
+**示例**：
+
+对于文档：
+```markdown
+# Feature: State Management <!-- id: feat_state_management -->
+
+> 项目状态的唯一真实来源
+
+## 1. Intent
+```
+
+提取结果：
+
+| 关键词 | 权重 | 来源 |
+|--------|------|------|
+| state | 1.0 | 标题 |
+| management | 1.0 | 标题 |
+| feat_state_management | 0.9 | 锚点 |
+| 状态 | 0.3 | 描述 |
+| intent | 0.8 | 章节标题 |
+
+---
+
+*Version: v2.4*
 *Created: 2024-12-21 (v1.0)*
-*Updated: 2025-12-23 (v2.2)*
-*Status: Draft (等待人类审核)*
+*Updated: 2025-12-24 (v2.4)*
+*Changes: v2.4 补充 impacts/defines 特殊关系类型说明；v2.3 新增知识库解析支持（链接解析规则、defines 关系提取、关键词权重定义）*

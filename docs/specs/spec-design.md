@@ -1,4 +1,4 @@
-# Design Document Specification v2.4 <!-- id: spec_design -->
+# Design Document Specification v2.5 <!-- id: spec_design -->
 
 > 定义设计文档的结构、内容要素、编写标准
 
@@ -9,7 +9,7 @@
 - 此规范定义设计文档的**具体章节结构**
 - 元规范 `spec-meta.md` 定义文档类型和验证规则
 - 需求文档规范见 `spec-requirements.md`
-- **版本 v2.4**：Decision Record 改为可选，减少过度设计
+- **版本 v2.5**：新增 Dependencies 章节格式（支持知识库关系提取）
 
 ---
 
@@ -281,6 +281,34 @@ interface LoginDTO {
 | 并发竞争条件 | High | Low | 分布式锁 + 乐观锁 |
 ```
 
+### 4.5 Dependencies Section Format
+
+Dependencies 章节声明设计的前置依赖，支持知识库关系提取：
+
+```markdown
+## Dependencies <!-- id: design_{name}_dependencies -->
+
+| Dependency | Type | 说明 |
+|------------|------|------|
+| design_system_arch | hard | 依赖系统架构设计 |
+| cap_auth | soft | 可选使用认证能力 |
+```
+
+| 列 | 必填 | 说明 |
+|----|------|------|
+| Dependency | 是 | 依赖项锚点 ID（设计文档用 `design_xxx`，能力用 `cap_xxx`） |
+| Type | 是 | `hard`（必须）/ `soft`（可选增强） |
+| 说明 | 否 | 依赖原因 |
+
+**解析规则**：
+- `Type=hard` → 关系类型 `depends`
+- `Type=soft` → 关系类型 `extends`
+- 方向：当前设计文档 → 依赖项
+
+**与 inputs 的区别**：
+- `inputs`：声明需求来源（需求 → 设计）
+- `Dependencies`：声明设计依赖（设计 → 设计 / 设计 → 能力）
+
 ---
 
 ## 5. Design Review Checklist <!-- id: spec_design_checklist -->
@@ -382,7 +410,7 @@ inputs:
 
 ---
 
-*Version: v2.4*
+*Version: v2.5*
 *Created: 2024-12-20 (v1.0)*
-*Updated: 2025-12-23 (v2.4)*
-*Changes: v2.2 新增 Decision Record（ADR）、扩展 Interface Design 和 Risks; v2.3 简化 Design Depth 为二元判断; v2.4 Decision Record 改为可选（减少过度设计）*
+*Updated: 2025-12-24 (v2.5)*
+*Changes: v2.2 新增 Decision Record（ADR）、扩展 Interface Design 和 Risks; v2.3 简化 Design Depth 为二元判断; v2.4 Decision Record 改为可选（减少过度设计）; v2.5 新增 Dependencies 章节格式（支持知识库关系提取）*

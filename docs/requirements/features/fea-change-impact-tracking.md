@@ -1,6 +1,8 @@
 ---
 type: feature
-version: "1.2"
+version: "1.4"
+priority: P0
+domain: process
 ---
 
 # Feature: Change Impact Tracking <!-- id: feat_change_impact_tracking -->
@@ -39,8 +41,7 @@ version: "1.2"
 - 影响分析算法（直接 + 间接影响）
 - 子任务生成（写入 state.json）
 - 影响分析脚本（analyze-impact.js）
-- 契约验证（PRD 文档格式校验）
-- 文档验证脚本（validate-docs.js）
+- 调用 document-validation Capability 验证受影响文档
 
 ### 2.2 Out of Scope
 
@@ -48,9 +49,6 @@ version: "1.2"
 - 任务跟踪命令（list/complete/skip）→ 后续迭代
 - 依赖图持久化缓存 → 后续迭代
 - AI Skill 智能分析 → 后续迭代
-- 其他文档类型校验（Domain/Feature/Capability/Flow）→ 后续迭代
-- 内容质量校验（语法、描述清晰度）→ 不做
-- 自动修复功能（仅提供修复建议）→ 后续迭代
 
 ---
 
@@ -61,7 +59,6 @@ version: "1.2"
 | C1 | 依赖图构建 | 扫描文档构建节点和边，支持多种依赖来源 |
 | C3 | 影响分析 | 基于依赖图计算变更影响范围 |
 | C4 | 子任务生成 | 将影响项转为 state.json 中的 subtasks |
-| C5 | 契约验证 | 验证文档是否符合规范定义的结构、章节、锚点、引用 |
 
 ### 3.1 C1: 依赖图构建
 
@@ -135,71 +132,19 @@ version: "1.2"
 - source：`impact-analysis`
 - 需人类确认后写入
 
-### 3.4 C5: 契约验证
+### 3.4 与 document-validation 的集成
 
-验证文档是否符合其声明依赖的规范，用于精确判断"确实不符合"而非"可能需要检查"。
-
-#### 验证类型
-
-| 类型 | 说明 | MVP 范围 |
-|------|------|----------|
-| Frontmatter Validation | 校验 YAML frontmatter 完整性和有效性 | PRD |
-| Section Validation | 校验必选章节是否存在 | PRD |
-| Anchor Validation | 校验锚点格式和存在性 | PRD |
-| Reference Validation | 校验引用文档和锚点存在性 | PRD |
-
-#### Frontmatter 校验规则
-
-**输入**：文档路径（默认 `docs/prd.md`）
-
-**输出**：校验结果（通过/失败 + 错误详情）
-
-**规则**：
-- WHEN frontmatter is missing THEN report "Missing frontmatter"
-- WHEN type field is missing THEN report "Missing required field: type"
-- WHEN type value is not in enum THEN report "Invalid type: {value}"
-- WHEN template field is missing THEN report "Missing required field: template"
-- WHEN template path does not exist THEN report "Template not found: {path}"
-- WHEN version field is missing THEN report "Missing required field: version"
-
-#### Section 校验规则
-
-**必选章节**（PRD）：
-
-| 章节 | 锚点 |
-|------|------|
-| Product Vision | `prod_vision` |
-| Target Users | `prod_users` |
-| Product Description | `prod_description` |
-| Feature Roadmap | `prod_roadmap` |
-| Success Criteria | `prod_success` |
-
-**规则**：
-- IF section is missing THEN report "Missing required section: {section_name}"
-
-#### Anchor 校验规则
-
-**规则**：
-- THE anchor format SHALL be `<!-- id: {prefix}_{name} -->`
-- THE prefix for PRD SHALL be `prod_`
-- WHEN anchor format is incorrect THEN report location and expected format
-
-#### Reference 校验规则
-
-**规则**：
-- WHEN referenced file does not exist THEN report "Referenced file not found: {path}"
-- WHEN referenced anchor does not exist THEN report "Referenced anchor not found: {file}#{anchor}"
-- THE system SHALL parse markdown links: `[text](path)` and `[text](path#anchor)`
-
-#### 与影响分析的集成
+影响分析通过调用 `cap-document-validation` Capability 来精确判断文档状态：
 
 ```
 1. 影响分析找到"可能受影响的文档"
        ↓
-2. 契约验证检查这些文档是否"确实不符合规范"
+2. 调用 document-validation 验证这些文档
        ↓
 3. 不符合的项目生成子任务（带具体错误信息）
 ```
+
+> 详细验证规则见 [cap-document-validation.md](../capabilities/cap-document-validation.md)
 
 ---
 
@@ -209,13 +154,10 @@ version: "1.2"
 |------|--------------|---------------|
 | Schema v7.0 | `npm run validate` | 输出 "state.json is valid!" |
 | subtasks 结构 | 检查 state.json | 活跃 Feature 有 subtasks 字段 |
-| 影响分析脚本 | `node scripts/analyze-impact.js docs/specs/requirements-doc.spec.md` | 输出标准格式报告 |
+| 影响分析脚本 | `node scripts/analyze-impact.js docs/specs/spec-requirements.md` | 输出标准格式报告 |
 | 依赖图构建 | 脚本输出 | 正确识别 Feature Dependencies |
 | 子任务生成 | 脚本输出 | 输出建议子任务列表 |
-| Frontmatter 检测 | 删除 PRD frontmatter 后运行验证 | 报告 "Missing frontmatter" |
-| 必选章节检测 | 删除 Product Vision 章节后运行 | 报告 "Missing required section: Product Vision" |
-| 锚点格式校验 | 修改锚点为错误格式 | 报告锚点位置和正确格式 |
-| 引用校验 | 添加不存在的文件引用 | 报告 "Referenced file not found: xxx" |
+| 验证集成 | 影响分析调用 document-validation | 不符合规范的文档生成带错误信息的子任务 |
 
 ---
 
@@ -224,8 +166,8 @@ version: "1.2"
 | Dependency | Type | 说明 |
 |------------|------|------|
 | state-management | hard | 需要扩展 state.json schema 到 v7.0 |
-| meta-spec | hard | 契约验证基于元规范定义的映射机制 |
-| requirements-doc | soft | 遵循 Feature Spec 结构规范 |
+| cap-document-validation | hard | 调用文档验证能力判断文档是否符合规范 |
+| spec-meta | soft | 依赖图构建基于元规范定义的锚点和引用系统 |
 
 ---
 
@@ -339,20 +281,19 @@ Feature 名称出现在 PRD Feature Roadmap 表格中
 
 | 文件 | 用途 |
 |------|------|
-| `docs/specs/meta-spec.md` | 元规范文档（验证系统的公理层） |
+| `docs/specs/spec-meta.md` | 元规范文档（锚点和引用系统） |
 | `scripts/analyze-impact.js` | 影响分析脚本 |
-| `scripts/validate-docs.js` | 文档契约验证脚本（实现 meta-spec） |
 | `docs/requirements/features/fea-state-management.md` | state.json Schema 文档 |
-| `scripts/validate-state.js` | v7.0 校验规则 |
+| `docs/requirements/capabilities/cap-document-validation.md` | 文档验证能力（被调用） |
 
 ### 6.2 Usage
 
 ```bash
-# 分析某个文件变更的影响
-node scripts/analyze-impact.js docs/specs/requirements-doc.spec.md
+# 分析规范文档变更的影响
+node scripts/analyze-impact.js docs/specs/spec-requirements.md
 
-# 分析模板变更的影响
-node scripts/analyze-impact.js docs/templates/backend/feature.spec.md
+# 分析 PRD 变更的影响
+node scripts/analyze-impact.js docs/requirements/prd.md
 ```
 
 ### 6.3 Integration with CLAUDE.md
@@ -370,7 +311,7 @@ node scripts/analyze-impact.js docs/templates/backend/feature.spec.md
 
 ---
 
-*Version: v1.2*
+*Version: v1.4*
 *Created: 2024-12-21*
-*Updated: 2024-12-21*
-*Changes: v1.2 扩展支持代码文件级别依赖（design-doc/code/test 节点类型，produces/tests 边类型）*
+*Updated: 2025-12-24*
+*Changes: v1.4 移除 C5 契约验证，改为依赖 cap-document-validation Capability; v1.3 添加 frontmatter 可选字段; v1.2 扩展支持代码文件级别依赖*

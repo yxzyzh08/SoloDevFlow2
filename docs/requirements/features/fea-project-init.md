@@ -1,6 +1,8 @@
 ---
 type: feature
-version: "1.0"
+version: "1.2"
+priority: P0
+domain: tooling
 ---
 
 # Feature: Project Init <!-- id: feat_project_init -->
@@ -395,7 +397,7 @@ solodevflow upgrade .   # 同样识别为自举模式（操作相同）
 
 ---
 
-*Version: v1.1*
+*Version: v1.2*
 *Created: 2025-12-21*
-*Updated: 2025-12-23*
-*Changes: v1.1 消除模板层，AI 命令直接从规范生成文档*
+*Updated: 2025-12-24*
+*Changes: v1.2 添加 frontmatter 可选字段（priority, domain）符合 spec-requirements v2.5; v1.1 消除模板层*

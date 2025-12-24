@@ -7,6 +7,10 @@
     {
       "name": "CVM_Demo",
       "path": "../CVM_Demo2"
+    },
+    {
+      "name": "devspec2",
+      "path": "../devspec2"
     }
   ],
   "settings": {}

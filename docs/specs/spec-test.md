@@ -1,4 +1,4 @@
-# Test Specification v1.0 <!-- id: spec_test -->
+# Test Specification v1.2 <!-- id: spec_test -->
 
 > 定义系统级测试的文档结构、测试类型、质量标准（不包含单元测试和集成测试）
 
@@ -80,9 +80,54 @@
 
 ---
 
-## 3. E2E Testing <!-- id: spec_test_e2e --> <!-- defines: test-e2e -->
+## 3. Frontmatter <!-- id: spec_test_frontmatter -->
 
-### 3.1 E2E Test Document Structure
+所有测试文档必须包含 YAML frontmatter：
+
+```yaml
+---
+type: {test_type}
+version: {version}
+inputs:
+  - docs/designs/des-xxx.md#design_xxx
+  - docs/requirements/features/fea-xxx.md#feat_xxx_acceptance
+---
+```
+
+| 字段 | 必填 | 说明 |
+|------|------|------|
+| `type` | 是 | 测试类型：`test-e2e`, `test-performance`, `test-destructive`, `test-security` |
+| `version` | 是 | 文档版本号 |
+| `inputs` | 是 | 输入来源列表（设计文档、需求文档锚点引用） |
+
+### 3.1 inputs 字段说明
+
+`inputs` 字段建立测试 → 设计 → 需求的追溯链路：
+
+| 用途 | 说明 |
+|------|------|
+| **追溯性** | 明确测试覆盖哪些设计/需求 |
+| **影响分析** | 设计变更时定位相关测试 |
+| **知识库关系** | 解析为 `references` 关系 |
+
+**格式规则**：
+- `path#anchor`：引用特定章节（推荐）
+- `path`：引用整个文档
+
+**示例**：
+
+```yaml
+inputs:
+  - docs/designs/des-user-auth.md#design_auth_interface
+  - docs/requirements/features/fea-user-login.md#feat_user_login_acceptance
+  - docs/requirements/features/fea-user-register.md
+```
+
+---
+
+## 4. E2E Testing <!-- id: spec_test_e2e --> <!-- defines: test-e2e -->
+
+### 4.1 E2E Test Document Structure
 
 | Section | Required | Anchor | Description |
 |---------|----------|--------|-------------|
@@ -92,7 +137,7 @@
 | Test Data | No | `test_{name}_data` | 测试数据要求 |
 | Expected Results | Yes | `test_{name}_expected` | 预期结果 |
 
-### 3.2 Test Scenario Format
+### 4.2 Test Scenario Format
 
 每个测试场景应包含：
 
@@ -117,7 +162,7 @@
 **优先级**：P0 / P1 / P2
 ```
 
-### 3.3 Test Priority
+### 4.3 Test Priority
 
 | 优先级 | 说明 | 执行频率 |
 |--------|------|----------|
@@ -125,7 +170,7 @@
 | **P1** | 重要功能，应该通过 | 每次发布 |
 | **P2** | 次要功能，建议通过 | 按需执行 |
 
-### 3.4 E2E Test Coverage by Scale
+### 4.4 E2E Test Coverage by Scale
 
 | 规模 | P0 覆盖 | P1 覆盖 | P2 覆盖 | 自动化率 |
 |------|---------|---------|---------|----------|
@@ -133,7 +178,7 @@
 | Medium | 100% | 80% | 按需 | 50%+ |
 | Large | 100% | 100% | 80% | 80%+ |
 
-### 3.5 Regression Testing Strategy
+### 4.5 Regression Testing Strategy
 
 | 策略 | 说明 | 执行时机 |
 |------|------|----------|
@@ -154,9 +199,9 @@
 
 ---
 
-## 4. Performance Testing <!-- id: spec_test_performance --> <!-- defines: test-performance -->
+## 5. Performance Testing <!-- id: spec_test_performance --> <!-- defines: test-performance -->
 
-### 4.1 Performance Test Document Structure
+### 5.1 Performance Test Document Structure
 
 | Section | Required | Anchor | Description |
 |---------|----------|--------|-------------|
@@ -167,7 +212,7 @@
 | Baseline | No | `test_{name}_baseline` | 性能基准 |
 | Results | No | `test_{name}_results` | 测试结果 |
 
-### 4.2 Performance Metrics
+### 5.2 Performance Metrics
 
 | 指标类别 | 指标 | 说明 |
 |----------|------|------|
@@ -177,7 +222,7 @@
 | **资源** | CPU / Memory / Disk | 资源使用率 |
 | **错误率** | Error Rate | 请求失败比例 |
 
-### 4.3 Performance Test Types
+### 5.3 Performance Test Types
 
 | 类型 | 目的 | 适用规模 |
 |------|------|----------|
@@ -187,7 +232,7 @@
 | **浸泡测试** | 验证长时间运行稳定性 | Large |
 | **峰值测试** | 验证突发流量处理能力 | Large |
 
-### 4.4 Performance Targets by Scale
+### 5.4 Performance Targets by Scale
 
 | 指标 | Medium | Large |
 |------|--------|-------|
@@ -198,9 +243,9 @@
 
 ---
 
-## 5. Destructive Testing <!-- id: spec_test_destructive --> <!-- defines: test-destructive -->
+## 6. Destructive Testing <!-- id: spec_test_destructive --> <!-- defines: test-destructive -->
 
-### 5.1 Destructive Test Document Structure
+### 6.1 Destructive Test Document Structure
 
 | Section | Required | Anchor | Description |
 |---------|----------|--------|-------------|
@@ -209,7 +254,7 @@
 | Test Procedures | Yes | `test_{name}_procedures` | 测试步骤 |
 | Rollback Plan | Yes | `test_{name}_rollback` | 回滚方案 |
 
-### 5.2 Failure Scenario Types
+### 6.2 Failure Scenario Types
 
 | 类型 | 场景 | 验证目标 |
 |------|------|----------|
@@ -219,7 +264,7 @@
 | **依赖故障** | 第三方服务不可用 | 熔断、降级、缓存 |
 | **资源耗尽** | 磁盘满、内存溢出 | 监控告警、自动扩容 |
 
-### 5.3 Recovery Metrics
+### 6.3 Recovery Metrics
 
 | 指标 | 说明 | 目标 |
 |------|------|------|
@@ -228,7 +273,7 @@
 | **RPO** | 恢复点目标 | 根据 SLA 定义 |
 | **数据完整性** | 故障后数据一致性 | 100% |
 
-### 5.4 Destructive Test Applicability
+### 6.4 Destructive Test Applicability
 
 | 规模 | 服务故障 | 网络故障 | 数据库故障 | 依赖故障 |
 |------|----------|----------|------------|----------|
@@ -238,9 +283,9 @@
 
 ---
 
-## 6. Security Testing <!-- id: spec_test_security --> <!-- defines: test-security -->
+## 7. Security Testing <!-- id: spec_test_security --> <!-- defines: test-security -->
 
-### 6.1 Security Test Document Structure
+### 7.1 Security Test Document Structure
 
 | Section | Required | Anchor | Description |
 |---------|----------|--------|-------------|
@@ -250,7 +295,7 @@
 | Findings | Yes | `test_{name}_findings` | 发现的问题 |
 | Remediation | Yes | `test_{name}_remediation` | 修复建议 |
 
-### 6.2 Security Test Types
+### 7.2 Security Test Types
 
 | 类型 | 说明 | 适用规模 |
 |------|------|----------|
@@ -260,7 +305,7 @@
 | **渗透测试** | 模拟攻击测试 | Large |
 | **安全审计** | 全面安全评估 | Large |
 
-### 6.3 Security Checklist
+### 7.3 Security Checklist
 
 | 检查项 | Small | Medium | Large |
 |--------|:-----:|:------:|:-----:|
@@ -271,7 +316,7 @@
 | API 安全测试 | - | ✓ | ✓ |
 | 渗透测试 | - | 按需 | 定期 |
 
-### 6.4 OWASP Top 10 Verification
+### 7.4 OWASP Top 10 Verification
 
 | 风险 | 测试方法 |
 |------|----------|
@@ -288,9 +333,9 @@
 
 ---
 
-## 7. Compatibility Testing <!-- id: spec_test_compatibility -->
+## 8. Compatibility Testing <!-- id: spec_test_compatibility -->
 
-### 7.1 Browser Compatibility (Web)
+### 8.1 Browser Compatibility (Web)
 
 | 规模 | 覆盖范围 |
 |------|----------|
@@ -298,7 +343,7 @@
 | Medium | Chrome, Firefox, Safari, Edge (最新2个版本) |
 | Large | 完整浏览器矩阵 + IE11（如需） |
 
-### 7.2 Device Compatibility (Mobile)
+### 8.2 Device Compatibility (Mobile)
 
 | 规模 | 覆盖范围 |
 |------|----------|
@@ -306,7 +351,7 @@
 | Medium | iOS 最新2版 + Android 6.0+ |
 | Large | 完整设备矩阵 + 低端机型 |
 
-### 7.3 API Compatibility
+### 8.3 API Compatibility
 
 | 检查项 | 说明 |
 |--------|------|
@@ -316,9 +361,9 @@
 
 ---
 
-## 8. Test Environment <!-- id: spec_test_environment -->
+## 9. Test Environment <!-- id: spec_test_environment -->
 
-### 8.1 Environment Types
+### 9.1 Environment Types
 
 | 环境 | 用途 | 数据 |
 |------|------|------|
@@ -327,7 +372,7 @@
 | **预发环境** | 预发布验证 | 生产数据脱敏副本 |
 | **生产环境** | 正式运行 | 真实数据 |
 
-### 8.2 Test Data Management
+### 9.2 Test Data Management
 
 | 策略 | 说明 |
 |------|------|
@@ -336,7 +381,7 @@
 | **数据重置** | 测试后可恢复初始状态 |
 | **数据版本** | 测试数据版本化管理 |
 
-### 8.3 Test Data Generation
+### 9.3 Test Data Generation
 
 | 策略 | 用途 | 说明 |
 |------|------|------|
@@ -356,9 +401,9 @@
 
 ---
 
-## 9. Test Reporting <!-- id: spec_test_reporting -->
+## 10. Test Reporting <!-- id: spec_test_reporting -->
 
-### 9.1 Test Report Structure
+### 10.1 Test Report Structure
 
 | Section | 说明 |
 |---------|------|
@@ -368,7 +413,7 @@
 | 覆盖率 | 场景覆盖、代码覆盖 |
 | 建议 | 改进建议 |
 
-### 9.2 Defect Severity
+### 10.2 Defect Severity
 
 | 级别 | 说明 | 处理要求 |
 |------|------|----------|
@@ -379,9 +424,9 @@
 
 ---
 
-## 10. Test Automation <!-- id: spec_test_automation -->
+## 11. Test Automation <!-- id: spec_test_automation -->
 
-### 10.1 Automation Strategy
+### 11.1 Automation Strategy
 
 | 规模 | 自动化策略 |
 |------|------------|
@@ -389,7 +434,7 @@
 | Medium | 核心流程自动化（P0 场景） |
 | Large | 全面自动化 + CI/CD 集成 |
 
-### 10.2 Automation Best Practices
+### 11.2 Automation Best Practices
 
 | 原则 | 说明 |
 |------|------|
@@ -399,7 +444,7 @@
 | 快速反馈 | 并行执行、合理分层 |
 | 可读性 | 清晰的命名和结构 |
 
-### 10.3 CI/CD Integration
+### 11.3 CI/CD Integration
 
 | 阶段 | 执行的测试 |
 |------|------------|
@@ -408,7 +453,7 @@
 | **定时任务** | 性能测试、安全扫描 |
 | **发布前** | 全量回归测试 |
 
-### 10.4 Test Failure Handling
+### 11.4 Test Failure Handling
 
 | 场景 | 策略 | 说明 |
 |------|------|------|
@@ -474,7 +519,7 @@
 
 ---
 
-*Version: v1.1*
+*Version: v1.2*
 *Created: 2025-12-23*
-*Updated: 2025-12-23*
-*Changes: v1.0 初始版本; v1.1 补充安全测试文档结构、回归测试策略、测试数据生成策略、测试失败处理策略*
+*Updated: 2025-12-24*
+*Changes: v1.2 新增 Frontmatter 章节，定义 inputs 字段建立测试→设计→需求追溯链路；v1.1 补充安全测试文档结构、回归测试策略、测试数据生成策略、测试失败处理策略*

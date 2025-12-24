@@ -1,6 +1,8 @@
 ---
 type: feature
-version: "9.0"
+version: "9.1"
+priority: P0
+domain: process
 ---
 
 # Feature: State Management <!-- id: feat_state_management -->
@@ -549,8 +551,8 @@ document 类型：pending → drafting → done
 
 ---
 
-*Version: v5.1*
+*Version: v9.1*
 *Created: 2024-12-20*
-*Updated: 2024-12-23*
-*Changes: v5.1 - 更新 state-management 自身类型定义为 code（designDepth: none）*
+*Updated: 2025-12-24*
+*Changes: v9.1 添加 frontmatter 可选字段（priority, domain）符合 spec-requirements v2.5*
 *Applies to: SoloDevFlow 2.0*
