@@ -58,8 +58,11 @@ domain: process
 | Feature | spec-requirements.md#4 | Intent, Capabilities, Acceptance |
 | Capability | spec-requirements.md#5 | Intent, Consumers, Requirements, Acceptance |
 | Flow | spec-requirements.md#6 | Overview, Steps, Participants, Acceptance |
-| Design | spec-design.md#4 | Input, Overview, Approach |
-| Test | spec-test.md#4 | Overview, Scope, Cases |
+| Design | spec-design.md#4 | Input Requirements, Overview, Technical Approach |
+| test-e2e | spec-test.md#4 | Scope, Prerequisites, Scenarios, Expected Results |
+| test-performance | spec-test.md#5 | Objectives, Environment, Scenarios, Metrics |
+| test-destructive | spec-test.md#6 | Failures, Recovery, Procedures, Rollback |
+| test-security | spec-test.md#7 | Scope, Cases, Findings, Remediation |
 
 ### 3.3 Frontmatter 校验规则
 
@@ -180,7 +183,7 @@ FOR each markdown link [text](path) or [text](path#anchor):
 
 ---
 
-*Version: v1.0*
+*Version: v1.1*
 *Created: 2025-12-24*
 *Updated: 2025-12-24*
-*Changes: Initial version - 从 change-impact-tracking C5 契约验证独立为 Capability*
+*Changes: v1.1 修正测试文档必选章节，区分 4 种测试类型；v1.0 初始版本*

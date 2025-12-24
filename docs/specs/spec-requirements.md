@@ -556,7 +556,7 @@ minor: 内容更新（修改描述）
 
 ---
 
-*Version: v2.6*
+*Version: v2.7*
 *Created: 2024-12-20 (v1.0)*
-*Updated: 2025-12-24 (v2.6)*
-*Changes: v2.6 统一元信息标签为 Feature（与 PRD 实际使用一致）；v2.5 新增 Summary 提取规则、Dependencies/Consumers 章节格式、可选 frontmatter 字段*
+*Updated: 2025-12-24 (v2.7)*
+*Changes: v2.7 Capability 结构新增可选 Artifacts 章节；v2.6 统一元信息标签为 Feature；v2.5 新增知识库解析支持*
