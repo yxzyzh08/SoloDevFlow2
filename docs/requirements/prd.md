@@ -1,6 +1,6 @@
 ---
 type: prd
-version: "2.12"
+version: "3.0"
 ---
 
 # SoloDevFlow 2.0 <!-- id: prod_solodevflow -->
@@ -36,7 +36,7 @@ version: "2.12"
 | **自举** | 用自己来构建自己，吃自己的狗粮 |
 | **元流程** | 通过结构化流程持续优化规范 |
 
-### 1.4 Human-AI Collaboration
+### 1.4 Human-AI Collaboration <!-- id: prod_collaboration -->
 
 **核心原则：AI 写，人审**
 
@@ -45,39 +45,23 @@ version: "2.12"
 | **人类** | 输入需求、咨询产品、审核、决策 |
 | **AI** | 分析上下文、澄清需求、编写文档、执行实现、反馈细节 |
 
-#### 1.4.1 需求交付流程
+**主要协作场景**：
 
-处理新功能开发、功能变更、问题修复等场景：
+1. **咨询交付**：处理产品咨询，支持咨询+需求混合输入
+   - AI 快速定位相关文档
+   - 提取混合输入中的需求成分，暂存到临时需求列表
+   - 咨询优先，不打断当前流程
 
-```
-人类输入需求
-  → AI 分析需求并加载相关上下文
-  → AI 与人类澄清需求（如有必要）
-  → AI 更新文档
-  → 人类审核确认
-  → AI 执行实现
-```
+2. **需求交付**：处理新功能开发、功能变更、问题修复
+   - AI 主动加载上下文、识别需求模糊点、主动澄清
+   - 文档先行：先更新规格文档，后实现代码
+   - 可从临时需求列表转化而来
 
-**关键点**：
-- AI 主动加载相关 Feature、设计文档、代码文件等上下文
-- AI 识别需求模糊点，主动发起澄清对话
-- 文档先行：先更新规格文档，后实现代码
+3. **变更管理**：处理规范/PRD/模板修改
+   - 运行影响分析，展示影响范围
+   - 生成 subtasks 逐个处理
 
-#### 1.4.2 功能咨询流程
-
-处理产品能力咨询、功能细节查询等场景：
-
-```
-人类咨询产品能力细节
-  → AI 分析咨询需求并加载相关上下文
-  → AI 反馈功能细节
-  → [如涉及产品改进] 转入需求交付流程
-```
-
-**关键点**：
-- AI 快速定位相关文档和代码
-- AI 提供准确的功能描述和使用方式
-- 如咨询中发现改进点，自然过渡到需求交付流程
+**详细执行规范**：参见 [workflows](flows/flow-workflows.md)
 
 ---
 
@@ -96,7 +80,7 @@ version: "2.12"
 - 需要一个一致的协作框架，引导 AI 行为
 - 需要状态管理，跨 Session 保持上下文
 - 需要变更追踪，不丢失关键输入
-- 需要灵活性，支持"灵光一闪"的想法捕获
+- 需要灵活性，支持咨询+需求混合输入
 
 ---
 
@@ -119,8 +103,8 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 | Domain | 说明 | Feature 数量 |
 |--------|------|--------------|
 | **specification** | 规范文档（元规范/需求/设计/开发/测试） | 5 |
-| **process** | 协作流程（核心流程/状态管理/输入捕获/灵光收集/影响追踪） | 5 |
-| **tooling** | 独立工具（项目初始化/分发安装/自我升级） | 1 |
+| **process** | 协作流程（核心流程/状态管理/输入捕获/影响追踪） | 4 |
+| **tooling** | 独立工具（项目初始化） | 1 |
 | **ai-config** | AI 协作配置（CLAUDE.md/命令/技能） | 3 |
 
 ---
@@ -182,14 +166,14 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 
 协作流程系统，定义人机协作的机制和状态管理。
 
-#### core-collaboration <!-- id: feat_ref_core_collaboration -->
+#### workflows <!-- id: flow_ref_workflows -->
 
-核心协作流程，解决 AI 不按流程执行、直接响应字面需求的问题。提供意图路由（识别输入类型）、阶段流转（Feature 生命周期）、交付流程（结构化需求澄清/设计/实现/验收）三大能力。
+标准工作流，定义人机协作的标准流程。基于 [1.4 Human-AI Collaboration](#prod_collaboration) 章节的协作原则，提供完整的执行规范：意图路由（识别输入类型）、阶段流转（Feature 生命周期）、交付流程（需求澄清/设计/实现/验收）。
 
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature**: [flow-core-collaboration.md](flows/flow-core-collaboration.md)
+- **Flow**: [flow-workflows.md](flows/flow-workflows.md)
 
 #### state-management <!-- id: feat_ref_state_management -->
 
@@ -218,15 +202,6 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 - **Type**: document
 - **Feature**: [input-log.md](../../.solodevflow/input-log.md)
 
-#### spark-box <!-- id: feat_ref_spark_box -->
-
-灵光收集与处理机制，解决"灵光一闪"想法丢失或打断当前任务的问题。在合适时机提示处理，评审后转为正式需求、归档、或丢弃。
-
-**元信息**：
-- **Priority**: P0
-- **Type**: document
-- **Feature**: [spark-box.md](../../.solodevflow/spark-box.md)
-
 ### 4.3 Domain: tooling <!-- id: domain_tooling -->
 
 独立工具系统，提供不依附于其他 Feature 的独立工具。
@@ -248,7 +223,7 @@ AI 协作配置系统，定义 Claude 的行为规范、命令和技能。
 
 #### claude-md <!-- id: feat_ref_claude_md -->
 
-AI 行为入口，解决 AI 对话启动时缺乏上下文和导航的问题。对话开始时读取 state.json 汇报状态，指向 core-collaboration.spec.md 获取具体流程定义。
+AI 行为入口，解决 AI 对话启动时缺乏上下文和导航的问题。对话开始时读取 state.json 汇报状态，指向 flow-workflows.md 获取具体流程定义。
 
 **元信息**：
 - **Priority**: P0
@@ -320,7 +295,7 @@ AI 行为入口，解决 AI 对话启动时缺乏上下文和导航的问题。�
 
 ---
 
-*Version: v2.12*
+*Version: v3.0*
 *Created: 2024-12-16*
-*Updated: 2025-12-23*
-*Changes: v2.12 修正锚点 ID 中的 doc/spec 后缀（feat_ref_meta_spec → feat_ref_meta）; v2.11 移除文档名称中的 doc/spec 后缀; v2.10 细化人机协作描述为两类流程*
+*Updated: 2024-12-24*
+*Changes: v3.0 删除 spark-box，改为临时需求机制；更新协作场景为咨询交付优先；v2.12 修正锚点 ID*

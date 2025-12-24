@@ -14,7 +14,7 @@
 
 **所有人类输入按此流程处理**：[.solodevflow/flows/workflows.md]
 
-> 需求文档（给人理解）：[docs/requirements/workflows/core-collaboration.spec.md]
+> 需求文档（给人理解）：[docs/requirements/flows/flow-workflows.md]
 ---
 
 

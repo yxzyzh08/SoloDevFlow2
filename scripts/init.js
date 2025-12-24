@@ -93,6 +93,73 @@ function renderTemplate(templatePath, variables) {
   return content;
 }
 
+/**
+ * 从 flow-workflows.md 提取第6章 Execution Spec
+ * 生成独立的 workflows.md 文件
+ */
+function extractExecutionSpec() {
+  const flowDocPath = path.join(SOLODEVFLOW_ROOT, 'docs/requirements/flows/flow-workflows.md');
+
+  if (!fs.existsSync(flowDocPath)) {
+    throw new Error('flow-workflows.md 不存在，无法提取 Execution Spec');
+  }
+
+  const content = fs.readFileSync(flowDocPath, 'utf-8');
+  const lines = content.split('\n');
+
+  // 找到第6章的起始位置
+  let startIndex = -1;
+  let endIndex = lines.length;
+
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].trim() === '## 6. Execution Spec <!-- id: flow_workflows_execution_spec -->') {
+      startIndex = i;
+    }
+    // 找到 version 信息的位置（作为结束标记）
+    if (startIndex !== -1 && lines[i].trim().startsWith('*Version:')) {
+      endIndex = i;
+      break;
+    }
+  }
+
+  if (startIndex === -1) {
+    throw new Error('在 flow-workflows.md 中未找到第6章 Execution Spec');
+  }
+
+  // 提取第6章内容（跳过章节标题本身）
+  let execSpecLines = lines.slice(startIndex + 1, endIndex);
+
+  // 调整章节号：6.1 → 1, 6.2 → 2, 6.2.1 → 2.1 等
+  execSpecLines = execSpecLines.map(line => {
+    // 替换标题中的章节号
+    if (line.match(/^#{2,4}\s+6\./)) {
+      return line.replace(/^(#{2,4}\s+)6\./, '$1');
+    }
+    // 替换表格和文本中的引用（如：6.2.2 → 2.2）
+    return line.replace(/（6\./g, '（').replace(/\(6\./g, '(');
+  });
+
+  // 构建最终文件内容
+  const header = `# Workflows - Execution Spec
+
+> AI 执行规范：定义 AI 如何响应用户输入并维护状态
+
+**需求文档**：[工作流需求文档](docs/requirements/flows/flow-workflows.md)
+
+---
+`;
+
+  const footer = `
+---
+
+*Version: v1.0*
+*Created: 2024-12-22*
+*Source: Extracted from flow-workflows.md v3.0*
+`;
+
+  return header + execSpecLines.join('\n') + footer;
+}
+
 async function question(rl, prompt) {
   return new Promise(resolve => {
     rl.question(prompt, resolve);
@@ -417,13 +484,18 @@ async function bootstrapFiles(config) {
 async function copyToolFiles(config) {
   const targetPath = config.targetPath;
 
-  // 1. Copy .solodevflow/flows/ (from template/flows/)
-  log('  复制 .solodevflow/flows/...');
-  const flowsSrc = path.join(SOLODEVFLOW_ROOT, 'template/flows');
+  // 1. Generate .solodevflow/flows/workflows.md (extract from flow-workflows.md)
+  log('  生成 .solodevflow/flows/workflows.md...');
   const flowsDest = path.join(targetPath, '.solodevflow/flows');
-  if (fs.existsSync(flowsSrc)) {
-    copyDir(flowsSrc, flowsDest);
-    log('    .solodevflow/flows/', 'success');
+  ensureDir(flowsDest);
+
+  try {
+    const workflowsContent = extractExecutionSpec();
+    fs.writeFileSync(path.join(flowsDest, 'workflows.md'), workflowsContent);
+    log('    .solodevflow/flows/workflows.md（从 flow-workflows.md 提取）', 'success');
+  } catch (error) {
+    log(`    生成 workflows.md 失败: ${error.message}`, 'error');
+    throw error;
   }
 
   // 2. Copy .claude/commands/ (from template/commands/)
@@ -449,9 +521,25 @@ async function copyToolFiles(config) {
     log('  复制 docs/specs/（规范文档）...');
     const specsSrc = path.join(SOLODEVFLOW_ROOT, 'docs/specs');
     const specsDest = path.join(targetPath, 'docs/specs');
-    if (fs.existsSync(specsSrc)) {
-      copyDir(specsSrc, specsDest);
-      log('    docs/specs/', 'success');
+    ensureDir(specsDest);
+
+    // 4.1 Generate spec-meta.md from template
+    const specMetaTemplatePath = path.join(SOLODEVFLOW_ROOT, 'scripts/templates/spec-meta.md.template');
+    if (fs.existsSync(specMetaTemplatePath)) {
+      const specMetaContent = renderTemplate(specMetaTemplatePath, { version: VERSION });
+      fs.writeFileSync(path.join(specsDest, 'spec-meta.md'), specMetaContent);
+      log('    docs/specs/spec-meta.md（从模板生成）', 'success');
+    }
+
+    // 4.2 Copy other spec files
+    const specFiles = ['spec-requirements.md', 'spec-design.md', 'spec-test.md', 'spec-backend-dev.md', 'spec-frontend-dev.md'];
+    for (const specFile of specFiles) {
+      const srcPath = path.join(specsSrc, specFile);
+      const destPath = path.join(specsDest, specFile);
+      if (fs.existsSync(srcPath)) {
+        copyFile(srcPath, destPath);
+        log(`    docs/specs/${specFile}`, 'success');
+      }
     }
   }
 

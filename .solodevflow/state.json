@@ -57,12 +57,13 @@
       "phase": "done",
       "status": "completed"
     },
-    "core-collaboration": {
+    "workflows": {
       "type": "document",
-      "description": "核心协作流程（意图路由/阶段流转/交付流程）",
+      "description": "标准工作流（意图路由/阶段流转/交付流程）",
       "domain": "process",
-      "docPath": "docs/requirements/flows/flow-core-collaboration.md",
+      "docPath": "docs/requirements/flows/flow-workflows.md",
       "execPath": ".solodevflow/flows/workflows.md",
+      "dependencies": ["project-init"],
       "phase": "pending",
       "status": "not_started"
     },
