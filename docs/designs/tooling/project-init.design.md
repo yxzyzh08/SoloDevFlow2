@@ -1,6 +1,8 @@
 ---
-type: spec
-version: "1.0"
+type: design
+version: "1.1"
+inputs:
+  - docs/requirements/features/fea-project-init.md#feat_project_init
 ---
 
 # Feature Design: project-init <!-- id: design_project_init -->

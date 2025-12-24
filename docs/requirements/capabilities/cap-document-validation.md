@@ -177,13 +177,11 @@ FOR each markdown link [text](path) or [text](path#anchor):
 
 | Type | Path | Description |
 |------|------|-------------|
-| Code | scripts/validate-docs.js | 文档验证 CLI |
-| Code | scripts/lib/doc-validator.js | 验证器核心逻辑 |
-| Test | tests/validate-docs.test.js | 单元测试 |
+| Code | scripts/validate-docs.js | 文档验证 CLI（v1.2） |
 
 ---
 
-*Version: v1.1*
+*Version: v1.2*
 *Created: 2025-12-24*
-*Updated: 2025-12-24*
-*Changes: v1.1 修正测试文档必选章节，区分 4 种测试类型；v1.0 初始版本*
+*Updated: 2025-12-25*
+*Changes: v1.2 实现完整验证脚本（锚点唯一性、引用验证、数组 inputs 支持）；v1.1 修正测试文档必选章节；v1.0 初始版本*

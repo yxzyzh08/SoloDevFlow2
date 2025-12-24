@@ -4,7 +4,16 @@
  * Document Contract Validation Script
  * Validates documents against their specification definitions
  *
- * Implements: spec-meta.md v2.1
+ * Version: 1.2
+ * Implements: cap-document-validation v1.1
+ * Based on: spec-meta.md v2.3, spec-requirements.md v2.5, spec-test.md v1.2
+ *
+ * Features:
+ *   - Frontmatter validation (type, version, inputs with array support)
+ *   - Required section validation
+ *   - Anchor format and uniqueness validation
+ *   - Reference validation (markdown links to files and anchors)
+ *   - Spec file detection and skip
  *
  * Usage:
  *   node scripts/validate-docs.js [doc-path]
@@ -45,10 +54,11 @@ const META_SPEC = {
     'flow': { prefix: 'flow-', dir: 'docs/requirements/flows/', specFile: 'spec-requirements.md', inputRequired: false },
     // Design Documents
     'design': { prefix: 'des-', dir: 'docs/designs/', specFile: 'spec-design.md', inputRequired: true },
-    // Test Documents
+    // Test Documents (spec-test.md v1.2)
     'test-e2e': { prefix: 'test-', dir: 'docs/tests/e2e/', specFile: 'spec-test.md', inputRequired: true },
     'test-performance': { prefix: 'test-', dir: 'docs/tests/performance/', specFile: 'spec-test.md', inputRequired: true },
     'test-destructive': { prefix: 'test-', dir: 'docs/tests/destructive/', specFile: 'spec-test.md', inputRequired: true },
+    'test-security': { prefix: 'test-', dir: 'docs/tests/security/', specFile: 'spec-test.md', inputRequired: true },
     // Spec Documents (不验证结构)
     'meta-spec': { prefix: 'spec-', dir: 'docs/specs/', specFile: null, inputRequired: false },
   },
@@ -86,6 +96,7 @@ const SPEC_FILES = {
 
 /**
  * Parse YAML frontmatter from document
+ * Supports simple key: value and key: followed by array items (- item)
  */
 function parseFrontmatter(content) {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
@@ -93,21 +104,46 @@ function parseFrontmatter(content) {
 
   const yaml = match[1];
   const result = {};
+  const lines = yaml.split('\n');
 
-  // Simple YAML parsing (key: value)
-  yaml.split('\n').forEach(line => {
+  let currentKey = null;
+  let currentArray = null;
+
+  for (const line of lines) {
+    // Check for array item (starts with -)
+    if (line.trim().startsWith('-') && currentKey) {
+      const value = line.trim().substring(1).trim();
+      if (!currentArray) {
+        currentArray = [];
+        result[currentKey] = currentArray;
+      }
+      currentArray.push(value);
+      continue;
+    }
+
     const colonIndex = line.indexOf(':');
-    if (colonIndex > 0) {
+    if (colonIndex > 0 && !line.trim().startsWith('-')) {
       const key = line.substring(0, colonIndex).trim();
       let value = line.substring(colonIndex + 1).trim();
+
       // Remove quotes
       if ((value.startsWith('"') && value.endsWith('"')) ||
           (value.startsWith("'") && value.endsWith("'"))) {
         value = value.slice(1, -1);
       }
-      result[key] = value;
+
+      currentKey = key;
+      currentArray = null;
+
+      // If value is empty, this might be an array (next lines will be - items)
+      if (value === '') {
+        result[key] = []; // Will be populated by array items
+        currentArray = result[key];
+      } else {
+        result[key] = value;
+      }
     }
-  });
+  }
 
   return result;
 }
@@ -128,6 +164,122 @@ function parseAnchors(content) {
   }
 
   return anchors;
+}
+
+/**
+ * Parse markdown links from document
+ * Returns array of { text, path, anchor, position }
+ */
+function parseMarkdownLinks(content) {
+  const links = [];
+  // Match [text](path) or [text](path#anchor)
+  const linkRegex = /\[([^\]]*)\]\(([^)#\s]+)(?:#([^)\s]+))?\)/g;
+  let match;
+
+  // Remove code blocks to avoid false positives
+  const contentWithoutCodeBlocks = content.replace(/```[\s\S]*?```/g, '');
+
+  while ((match = linkRegex.exec(contentWithoutCodeBlocks)) !== null) {
+    const linkPath = match[2];
+    // Skip external URLs, anchors-only references, and generic placeholders
+    if (linkPath.startsWith('http://') ||
+        linkPath.startsWith('https://') ||
+        linkPath.startsWith('#') ||
+        linkPath === 'path' ||
+        linkPath.includes('{') ||  // Skip template variables like {path}
+        !linkPath.includes('/') && !linkPath.includes('.')) {  // Skip single words without extension
+      continue;
+    }
+    links.push({
+      text: match[1],
+      path: linkPath,
+      anchor: match[3] || null,
+      position: match.index
+    });
+  }
+
+  return links;
+}
+
+/**
+ * Check anchor uniqueness in document
+ * Returns array of duplicate anchor ids
+ */
+function findDuplicateAnchors(anchors) {
+  const seen = new Map();
+  const duplicates = [];
+
+  for (const anchor of anchors) {
+    if (seen.has(anchor.id)) {
+      duplicates.push(anchor.id);
+    } else {
+      seen.set(anchor.id, anchor.position);
+    }
+  }
+
+  return [...new Set(duplicates)];
+}
+
+/**
+ * Validate markdown link references
+ * Returns array of { link, error }
+ */
+function validateReferences(links, docPath, allAnchors = new Map()) {
+  const errors = [];
+  const docDir = path.dirname(docPath);
+
+  for (const link of links) {
+    // Resolve relative path
+    let targetPath = path.resolve(docDir, link.path);
+
+    // Handle trailing slash for directories
+    if (link.path.endsWith('/')) {
+      targetPath = targetPath.replace(/\/$/, '');
+    }
+
+    // Check if file or directory exists
+    if (!fs.existsSync(targetPath)) {
+      errors.push({
+        link,
+        error: `Referenced file not found: ${link.path}`
+      });
+      continue;
+    }
+
+    // Skip anchor check for directories
+    const stat = fs.statSync(targetPath);
+    if (stat.isDirectory()) {
+      continue;
+    }
+
+    // Check if anchor exists in target file
+    if (link.anchor) {
+      // Read target file and check for anchor
+      let targetAnchors = allAnchors.get(targetPath);
+      if (!targetAnchors) {
+        try {
+          const targetContent = fs.readFileSync(targetPath, 'utf8');
+          targetAnchors = new Set(parseAnchors(targetContent).map(a => a.id));
+          allAnchors.set(targetPath, targetAnchors);
+        } catch (e) {
+          errors.push({
+            link,
+            error: `Cannot read referenced file: ${link.path}`
+          });
+          continue;
+        }
+      }
+
+      if (!targetAnchors.has(link.anchor)) {
+        errors.push({
+          link,
+          error: `Referenced anchor not found: ${link.path}#${link.anchor}`
+        });
+      }
+    }
+  }
+
+  return errors;
 }
 
 /**
@@ -271,6 +423,9 @@ function inferDocType(filePath, frontmatterType) {
     if (normalizedPath.includes('/tests/destructive/')) {
       return 'test-destructive';
     }
+    if (normalizedPath.includes('/tests/security/')) {
+      return 'test-security';
+    }
     return 'test-e2e'; // 默认
   }
   if (basename.startsWith('spec-')) {
@@ -298,6 +453,27 @@ function inferDocType(filePath, frontmatterType) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
+ * Check if file is a specification document (skip frontmatter validation)
+ * Spec files use <!-- defines: xxx --> instead of frontmatter
+ */
+function isSpecDocument(filePath) {
+  const basename = path.basename(filePath);
+  const normalizedPath = filePath.replace(/\\/g, '/');
+
+  // Check by path (in docs/specs/ directory)
+  if (normalizedPath.includes('/docs/specs/')) {
+    return true;
+  }
+
+  // Check by filename prefix (spec-*.md)
+  if (basename.startsWith('spec-')) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * Validate a single document
  */
 function validateDocument(filePath, specDefinitions) {
@@ -307,6 +483,12 @@ function validateDocument(filePath, specDefinitions) {
     warnings: [],
     info: []
   };
+
+  // 0. Skip spec documents (they use <!-- defines: --> not frontmatter)
+  if (isSpecDocument(filePath)) {
+    results.info.push('Spec document - skipping frontmatter and structure validation');
+    return results;
+  }
 
   // Read file
   let content;
@@ -353,7 +535,10 @@ function validateDocument(filePath, specDefinitions) {
   // 5. Check inputs field for types that require it
   const typeConfig = META_SPEC.typeRegistry[docType];
   if (typeConfig && typeConfig.inputRequired) {
-    if (!frontmatter.inputs) {
+    const inputs = frontmatter.inputs;
+    // Check if inputs is missing, empty string, or empty array
+    const hasInputs = inputs && (Array.isArray(inputs) ? inputs.length > 0 : inputs.length > 0);
+    if (!hasInputs) {
       results.errors.push(`Missing required 'inputs' field for type: ${docType}`);
     }
   }
@@ -399,6 +584,19 @@ function validateDocument(filePath, specDefinitions) {
     if (!META_SPEC.anchor.identifierPattern.test(anchor.id)) {
       results.warnings.push(`Invalid anchor format: ${anchor.id} (should match ${META_SPEC.anchor.identifierPattern})`);
     }
+  }
+
+  // 10. Check anchor uniqueness
+  const duplicateAnchors = findDuplicateAnchors(docAnchors);
+  for (const dup of duplicateAnchors) {
+    results.errors.push(`Duplicate anchor: ${dup}`);
+  }
+
+  // 11. Validate markdown link references
+  const links = parseMarkdownLinks(content);
+  const refErrors = validateReferences(links, filePath);
+  for (const refError of refErrors) {
+    results.errors.push(refError.error);
   }
 
   return results;

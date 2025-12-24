@@ -246,7 +246,7 @@ AI 行为入口，解决 AI 对话启动时缺乏上下文和导航的问题。�
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature**: [CLAUDE.md](../CLAUDE.md)
+- **Feature**: [CLAUDE.md](../../CLAUDE.md)
 
 #### write-commands <!-- id: feat_ref_write_commands -->
 
@@ -255,7 +255,7 @@ AI 行为入口，解决 AI 对话启动时缺乏上下文和导航的问题。�
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature**: [.claude/commands/](../.claude/commands/)
+- **Feature**: [.claude/commands/](../../.claude/commands/)
 
 #### requirements-expert <!-- id: feat_ref_requirements_expert -->
 
@@ -264,7 +264,7 @@ AI 行为入口，解决 AI 对话启动时缺乏上下文和导航的问题。�
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature**: [.claude/skills/requirements-expert/](../.claude/skills/requirements-expert/)
+- **Feature**: [.claude/skills/requirements-expert/](../../.claude/skills/requirements-expert/)
 
 ---
 
@@ -309,11 +309,11 @@ AI 行为入口，解决 AI 对话启动时缺乏上下文和导航的问题。�
 
 ### Design Principles
 
-核心设计原则定义在设计文档规范中：[spec-design.md](../specs/spec-design.md#spec_design_principles)
+核心设计原则定义在设计文档规范中：[spec-design.md](../specs/spec-design.md)
 
 ---
 
-*Version: v3.2*
+*Version: v3.3*
 *Created: 2024-12-16*
-*Updated: 2025-12-24*
-*Changes: v3.2 新增 document-validation Capability（文档验证能力）；v3.1 新增 knowledge-base Feature；v3.0 删除 spark-box，改为临时需求机制*
+*Updated: 2025-12-25*
+*Changes: v3.3 修复引用路径错误；v3.2 新增 document-validation Capability（文档验证能力）；v3.1 新增 knowledge-base Feature；v3.0 删除 spark-box，改为临时需求机制*
