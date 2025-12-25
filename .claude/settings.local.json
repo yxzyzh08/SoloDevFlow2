@@ -22,13 +22,11 @@
       "Bash(git mv:*)",
       "Bash(wc:*)",
       "WebFetch(domain:docs.claude.com)",
-      "Bash(node scripts/knowledge-base.js:*)",
+      "Bash(node src/cli/knowledge-base.js:*)",
       "Bash(npm install:*)",
       "Bash(node -e:*)",
       "Bash(npm run test:kb:*)",
       "WebFetch(domain:github.com)",
-      "Bash(node src/cli/knowledge-base.js:*)",
-      "Read(//d/github_projects/devspec2/**)",
       "Bash(node:*)"
     ]
   },

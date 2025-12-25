@@ -24,6 +24,6 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "better-sqlite3": "^12.5.0"
+    "sql.js": "^1.11.0"
   }
 }

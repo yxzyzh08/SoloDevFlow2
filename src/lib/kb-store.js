@@ -2,13 +2,50 @@
  * Knowledge Base Store - SQLite 存储层
  *
  * 基于设计文档 des-knowledge-base.md v1.1 §3.1
+ *
+ * 使用 sql.js（纯 JavaScript SQLite 实现，无需编译原生模块）
  */
 
-const Database = require('better-sqlite3');
+const initSqlJs = require('sql.js');
 const path = require('path');
 const fs = require('fs');
 
 const DB_PATH = path.join(process.cwd(), '.solodevflow', 'knowledge.db');
+
+// sql.js 实例缓存
+let SQL = null;
+
+/**
+ * 初始化 sql.js（同步方式）
+ */
+function initSqlJsSync() {
+  if (SQL) return SQL;
+
+  // sql.js 在 Node.js 环境下可以同步初始化
+  const sqlPromise = initSqlJs();
+
+  // 使用 deasync 风格的同步等待（简化版）
+  let resolved = false;
+  let result = null;
+  let error = null;
+
+  sqlPromise.then(
+    (sql) => { result = sql; resolved = true; },
+    (err) => { error = err; resolved = true; }
+  );
+
+  // 同步等待（使用 setImmediate 和 while 循环）
+  const deasync = require;
+  while (!resolved) {
+    // 在 Node.js 中，我们需要让事件循环运行
+    // 这里使用一个简单的 busy-wait（不推荐生产使用，但对 CLI 工具足够）
+    require('child_process').spawnSync('node', ['-e', 'setTimeout(() => {}, 10)']);
+  }
+
+  if (error) throw error;
+  SQL = result;
+  return SQL;
+}
 
 class KBStore {
   constructor(dbPath = DB_PATH) {
@@ -19,17 +56,28 @@ class KBStore {
   /**
    * 初始化数据库连接和表结构
    */
-  initDB() {
+  async initDB() {
     // 确保目录存在
     const dir = path.dirname(this.dbPath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    this.db = new Database(this.dbPath);
+    // 初始化 sql.js
+    if (!SQL) {
+      SQL = await initSqlJs();
+    }
+
+    // 加载已有数据库或创建新的
+    if (fs.existsSync(this.dbPath)) {
+      const buffer = fs.readFileSync(this.dbPath);
+      this.db = new SQL.Database(buffer);
+    } else {
+      this.db = new SQL.Database();
+    }
 
     // 创建表结构（基于设计文档 §3.1）
-    this.db.exec(`
+    this.db.run(`
       -- 1. 文档表
       CREATE TABLE IF NOT EXISTS documents (
         id TEXT PRIMARY KEY,
@@ -77,14 +125,23 @@ class KBStore {
   }
 
   /**
+   * 保存数据库到文件
+   */
+  save() {
+    if (this.db) {
+      const data = this.db.export();
+      const buffer = Buffer.from(data);
+      fs.writeFileSync(this.dbPath, buffer);
+    }
+  }
+
+  /**
    * 清空所有表（全量同步前调用）
    */
   clearAll() {
-    this.db.exec(`
-      DELETE FROM keywords;
-      DELETE FROM relations;
-      DELETE FROM documents;
-    `);
+    this.db.run(`DELETE FROM keywords`);
+    this.db.run(`DELETE FROM relations`);
+    this.db.run(`DELETE FROM documents`);
   }
 
   /**
@@ -93,9 +150,10 @@ class KBStore {
   insertDocument(doc) {
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO documents (id, type, name, path, summary, domain, raw_content, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
     `);
-    stmt.run(doc.id, doc.type, doc.name, doc.path, doc.summary, doc.domain, doc.raw_content);
+    stmt.run([doc.id, doc.type, doc.name, doc.path, doc.summary, doc.domain, doc.raw_content]);
+    stmt.free();
   }
 
   /**
@@ -106,7 +164,8 @@ class KBStore {
       INSERT OR IGNORE INTO relations (source_id, target_id, type, description)
       VALUES (?, ?, ?, ?)
     `);
-    stmt.run(rel.source_id, rel.target_id, rel.type, rel.description);
+    stmt.run([rel.source_id, rel.target_id, rel.type, rel.description]);
+    stmt.free();
   }
 
   /**
@@ -117,14 +176,38 @@ class KBStore {
       INSERT OR IGNORE INTO keywords (doc_id, keyword, source)
       VALUES (?, ?, ?)
     `);
-    stmt.run(kw.doc_id, kw.keyword, kw.source);
+    stmt.run([kw.doc_id, kw.keyword, kw.source]);
+    stmt.free();
+  }
+
+  /**
+   * 执行查询并返回所有结果
+   */
+  _query(sql, params = []) {
+    const stmt = this.db.prepare(sql);
+    stmt.bind(params);
+
+    const results = [];
+    while (stmt.step()) {
+      results.push(stmt.getAsObject());
+    }
+    stmt.free();
+    return results;
+  }
+
+  /**
+   * 执行查询并返回第一条结果
+   */
+  _queryOne(sql, params = []) {
+    const results = this._query(sql, params);
+    return results.length > 0 ? results[0] : null;
   }
 
   /**
    * 获取单个文档
    */
   getDocument(id) {
-    return this.db.prepare('SELECT * FROM documents WHERE id = ?').get(id);
+    return this._queryOne('SELECT * FROM documents WHERE id = ?', [id]);
   }
 
   /**
@@ -147,7 +230,7 @@ class KBStore {
       params.push(`%${keyword.toLowerCase()}%`);
     }
 
-    return this.db.prepare(sql).all(...params);
+    return this._query(sql, params);
   }
 
   /**
@@ -167,8 +250,8 @@ class KBStore {
       params.push(type);
     }
 
-    const result = this.db.prepare(sql).get(...params);
-    return result.count > 0;
+    const result = this._queryOne(sql, params);
+    return result && result.count > 0;
   }
 
   /**
@@ -176,19 +259,19 @@ class KBStore {
    */
   getRelations(docId, direction = 'outgoing') {
     if (direction === 'outgoing') {
-      return this.db.prepare(`
+      return this._query(`
         SELECT r.*, d.name as target_name, d.type as target_type
         FROM relations r
         LEFT JOIN documents d ON r.target_id = d.id
         WHERE r.source_id = ?
-      `).all(docId);
+      `, [docId]);
     } else {
-      return this.db.prepare(`
+      return this._query(`
         SELECT r.*, d.name as source_name, d.type as source_type
         FROM relations r
         LEFT JOIN documents d ON r.source_id = d.id
         WHERE r.target_id = ?
-      `).all(docId);
+      `, [docId]);
     }
   }
 
@@ -196,13 +279,13 @@ class KBStore {
    * 获取受影响的文档（反向查询 depends/consumes）
    */
   getImpactedDocuments(docId) {
-    return this.db.prepare(`
+    return this._query(`
       SELECT DISTINCT d.*
       FROM documents d
       JOIN relations r ON d.id = r.source_id
       WHERE r.target_id = ?
       AND r.type IN ('depends', 'consumes')
-    `).all(docId);
+    `, [docId]);
   }
 
   /**
@@ -225,7 +308,7 @@ class KBStore {
         params.push(relationType);
       }
 
-      const relations = this.db.prepare(sql).all(...params);
+      const relations = this._query(sql, params);
 
       for (const rel of relations) {
         result.edges.push({ source: id, target: rel.target_id, type: rel.type });
@@ -245,21 +328,22 @@ class KBStore {
    * 获取产品概览
    */
   getProductOverview() {
-    const prd = this.db.prepare('SELECT * FROM documents WHERE type = ?').get('prd');
+    const prd = this._queryOne('SELECT * FROM documents WHERE type = ?', ['prd']);
 
-    const domainRows = this.db.prepare(
+    const domainRows = this._query(
       'SELECT DISTINCT domain FROM documents WHERE domain IS NOT NULL'
-    ).all();
+    );
 
     const domains = domainRows.map(row => {
-      const features = this.db.prepare(
-        'SELECT * FROM documents WHERE domain = ? AND type = ?'
-      ).all(row.domain, 'feature');
+      const features = this._query(
+        'SELECT * FROM documents WHERE domain = ? AND type = ?',
+        [row.domain, 'feature']
+      );
       return { name: row.domain, features };
     });
 
-    const capabilities = this.db.prepare('SELECT * FROM documents WHERE type = ?').all('capability');
-    const flows = this.db.prepare('SELECT * FROM documents WHERE type = ?').all('flow');
+    const capabilities = this._query('SELECT * FROM documents WHERE type = ?', ['capability']);
+    const flows = this._query('SELECT * FROM documents WHERE type = ?', ['flow']);
 
     return { prd, domains, capabilities, flows };
   }
@@ -282,12 +366,12 @@ class KBStore {
       if (!keyword) continue;
 
       // 查询匹配的关键词记录
-      const matches = this.db.prepare(`
+      const matches = this._query(`
         SELECT k.doc_id, k.source, d.*
         FROM keywords k
         JOIN documents d ON k.doc_id = d.id
         WHERE k.keyword LIKE ?
-      `).all(`%${keyword}%`);
+      `, [`%${keyword}%`]);
 
       for (const match of matches) {
         const existing = matchCounts.get(match.doc_id);
@@ -339,13 +423,13 @@ class KBStore {
    * 获取统计信息
    */
   getStats() {
-    const docs = this.db.prepare('SELECT COUNT(*) as count FROM documents').get();
-    const rels = this.db.prepare('SELECT COUNT(*) as count FROM relations').get();
-    const kws = this.db.prepare('SELECT COUNT(*) as count FROM keywords').get();
+    const docs = this._queryOne('SELECT COUNT(*) as count FROM documents');
+    const rels = this._queryOne('SELECT COUNT(*) as count FROM relations');
+    const kws = this._queryOne('SELECT COUNT(*) as count FROM keywords');
     return {
-      documents: docs.count,
-      relations: rels.count,
-      keywords: kws.count
+      documents: docs?.count || 0,
+      relations: rels?.count || 0,
+      keywords: kws?.count || 0
     };
   }
 
@@ -353,21 +437,22 @@ class KBStore {
    * 开始事务
    */
   beginTransaction() {
-    this.db.exec('BEGIN TRANSACTION');
+    this.db.run('BEGIN TRANSACTION');
   }
 
   /**
    * 提交事务
    */
   commit() {
-    this.db.exec('COMMIT');
+    this.db.run('COMMIT');
+    this.save(); // 保存到文件
   }
 
   /**
    * 回滚事务
    */
   rollback() {
-    this.db.exec('ROLLBACK');
+    this.db.run('ROLLBACK');
   }
 
   /**
@@ -375,6 +460,7 @@ class KBStore {
    */
   close() {
     if (this.db) {
+      this.save(); // 保存后关闭
       this.db.close();
       this.db = null;
     }

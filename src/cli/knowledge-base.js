@@ -29,10 +29,10 @@ const { scanDocs, parseDoc } = require('../lib/kb-parser');
 /**
  * sync - 全量同步
  */
-function cmdSync(options = {}) {
+async function cmdSync(options = {}) {
   const startTime = Date.now();
   const store = new KBStore();
-  store.initDB();
+  await store.initDB();
 
   const report = {
     success: 0,
@@ -119,9 +119,9 @@ function cmdSync(options = {}) {
 /**
  * query - 查询文档
  */
-function cmdQuery(options = {}) {
+async function cmdQuery(options = {}) {
   const store = new KBStore();
-  store.initDB();
+  await store.initDB();
 
   try {
     const docs = store.findDocuments({
@@ -152,14 +152,14 @@ function cmdQuery(options = {}) {
 /**
  * search - 关键词搜索（v1.2 新增）
  */
-function cmdSearch(keywords, options = {}) {
+async function cmdSearch(keywords, options = {}) {
   if (!keywords || keywords.length === 0) {
     console.error('Error: search command requires at least one keyword');
     process.exit(1);
   }
 
   const store = new KBStore();
-  store.initDB();
+  await store.initDB();
 
   try {
     const results = store.searchByKeywords(keywords);
@@ -187,9 +187,9 @@ function cmdSearch(keywords, options = {}) {
 /**
  * overview - 产品概览
  */
-function cmdOverview(options = {}) {
+async function cmdOverview(options = {}) {
   const store = new KBStore();
-  store.initDB();
+  await store.initDB();
 
   try {
     const overview = store.getProductOverview();
@@ -235,9 +235,9 @@ function cmdOverview(options = {}) {
 /**
  * exists - 检查文档是否存在
  */
-function cmdExists(name, options = {}) {
+async function cmdExists(name, options = {}) {
   const store = new KBStore();
-  store.initDB();
+  await store.initDB();
 
   try {
     const exists = store.exists(name, options.type);
@@ -257,9 +257,9 @@ function cmdExists(name, options = {}) {
 /**
  * impact - 获取受影响的文档
  */
-function cmdImpact(docId, options = {}) {
+async function cmdImpact(docId, options = {}) {
   const store = new KBStore();
-  store.initDB();
+  await store.initDB();
 
   try {
     const docs = store.getImpactedDocuments(docId);
@@ -286,9 +286,9 @@ function cmdImpact(docId, options = {}) {
 /**
  * chain - 获取关系链
  */
-function cmdChain(docId, options = {}) {
+async function cmdChain(docId, options = {}) {
   const store = new KBStore();
-  store.initDB();
+  await store.initDB();
 
   try {
     const chain = store.getRelationChain(
@@ -377,9 +377,9 @@ function cmdHookContext(options = {}) {
 /**
  * stats - 获取统计信息
  */
-function cmdStats(options = {}) {
+async function cmdStats(options = {}) {
   const store = new KBStore();
-  store.initDB();
+  await store.initDB();
 
   try {
     const stats = store.getStats();
@@ -464,7 +464,7 @@ Examples:
 `);
 }
 
-function main() {
+async function main() {
   const { command, args, options } = parseArgs(process.argv.slice(2));
 
   if (!command || command === 'help' || options.help) {
@@ -475,47 +475,47 @@ function main() {
   try {
     switch (command) {
       case 'sync':
-        cmdSync(options);
+        await cmdSync(options);
         break;
       case 'query':
-        cmdQuery(options);
+        await cmdQuery(options);
         break;
       case 'search':
         if (args.length < 1) {
           console.error('Error: search command requires at least one keyword');
           process.exit(1);
         }
-        cmdSearch(args, options);
+        await cmdSearch(args, options);
         break;
       case 'overview':
-        cmdOverview(options);
+        await cmdOverview(options);
         break;
       case 'exists':
         if (args.length < 1) {
           console.error('Error: exists command requires a name argument');
           process.exit(1);
         }
-        cmdExists(args[0], options);
+        await cmdExists(args[0], options);
         break;
       case 'impact':
         if (args.length < 1) {
           console.error('Error: impact command requires a document ID');
           process.exit(1);
         }
-        cmdImpact(args[0], options);
+        await cmdImpact(args[0], options);
         break;
       case 'chain':
         if (args.length < 1) {
           console.error('Error: chain command requires a document ID');
           process.exit(1);
         }
-        cmdChain(args[0], options);
+        await cmdChain(args[0], options);
         break;
       case 'hook-context':
         cmdHookContext(options);
         break;
       case 'stats':
-        cmdStats(options);
+        await cmdStats(options);
         break;
       default:
         console.error(`Unknown command: ${command}`);

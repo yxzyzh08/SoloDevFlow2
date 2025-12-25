@@ -10,7 +10,8 @@
   "flow": {
     "researchMethod": "bottom-up",
     "activeFeatures": [
-      "project-init"
+      "project-init",
+      "state-management"
     ]
   },
   "session": {
@@ -71,7 +72,10 @@
       "domain": "process",
       "docPath": "docs/requirements/flows/flow-workflows.md",
       "execPath": ".solodevflow/flows/workflows.md",
-      "dependencies": ["project-init"],
+      "dependencies": [
+        "knowledge-base",
+        "state-management"
+      ],
       "phase": "pending",
       "status": "not_started"
     },
@@ -90,8 +94,8 @@
         ],
         "tests": []
       },
-      "phase": "pending",
-      "status": "not_started"
+      "phase": "feature_implementation",
+      "status": "in_progress"
     },
     "change-impact-tracking": {
       "type": "document",
@@ -153,14 +157,6 @@
       "phase": "pending",
       "status": "not_started"
     },
-    "spark-box": {
-      "type": "document",
-      "description": "灵光收集与处理机制",
-      "domain": "process",
-      "docPath": ".solodevflow/spark-box.md",
-      "phase": "pending",
-      "status": "not_started"
-    },
     "project-init": {
       "type": "code",
       "domain": "tooling",
@@ -216,7 +212,11 @@
       "description": "Agent 架构演进（从单 Agent 到专业化 Subagent）",
       "domain": "ai-config",
       "docPath": "docs/requirements/features/fea-agent-architecture.md",
-      "dependencies": ["workflows", "knowledge-base", "state-management"],
+      "dependencies": [
+        "workflows",
+        "knowledge-base",
+        "state-management"
+      ],
       "phase": "pending",
       "status": "not_started"
     }
@@ -233,8 +233,8 @@
     "lastGitCommit": "",
     "lastGitCommitMessage": "",
     "lastGitCommitAt": "",
-    "stateFileVersion": 2,
-    "totalStateChanges": 2
+    "stateFileVersion": 11,
+    "totalStateChanges": 11
   },
-  "lastUpdated": "2025-12-25T02:00:00.000Z"
+  "lastUpdated": "2025-12-25T15:26:25.353Z"
 }
