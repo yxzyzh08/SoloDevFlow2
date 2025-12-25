@@ -1,6 +1,6 @@
 ---
 type: feature
-version: "1.2"
+version: "1.4"
 priority: P0
 domain: process
 ---
@@ -54,7 +54,7 @@ domain: process
 | C2 | 关系存储 | 解析 Dependencies/Consumers 章节，建立文档间关系图 |
 | C3 | 关键词索引 | 从文档标题、章节标题、描述提取关键词，支持模糊匹配 |
 | C4 | 上下文查询 | 提供 API：获取产品概览、查询相关文档、获取关系链 |
-| C5 | 增量更新 | 检测文档变更（基于 mtime），仅更新变化的文档 |
+| C5 | 全量同步 | 每次同步清空并重建索引，简单可靠 |
 | C6 | 规范解析 | 使用现有规范作为解析契约，无需额外 frontmatter |
 
 ---
@@ -97,7 +97,9 @@ domain: process
 |------|------|------|
 | `doc_id` | TEXT FK | 文档 ID |
 | `keyword` | TEXT | 关键词（小写） |
-| `weight` | REAL | 权重（标题 > 章节 > 正文） |
+| `source` | TEXT | 来源：`title`/`section`/`description` |
+
+> **简化说明**：不使用权重系统，通过 source 字段区分关键词来源即可满足查询需求。
 
 ---
 
@@ -122,6 +124,10 @@ findDocuments(query: {
   domain?: string,
   keyword?: string
 }) → Document[]
+
+exists(name: string, type?: DocType) → boolean
+  判断指定名称的 Feature/Capability/Flow 是否已存在
+  用于区分"新增需求"和"需求变更"
 ```
 
 ### 5.3 关系查询
@@ -130,6 +136,11 @@ findDocuments(query: {
 getRelations(docId: string, direction: 'outgoing' | 'incoming') → Relation[]
 
 getRelationChain(docId: string, type: RelationType, depth?: number) → Graph
+
+getImpactedDocuments(docId: string) → Document[]
+  返回受指定文档变更影响的所有文档
+  通过反向查询 depends/consumes 关系实现
+  用于规范变更和需求变更的影响分析
 ```
 
 ### 5.4 上下文加载
@@ -138,9 +149,42 @@ getRelationChain(docId: string, type: RelationType, depth?: number) → Graph
 loadContext(userInput: string) → {
   relevantDocs: Document[],
   matchedKeywords: string[],
-  suggestedType: 'consult' | 'new_requirement' | 'change' | 'unknown'
+  suggestedType: InputType
 }
 ```
+
+**InputType 定义**（与 flow-workflows §3.1 对齐）：
+
+| 类型 | 说明 | 判断依据 |
+|------|------|----------|
+| `direct_execute` | 直接执行 | 简单明确的操作指令，无需上下文 |
+| `consult` | 产品咨询 | 询问功能、进度、实现方式 |
+| `new_requirement` | 新增需求 | 描述新功能，且 Feature 不存在 |
+| `requirement_change` | 需求变更 | 修改已有功能的行为或描述 |
+| `spec_change` | 规范变更 | 修改文档规范、模板、写作规则 |
+| `irrelevant` | 无关想法 | 与本产品完全无关 |
+| `unknown` | 无法判断 | 需向用户澄清 |
+
+> **注**：知识库提供 `suggestedType` 作为意图识别的参考，最终判断由主 Agent 结合上下文决定。
+
+### 5.5 Hook 集成
+
+```
+getContextForHook() → {
+  productOverview: {
+    name: string,
+    description: string,
+    activeFeatures: string[]
+  },
+  featureList: [{ name: string, status: string, domain: string }],
+  currentFeature: Feature | null
+}
+```
+
+为 `UserPromptSubmit` Hook 提供精简上下文（~200 tokens），包含：
+- 产品基本信息和当前活跃 Feature
+- Feature 列表摘要（名称、状态、领域）
+- 当前正在处理的 Feature（如有）
 
 ---
 
@@ -191,7 +235,11 @@ loadContext(userInput: string) → {
 | 关系存储 | 查询 relations 表 | Dependencies 章节正确解析为关系记录 |
 | 关键词查询 | `findDocuments({ keyword: "状态" })` | 返回 state-management 相关文档 |
 | 上下文加载 | `loadContext("登录功能怎么实现的")` | 返回相关 Feature 和 suggestedType: consult |
-| 增量更新 | 修改文档后运行 sync | 仅更新变化的文档，其他保持不变 |
+| 意图识别 | `loadContext("添加新功能")` | suggestedType 返回 7 种类型之一 |
+| 存在性检查 | `exists("state-management")` | 返回 true |
+| 影响分析 | `getImpactedDocuments("spec-meta")` | 返回依赖该规范的文档列表 |
+| Hook 上下文 | `getContextForHook()` | 返回精简上下文（< 200 tokens） |
+| 全量同步 | 运行 `knowledge-base sync` | 清空并重建所有索引，输出同步报告 |
 | 无额外元数据 | 检查文档 | 现有文档无需修改即可被解析 |
 
 ---
@@ -207,7 +255,18 @@ loadContext(userInput: string) → {
 
 ---
 
-## 9. Artifacts <!-- id: feat_knowledge_base_artifacts -->
+## 9. Consumers <!-- id: feat_knowledge_base_consumers -->
+
+| Consumer | 使用场景 |
+|----------|----------|
+| flow_workflows | 意图识别、咨询流程、需求流程中的关系分析 |
+| feat_change_impact_tracking | 变更影响分析，通过 `getImpactedDocuments()` |
+| UserPromptSubmit Hook | 上下文注入，通过 `getContextForHook()` |
+| requirements-expert | 需求澄清时判断 Feature 是否存在 |
+
+---
+
+## 10. Artifacts <!-- id: feat_knowledge_base_artifacts -->
 
 | Type | Path | Description |
 |------|------|-------------|
@@ -218,21 +277,20 @@ loadContext(userInput: string) → {
 | Data | .solodevflow/knowledge.db | SQLite 数据库文件 |
 | Test | tests/knowledge-base.test.js | 单元测试 |
 
-**Design Depth**: TBD（由设计阶段确定）
+**Design Depth**: Required（需要设计文档）
 
 ---
 
-## 10. Open Questions <!-- id: feat_knowledge_base_questions -->
+## 11. Open Questions <!-- id: feat_knowledge_base_questions -->
 
 | Question | Context | Impact |
 |----------|---------|--------|
 | 是否需要支持代码文件索引？ | 当前仅索引文档，代码级别影响分析依赖 state.json artifacts | 可后续扩展 |
 | 如何处理跨产品引用？ | 当前仅支持单项目 | 可通过 project scope 过滤 |
-| 关键词权重如何调优？ | 初始权重：标题=1.0，章节=0.7，正文=0.3 | 可根据实际效果迭代 |
 
 ---
 
-*Version: v1.2*
+*Version: v1.4*
 *Created: 2024-12-24*
-*Updated: 2025-12-24*
-*Changes: v1.2 添加 cap-document-validation 依赖（解析前验证）; v1.1 添加 frontmatter 可选字段*
+*Updated: 2025-12-25*
+*Changes: v1.4 简化需求：C5 改为全量同步（参考 devspec2）、移除关键词权重系统改用 source 字段; v1.3 根据评审报告修复：扩展 suggestedType 与工作流对齐、添加 exists()/getImpactedDocuments()/getContextForHook() API、添加 Consumers 章节; v1.2 添加 cap-document-validation 依赖; v1.1 添加 frontmatter 可选字段*

@@ -10,7 +10,8 @@
   "flow": {
     "researchMethod": "bottom-up",
     "activeFeatures": [
-      "project-init"
+      "project-init",
+      "knowledge-base"
     ]
   },
   "features": {
@@ -97,6 +98,45 @@
       "phase": "pending",
       "status": "not_started"
     },
+    "document-validation": {
+      "type": "code",
+      "description": "文档格式验证能力（Frontmatter/章节/锚点/引用）",
+      "domain": "process",
+      "docPath": "docs/requirements/capabilities/cap-document-validation.md",
+      "designDepth": "none",
+      "artifacts": {
+        "design": null,
+        "code": [
+          "scripts/validate-docs.js"
+        ],
+        "tests": []
+      },
+      "phase": "done",
+      "status": "completed"
+    },
+    "knowledge-base": {
+      "type": "code",
+      "description": "产品知识库（文档索引/关系查询/上下文加载）",
+      "domain": "process",
+      "docPath": "docs/requirements/features/fea-knowledge-base.md",
+      "designDepth": "Required",
+      "artifacts": {
+        "design": "docs/designs/des-knowledge-base.md",
+        "code": [
+          "scripts/knowledge-base.js",
+          "scripts/lib/kb-parser.js",
+          "scripts/lib/kb-store.js"
+        ],
+        "tests": [
+          "tests/knowledge-base.test.js"
+        ]
+      },
+      "dependencies": [
+        "document-validation"
+      ],
+      "phase": "design",
+      "status": "in_progress"
+    },
     "input-capture": {
       "type": "document",
       "description": "输入捕获机制（记录关键人类输入）",
@@ -179,5 +219,5 @@
     "stateFileVersion": 2,
     "totalStateChanges": 2
   },
-  "lastUpdated": "2025-12-23T10:28:48.390Z"
+  "lastUpdated": "2025-12-25T00:00:00.000Z"
 }
