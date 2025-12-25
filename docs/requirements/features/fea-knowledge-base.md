@@ -1,6 +1,6 @@
 ---
 type: feature
-version: "1.4"
+version: "1.5"
 priority: P0
 domain: process
 ---
@@ -289,7 +289,7 @@ getContextForHook() → {
 
 ---
 
-*Version: v1.4*
+*Version: v1.5*
 *Created: 2024-12-24*
 *Updated: 2025-12-25*
-*Changes: v1.4 简化需求：C5 改为全量同步（参考 devspec2）、移除关键词权重系统改用 source 字段; v1.3 根据评审报告修复：扩展 suggestedType 与工作流对齐、添加 exists()/getImpactedDocuments()/getContextForHook() API、添加 Consumers 章节; v1.2 添加 cap-document-validation 依赖; v1.1 添加 frontmatter 可选字段*
+*Changes: v1.5 移除 mtime 字段（全量同步不需要）; v1.4 简化需求：C5 改为全量同步、移除关键词权重系统; v1.3 扩展 suggestedType、添加新 API、添加 Consumers 章节; v1.2 添加 cap-document-validation 依赖; v1.1 添加 frontmatter 可选字段*
