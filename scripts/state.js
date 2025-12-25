@@ -849,6 +849,214 @@ function listArtifacts() {
   console.log(JSON.stringify(codeFeatures, null, 2));
 }
 
+// ============ Session Commands (v11.0) ============
+
+/**
+ * 设置 session mode
+ */
+function sessionMode(mode) {
+  const validModes = ['idle', 'consulting', 'delivering'];
+  if (!validModes.includes(mode)) {
+    console.error(`Error: Invalid mode. Expected: ${validModes.join(', ')}`);
+    process.exit(1);
+  }
+
+  acquireLock();
+  try {
+    const state = readState();
+
+    // 确保 session 结构存在
+    if (!state.session) {
+      state.session = {
+        mode: 'idle',
+        context: {
+          topic: null,
+          relatedFeatures: [],
+          pendingRequirements: []
+        }
+      };
+    }
+
+    state.session.mode = mode;
+
+    // 切换到 idle 时清空 topic
+    if (mode === 'idle') {
+      state.session.context.topic = null;
+      state.session.context.relatedFeatures = [];
+    }
+
+    writeState(state);
+    console.log(JSON.stringify({ success: true, session: state.session }, null, 2));
+  } finally {
+    releaseLock();
+  }
+}
+
+/**
+ * 设置 session topic
+ */
+function sessionTopic(topic) {
+  acquireLock();
+  try {
+    const state = readState();
+
+    // 确保 session 结构存在
+    if (!state.session) {
+      state.session = {
+        mode: 'idle',
+        context: {
+          topic: null,
+          relatedFeatures: [],
+          pendingRequirements: []
+        }
+      };
+    }
+
+    state.session.context.topic = topic || null;
+
+    writeState(state);
+    console.log(JSON.stringify({ success: true, session: state.session }, null, 2));
+  } finally {
+    releaseLock();
+  }
+}
+
+/**
+ * 添加待处理需求
+ */
+function addPending(content, source = 'user') {
+  if (!content) {
+    console.error('Error: Content is required');
+    process.exit(1);
+  }
+
+  acquireLock();
+  try {
+    const state = readState();
+
+    // 确保 session 结构存在
+    if (!state.session) {
+      state.session = {
+        mode: 'idle',
+        context: {
+          topic: null,
+          relatedFeatures: [],
+          pendingRequirements: []
+        }
+      };
+    }
+    if (!state.session.context) {
+      state.session.context = {
+        topic: null,
+        relatedFeatures: [],
+        pendingRequirements: []
+      };
+    }
+    if (!state.session.context.pendingRequirements) {
+      state.session.context.pendingRequirements = [];
+    }
+
+    const requirement = {
+      id: `pr_${Date.now()}`,
+      content,
+      source,
+      createdAt: new Date().toISOString()
+    };
+
+    state.session.context.pendingRequirements.push(requirement);
+
+    writeState(state);
+    console.log(JSON.stringify({ success: true, requirement }, null, 2));
+  } finally {
+    releaseLock();
+  }
+}
+
+/**
+ * 列出待处理需求
+ */
+function listPending() {
+  const state = readState();
+
+  const pending = state.session?.context?.pendingRequirements || [];
+
+  console.log(JSON.stringify({
+    count: pending.length,
+    requirements: pending
+  }, null, 2));
+}
+
+/**
+ * 清空所有待处理需求
+ */
+function clearPending() {
+  acquireLock();
+  try {
+    const state = readState();
+
+    if (state.session?.context?.pendingRequirements) {
+      const count = state.session.context.pendingRequirements.length;
+      state.session.context.pendingRequirements = [];
+      writeState(state);
+      console.log(JSON.stringify({ success: true, cleared: count }, null, 2));
+    } else {
+      console.log(JSON.stringify({ success: true, cleared: 0 }, null, 2));
+    }
+  } finally {
+    releaseLock();
+  }
+}
+
+/**
+ * 移除指定待处理需求
+ */
+function removePending(id) {
+  if (!id) {
+    console.error('Error: Requirement ID is required');
+    process.exit(1);
+  }
+
+  acquireLock();
+  try {
+    const state = readState();
+
+    if (!state.session?.context?.pendingRequirements) {
+      console.error('Error: No pending requirements found');
+      process.exit(1);
+    }
+
+    const idx = state.session.context.pendingRequirements.findIndex(r => r.id === id);
+    if (idx === -1) {
+      console.error(`Error: Requirement "${id}" not found`);
+      process.exit(1);
+    }
+
+    const removed = state.session.context.pendingRequirements.splice(idx, 1)[0];
+    writeState(state);
+    console.log(JSON.stringify({ success: true, removed }, null, 2));
+  } finally {
+    releaseLock();
+  }
+}
+
+/**
+ * 获取当前 session 状态
+ */
+function getSession() {
+  const state = readState();
+
+  const session = state.session || {
+    mode: 'idle',
+    context: {
+      topic: null,
+      relatedFeatures: [],
+      pendingRequirements: []
+    }
+  };
+
+  console.log(JSON.stringify(session, null, 2));
+}
+
 // ============ CLI Parser ============
 
 function parseArgs(args) {
@@ -883,6 +1091,8 @@ QUERY COMMANDS:
   summary                      Get state summary
   get-artifacts <name>         Get artifacts for a code type feature
   list-artifacts               List all code type features with artifacts
+  get-session                  Get current session state
+  list-pending                 List pending requirements
 
 UPDATE COMMANDS:
   update-feature <name> --phase <phase> [--status <status>]
@@ -898,6 +1108,13 @@ UPDATE COMMANDS:
   record-commit                Record latest git commit to metadata
   set-artifacts <name> [--designDepth none|required] [--design <path>] [--code <paths>] [--tests <paths>]
 
+SESSION COMMANDS (v11.0):
+  session-mode <mode>          Set session mode (idle|consulting|delivering)
+  session-topic <topic>        Set session topic
+  add-pending <content>        Add pending requirement [--source <src>]
+  remove-pending <id>          Remove pending requirement by ID
+  clear-pending                Clear all pending requirements
+
 OPTIONS:
   --help                       Show this help
 
@@ -908,6 +1125,9 @@ EXAMPLES:
   node scripts/state.js complete-feature xxx
   node scripts/state.js add-subtask xxx --description "Check dependencies"
   node scripts/state.js set-artifacts xxx --designDepth required --design "docs/xxx.design.md" --code "src/xxx.js" --tests "tests/xxx.test.ts"
+  node scripts/state.js session-mode consulting
+  node scripts/state.js add-pending "需要添加用户认证功能"
+  node scripts/state.js list-pending
 `);
 }
 
@@ -1074,6 +1294,47 @@ function main() {
 
     case 'list-artifacts':
       listArtifacts();
+      break;
+
+    // Session commands (v11.0)
+    case 'session-mode':
+      if (!restArgs[0] || restArgs[0].startsWith('--')) {
+        console.error('Error: Mode required (idle|consulting|delivering)');
+        process.exit(1);
+      }
+      sessionMode(restArgs[0]);
+      break;
+
+    case 'session-topic':
+      sessionTopic(restArgs[0] || null);
+      break;
+
+    case 'add-pending':
+      if (!restArgs[0] || restArgs[0].startsWith('--')) {
+        console.error('Error: Content required');
+        process.exit(1);
+      }
+      addPending(restArgs[0], options.source || 'user');
+      break;
+
+    case 'list-pending':
+      listPending();
+      break;
+
+    case 'remove-pending':
+      if (!restArgs[0] || restArgs[0].startsWith('--')) {
+        console.error('Error: Requirement ID required');
+        process.exit(1);
+      }
+      removePending(restArgs[0]);
+      break;
+
+    case 'clear-pending':
+      clearPending();
+      break;
+
+    case 'get-session':
+      getSession();
       break;
 
     case 'help':

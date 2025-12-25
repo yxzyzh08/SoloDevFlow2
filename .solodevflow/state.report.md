@@ -9,13 +9,12 @@
 | Name | SoloDevFlow 2.0 |
 | Schema | v11.0.0 |
 | Method | bottom-up |
-| Updated | 2025-12-25T15:26:25.353Z |
+| Updated | 2025-12-25T15:35:32.063Z |
 
 ## Active Features
 
 | Feature | Domain | Phase | Status |
 |---------|--------|-------|--------|
-| project-init | tooling | pending | 🔄 in_progress |
 | state-management | process | feature_implementation | 🔄 in_progress |
 
 ## Domain Tree
@@ -53,7 +52,7 @@
 ### 📁 tooling (0/1)
 > 独立工具（项目初始化/分发安装）
 
-- 🔄 **project-init** [pending] **[ACTIVE]**
+- 🔄 **project-init** [pending]
   - 项目初始化工具（将 SoloDevFlow 安装到其他项目）
 
 ### 📁 ai-config (0/5)
@@ -83,4 +82,4 @@
 | Pending Docs | 0 |
 
 ---
-*Generated at 2025-12-25T15:26:25.353Z*
+*Generated at 2025-12-25T15:35:32.063Z*
