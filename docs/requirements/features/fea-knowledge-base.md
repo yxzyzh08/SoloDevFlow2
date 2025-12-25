@@ -71,7 +71,6 @@ domain: process
 | `path` | TEXT | 文件路径（相对于项目根目录） |
 | `summary` | TEXT | 摘要（从 Intent/Overview 提取） |
 | `domain` | TEXT | 所属 Domain（可为 null） |
-| `mtime` | INTEGER | 文件修改时间（Unix timestamp） |
 
 ### 4.2 Relation Table
 
