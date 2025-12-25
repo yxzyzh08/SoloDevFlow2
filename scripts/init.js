@@ -472,7 +472,7 @@ async function bootstrapFiles(config) {
     log('    .claude/skills/', 'success');
   }
 
-  // 5. 复制工具文件（commands, skills, templates, scripts）
+  // 5. 复制工具文件（commands, skills, templates, scripts, hooks）
   await copyToolFiles(config);
 
   log('自举模式更新完成', 'success');
@@ -562,6 +562,15 @@ async function copyToolFiles(config) {
       }
     }
   }
+
+  // 6. Copy src/hooks/ to .claude/hooks/
+  log('  复制 .claude/hooks/...');
+  const hooksSrc = path.join(SOLODEVFLOW_ROOT, 'src', 'hooks');
+  const hooksDest = path.join(targetPath, '.claude', 'hooks');
+  if (fs.existsSync(hooksSrc)) {
+    copyDir(hooksSrc, hooksDest);
+    log('    .claude/hooks/', 'success');
+  }
 }
 
 // ============================================================================
@@ -650,6 +659,7 @@ function finalize(config) {
   - .solodevflow/flows/（工作流文件）
   - .claude/commands/（命令文件）
   - .claude/skills/（技能文件）
+  - .claude/hooks/（Hook 脚本）
 
 已保留:
   - .solodevflow/state.json（项目状态数据）
@@ -670,6 +680,7 @@ function finalize(config) {
   - .solodevflow/scripts/（运行时脚本）
   - .claude/commands/（命令文件）
   - .claude/skills/（技能文件）
+  - .claude/hooks/（Hook 脚本）
   - docs/specs/（规范文档）
   - CLAUDE.md（流程控制器）
 

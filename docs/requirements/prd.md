@@ -105,7 +105,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 | **specification** | 规范文档（元规范/需求/设计/开发/测试） | 5 |
 | **process** | 协作流程（核心流程/状态管理/输入捕获/影响追踪/知识库/文档验证） | 6 |
 | **tooling** | 独立工具（项目初始化） | 1 |
-| **ai-config** | AI 协作配置（CLAUDE.md/命令/技能） | 3 |
+| **ai-config** | AI 协作配置（CLAUDE.md/命令/技能/架构演进） | 4 |
 
 ---
 
@@ -265,6 +265,15 @@ AI 行为入口，解决 AI 对话启动时缺乏上下文和导航的问题。�
 - **Priority**: P0
 - **Type**: document
 - **Feature**: [.claude/skills/requirements-expert/](../../.claude/skills/requirements-expert/)
+
+#### agent-architecture <!-- id: feat_ref_agent_architecture -->
+
+Agent 架构演进，从单 Agent 演进到专业化 Subagent 架构。支持多窗口并行工作，每个 Agent 专注特定阶段（需求/设计/开发/测试），实现上下文精简和专业化分工。
+
+**元信息**：
+- **Priority**: P2
+- **Type**: document
+- **Feature**: [fea-agent-architecture.md](features/fea-agent-architecture.md)
 
 ---
 

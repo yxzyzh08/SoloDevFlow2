@@ -226,12 +226,6 @@ git add -A && git commit -m "feat(<feature-name>): <描述>"
 |------|------|------|
 | CVM_Demo2 | `d:\github_projects\CVM_Demo2` | SoloDevFlow 验证项目 |
 
-### 8.2 Bilingual Convention
-
-- 文件名：英文 kebab-case
-- 标题/术语：英文
-- 描述/逻辑：中文
-
 ---
 
 *Version: v6.0 (Simplified)*

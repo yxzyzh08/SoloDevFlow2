@@ -10,7 +10,10 @@
     "validate": "node scripts/validate.js",
     "validate:state": "node scripts/validate-state.js",
     "validate:docs": "node scripts/validate-docs.js",
-    "init": "node scripts/init.js"
+    "init": "node scripts/init.js",
+    "kb": "node src/cli/knowledge-base.js",
+    "test": "node --test tests/",
+    "test:kb": "node --test tests/knowledge-base.test.js"
   },
   "keywords": [
     "ai",
@@ -19,5 +22,8 @@
     "workflow"
   ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^12.5.0"
+  }
 }

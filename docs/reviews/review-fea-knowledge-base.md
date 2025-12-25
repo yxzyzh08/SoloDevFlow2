@@ -1,202 +1,208 @@
-# 知识库需求文档评审报告
+# Knowledge Base 需求评审报告
 
-**评审对象**: `docs/requirements/features/fea-knowledge-base.md` v1.2
-**评审日期**: 2025-12-25
-**评审目标**: 检查格式符合性、需求清晰度、与 flow-workflows.md 的匹配程度
+**评审对象**: `docs/requirements/features/fea-knowledge-base.md` (v1.7)
+**评审日期**: 2025-12-25 (v2.0)
+**评审目标**: 评估需求完整性、职责边界、与实现的一致性
 
 ---
 
-## 1. 格式符合性检查
+## 1. 需求概览
 
-### Frontmatter
+知识库提供以下核心能力：
 
-```yaml
-type: feature       # ✅
-version: "1.2"      # ✅
-priority: P0        # ✅ 可选
-domain: process     # ✅ 可选
-```
+| ID | Capability | 描述 |
+|----|------------|------|
+| C1 | 文档索引 | 扫描 docs/ 目录，提取元数据入库 |
+| C2 | 关系存储 | 解析 Dependencies/Consumers，建立关系图 |
+| C3 | 关键词索引 | 从标题、章节、描述提取关键词 |
+| C4 | 上下文查询 | 产品概览、文档查询、关系链 |
+| C5 | 全量同步 | 每次同步清空并重建索引 |
+| C6 | 规范解析 | 基于现有规范解析，无需额外 frontmatter |
 
-### 必选章节
+---
 
-| 章节 | 锚点 | 状态 |
+## 2. 关键架构更新（v1.7）
+
+### 2.1 新增职责边界定义
+
+**v1.7 新增 §1.3 职责边界**：
+
+| 知识库职责 | 非知识库职责 |
+|-----------|-------------|
+| ✅ 提供产品结构（Features、Domains） | ❌ 理解用户意图 |
+| ✅ 关键词搜索文档 | ❌ 语义相关性判断 |
+| ✅ 查询文档关系（依赖/影响） | ❌ 判断"这是咨询还是需求" |
+| ✅ 判断 Feature 是否存在 | ❌ 从混合输入提取需求 |
+
+**评价**：✅ 职责边界明确，避免了知识库承担超出其能力的任务。
+
+### 2.2 接口简化
+
+| 原接口 | 新接口 | 变更原因 |
+|--------|--------|----------|
+| `loadContext(prompt) → { suggestedType }` | `searchByKeywords(keywords) → Document[]` | 移除意图建议职责 |
+
+**评价**：✅ 接口更简洁，职责更明确。
+
+---
+
+## 3. 需求完整性评估
+
+### 3.1 数据模型 ✅
+
+| 表 | 字段定义 | 状态 |
+|----|----------|------|
+| Document | id, type, name, path, summary, domain | ✅ 完整 |
+| Relation | source_id, target_id, type | ✅ 完整 |
+| Keyword | doc_id, keyword, source | ✅ 完整 |
+
+### 3.2 查询接口 ✅
+
+| 接口 | 定义完整性 | 实现状态 |
+|------|-----------|----------|
+| `getProductOverview()` | ✅ 返回结构明确 | ✅ 已实现 |
+| `findDocuments(query)` | ✅ 参数明确 | ✅ 已实现 |
+| `exists(name, type?)` | ✅ 用途说明 | ✅ 已实现 |
+| `getRelations(docId, direction)` | ✅ 方向参数 | ✅ 已实现 |
+| `getRelationChain(docId, type, depth)` | ✅ BFS 说明 | ✅ 已实现 |
+| `getImpactedDocuments(docId)` | ✅ 反向查询 | ✅ 已实现 |
+| `searchByKeywords(keywords)` | ✅ 简化说明 | ⚠️ 需补充 |
+| `getContextForHook()` | ✅ 返回结构明确 | ✅ 已实现 |
+
+### 3.3 解析规则 ✅
+
+| 规则 | 定义 | 状态 |
 |------|------|------|
-| Intent | `feat_knowledge_base_intent` | ✅ |
-| Core Capabilities | `feat_knowledge_base_capabilities` | ✅ |
-| Acceptance Criteria | `feat_knowledge_base_acceptance` | ✅ |
-| Artifacts | `feat_knowledge_base_artifacts` | ✅ |
+| ID 提取 | 从锚点提取 | ✅ 完整 |
+| 类型检测 | ID 前缀映射 | ✅ 完整 |
+| 关系提取 | Dependencies/Consumers 表格 | ✅ 完整 |
 
-### 可选章节
+### 3.4 验收标准 ✅
 
-| 章节 | 状态 |
-|------|------|
-| Scope | ✅ (含 In/Out Scope) |
-| Dependencies | ✅ |
-| Open Questions | ✅ |
-
----
-
-## 2. 与 flow-workflows.md 需求匹配分析
-
-### 2.1 工作流对知识库的需求提取
-
-| 流程 | 需要的知识库能力 | 来源章节 |
-|------|-----------------|----------|
-| **意图识别** | Feature 列表、关键词匹配、判断功能是否存在 | §3 Input Analysis |
-| **咨询流程** | 加载 PRD、识别关联文档、加载相关文档 | §5 Consulting |
-| **需求流程** | 关系分析（扩展/依赖/影响）、确定文档类型 | §6 Requirements |
-| **需求变更** | 定位已有需求、评估影响 | §8 Other Flows |
-| **规范变更** | 运行影响分析 | §8 Other Flows |
-| **Hook 集成** | 提供上下文注入 | §9 Hooks |
-
-### 2.2 能力覆盖检查
-
-| 工作流需求 | 知识库能力 | 覆盖状态 |
-|-----------|-----------|----------|
-| 加载 PRD | C1 文档索引 + C4 `getProductOverview()` | ✅ 覆盖 |
-| 识别关联文档 | C3 关键词索引 + C4 `findDocuments()` | ✅ 覆盖 |
-| 加载相关文档 | C4 上下文查询 | ✅ 覆盖 |
-| 关系分析（依赖/扩展） | C2 关系存储 + C4 `getRelations()` | ✅ 覆盖 |
-| 判断功能是否存在 | C4 `findDocuments({ keyword })` | ⚠️ 隐含覆盖 |
-| 影响分析（impacts） | C4 `getRelationChain()` | ⚠️ 需反向查询 |
-| 意图类型判断 | C4 `loadContext()` | ❌ 类型不完整 |
-| Hook 上下文注入 | 未定义 | ❌ 缺失 |
+| Item | 验证方式 | 状态 |
+|------|----------|------|
+| 文档索引 | sync 命令 | ✅ |
+| 关系存储 | 查询 relations 表 | ✅ |
+| 关键词查询 | findDocuments | ✅ |
+| 关键词搜索 | searchByKeywords | ✅ 新增 |
+| 存在性检查 | exists | ✅ |
+| 影响分析 | getImpactedDocuments | ✅ |
+| Hook 上下文 | getContextForHook | ✅ |
+| 全量同步 | sync 输出报告 | ✅ |
+| 无额外元数据 | 文档检查 | ✅ |
 
 ---
 
-## 3. 发现的问题
+## 4. 实现一致性检查
 
-### 问题 1：`loadContext()` 返回的 suggestedType 与工作流不匹配 ❌
+### 4.1 已实现 API
 
-**知识库定义**（§5.4）：
-```
-suggestedType: 'consult' | 'new_requirement' | 'change' | 'unknown'
-```
+| 需求接口 | CLI 命令 | 代码位置 |
+|----------|----------|----------|
+| `sync()` | `sync` | src/cli/knowledge-base.js:30 |
+| `findDocuments()` | `query` | src/lib/kb-store.js:133 |
+| `exists()` | `exists` | src/lib/kb-store.js:157 |
+| `getRelations()` | — | src/lib/kb-store.js:177 |
+| `getImpactedDocuments()` | `impact` | src/lib/kb-store.js:198 |
+| `getRelationChain()` | `chain` | src/lib/kb-store.js:211 |
+| `getProductOverview()` | `overview` | src/lib/kb-store.js:247 |
+| `getContextForHook()` | `hook-context` | src/cli/knowledge-base.js:286 |
 
-**工作流需要**（flow-workflows §3.1）：
-```
-直接执行 | 产品咨询 | 新增需求 | 需求变更 | 规范变更 | 无关想法
-```
+### 4.2 待实现 API
 
-**差距**：
-
-| 工作流类型 | 知识库 suggestedType | 状态 |
-|-----------|---------------------|------|
-| 直接执行 | - | ❌ 缺失 |
-| 产品咨询 | `consult` | ✅ |
-| 新增需求 | `new_requirement` | ✅ |
-| 需求变更 | `change` | ✅ |
-| 规范变更 | - | ❌ 缺失 |
-| 无关想法 | - | ❌ 缺失 |
-| 无法判断 | `unknown` | ✅ |
-
-**建议**：扩展 suggestedType 枚举值，或说明知识库只负责部分意图识别（咨询/需求/变更），其他由主 Agent 判断。
+| 需求接口 | CLI 命令 | 实现难度 |
+|----------|----------|----------|
+| `searchByKeywords()` | `search` | 低（基于现有 findDocuments 扩展） |
 
 ---
 
-### 问题 2：缺少明确的 `exists()` API ⚠️
+## 5. 与 Hooks 集成评估
 
-**工作流需求**：区分"新增需求"和"需求变更"需要判断功能是否已存在。
+### 5.1 UserPromptSubmit Hook 需求
 
-**当前状态**：可通过 `findDocuments({ keyword })` 实现，但不够直接。
+| 需求 | 知识库支持 | 状态 |
+|------|-----------|------|
+| 获取产品概览 | `getContextForHook()` | ✅ 已支持 |
+| 查找相关文档 | `searchByKeywords()` | ⚠️ 需实现 |
+| 存在性检查 | `exists()` | ✅ 已支持 |
 
-**建议**：在 §5 Query Interfaces 中添加：
-```
-exists(name: string) → boolean
-  判断指定名称的 Feature/Capability 是否已存在
+### 5.2 集成方式
+
+```bash
+# Hook 调用知识库
+node src/cli/knowledge-base.js hook-context --json
+node src/cli/knowledge-base.js search "登录" "认证" --json
 ```
 
 ---
 
-### 问题 3：影响分析 API 不明确 ⚠️
+## 6. 历史问题解决状态
 
-**工作流需求**：
-- 规范变更 → "运行影响分析"
-- 需求变更 → "评估影响"
+### 6.1 v1.2 评审发现的问题
 
-**当前状态**：
-- 关系表有 `impacts` 类型，但说明是"影响分析计算"
-- `getRelationChain()` 可以做反向查询，但没有专门的影响分析 API
+| 问题 | v1.2 状态 | v1.7 状态 |
+|------|-----------|-----------|
+| suggestedType 与工作流类型不匹配 | ❌ | ✅ 已移除，由 Claude 完成 |
+| 缺少 `exists()` API | ❌ | ✅ 已添加 |
+| 影响分析 API 不明确 | ⚠️ | ✅ 已添加 getImpactedDocuments |
+| 缺少 Hook 集成说明 | ❌ | ✅ 已添加 getContextForHook |
+| 缺少 Consumers 说明 | ⚠️ | ✅ 已添加 §9 Consumers |
 
-**建议**：添加明确的影响分析接口：
-```
-getImpactedDocuments(docId: string) → Document[]
-  返回受指定文档变更影响的所有文档（反向查询 depends/consumes）
-```
+**所有 v1.2 评审问题均已解决** ✅
 
 ---
 
-### 问题 4：缺少与 Hook 集成的说明 ❌
+## 7. 问题与建议
 
-**工作流需求**（§9）：
-- `UserPromptSubmit` Hook 需要注入上下文
+### 7.1 待补充
 
-**当前状态**：知识库没有定义如何与 Hook 集成。
+| 问题 | 优先级 | 建议 |
+|------|--------|------|
+| `searchByKeywords()` CLI 未实现 | P1 | 添加 `search` 命令 |
+| 设计文档需同步更新 | P2 | 更新 des-knowledge-base.md |
 
-**建议**：在 §5 Query Interfaces 中添加：
-```
-getContextForHook() → {
-  productOverview: Summary,
-  featureList: [{ name, status }],
-  currentFeature: Feature | null
-}
-  为 UserPromptSubmit Hook 提供精简上下文（~200 tokens）
-```
+### 7.2 可选优化
 
----
-
-### 问题 5：缺少 Consumers 说明 ⚠️
-
-**当前状态**：Dependencies 章节列出了知识库依赖什么，但没有说明谁使用知识库。
-
-**建议**：添加 Consumers 章节（虽然是 Feature 不是 Capability，但有助于理解）：
-```markdown
-## Consumers
-
-| Consumer | 使用场景 |
-|----------|----------|
-| flow_workflows | 意图识别、咨询流程、需求流程 |
-| feat_change_impact_tracking | 影响分析 |
-| UserPromptSubmit Hook | 上下文注入 |
-```
+| 优化项 | 说明 | 优先级 |
+|--------|------|--------|
+| 关键词分词 | 支持中文分词 | P3 |
+| 缓存优化 | 热点查询缓存 | P3 |
 
 ---
 
-## 4. 清晰度评估
+## 8. 评审结论
 
-| 章节 | 评分 | 说明 |
-|------|------|------|
-| Intent | ✅ 95% | Problem/Value 清晰 |
-| Scope | ✅ 90% | In/Out Scope 明确 |
-| Core Capabilities | ✅ 90% | 6 个能力定义清晰 |
-| Data Model | ✅ 95% | 表结构完整 |
-| Query Interfaces | ⚠️ 75% | 缺少部分工作流需要的 API |
-| Parsing Rules | ✅ 90% | 解析契约清晰 |
-| Acceptance Criteria | ⚠️ 80% | 缺少意图识别、影响分析的验收条件 |
-
----
-
-## 5. 评审结论
-
-### 总体评价
+### 8.1 总体评价
 
 | 维度 | 评分 | 说明 |
 |------|------|------|
-| 格式符合性 | ✅ 95% | 符合 Feature Spec 结构 |
-| 需求清晰度 | ✅ 85% | 整体清晰，部分 API 定义不足 |
-| 工作流覆盖 | ⚠️ 70% | 核心能力覆盖，但有 4 个缺口 |
+| 需求完整性 | ✅ 95% | 数据模型、接口、验收标准完整 |
+| 职责边界 | ✅ 98% | 明确"静态知识提供者"定位 |
+| 实现一致性 | ✅ 90% | 核心 API 已实现，searchByKeywords 待补充 |
+| 与 Hooks 集成 | ✅ 90% | 接口对齐，需补充 search 命令 |
 
-### 需要修复的问题
+**整体评分**: ✅ **93%**
 
-| # | 问题 | 优先级 | 修复建议 |
-|---|------|--------|----------|
-| 1 | suggestedType 与工作流类型不匹配 | P0 | 扩展枚举值或明确职责边界 |
-| 2 | 缺少 `exists()` API | P1 | 添加接口定义 |
-| 3 | 影响分析 API 不明确 | P1 | 添加 `getImpactedDocuments()` |
-| 4 | 缺少 Hook 集成说明 | P1 | 添加 `getContextForHook()` |
-| 5 | 缺少 Consumers 说明 | P2 | 添加使用方列表 |
+### 8.2 评审结论
+
+**PASS** — 需求定义清晰，职责边界明确，核心功能已实现。
+
+### 8.3 后续任务
+
+1. **P1**: 实现 `searchByKeywords()` CLI 命令（`search`）
+2. **P2**: 同步更新设计文档 des-knowledge-base.md
 
 ---
 
-*Reviewed by: Claude*
+## 9. Changelog
+
+| 日期 | 版本 | 变更 |
+|------|------|------|
+| 2025-12-25 | v2.0 | 重新评审 v1.7：确认职责边界更新，历史问题全部解决，评分 93% |
+| 2025-12-25 | v1.0 | 初始评审 v1.2：发现 5 个问题 |
+
+---
+
+*Reviewed by: Claude Opus 4.5*
 *Date: 2025-12-25*
+*Status: **PASS** - 需求定义完整，职责边界明确*

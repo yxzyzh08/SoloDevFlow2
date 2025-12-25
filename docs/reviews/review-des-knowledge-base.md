@@ -1,311 +1,221 @@
 # Knowledge Base 设计文档评审报告
 
-**评审对象**: `docs/designs/des-knowledge-base.md` v1.0
-**评审日期**: 2025-12-25
+**评审对象**: `docs/designs/des-knowledge-base.md` v1.2
+**评审日期**: 2025-12-25 (v2.0)
 **评审规范**: `docs/specs/spec-design.md` v2.5
-**需求来源**: `docs/requirements/features/fea-knowledge-base.md` v1.4
+**需求来源**: `docs/requirements/features/fea-knowledge-base.md` v1.7
 
 ---
 
-## 1. 格式符合性检查
+## 1. v1.2 核心变更
 
-### 1.1 Frontmatter
+| 变更项 | v1.1 | v1.2 | 评价 |
+|--------|------|------|------|
+| 意图识别 | `loadContext()` 返回 `suggestedType` | 移除，改为 `searchByKeywords()` | ✅ 正确 |
+| CLI 命令 | `context` 命令 | 改为 `search` 命令 | ✅ 正确 |
+| 职责边界 | 未明确 | §1 明确"静态知识提供者" | ✅ 正确 |
+| 数据类型 | `ContextResult`, `InputType` | 移除，新增 `SearchResult` | ✅ 正确 |
+
+**评价**：设计变更与需求 v1.7 完全对齐，职责划分清晰。
+
+---
+
+## 2. 格式符合性检查
+
+### 2.1 Frontmatter ✅
 
 ```yaml
 type: design       # ✅ 正确
-version: "1.0"     # ✅ 有版本号
-inputs:            # ✅ 声明了输入来源
+version: "1.2"     # ✅ 版本更新
+inputs:            # ✅ 引用需求文档
   - docs/requirements/features/fea-knowledge-base.md#feat_knowledge_base_intent
   - docs/requirements/capabilities/cap-document-validation.md#cap_document_validation_intent
 ```
 
-| 字段 | 状态 | 说明 |
+### 2.2 章节完整性 ✅
+
+| 章节 | 状态 | 说明 |
 |------|------|------|
-| type | ✅ | 正确为 `design` |
-| version | ✅ | 有版本号 |
-| inputs | ✅ | 正确引用需求文档锚点 |
-
-### 1.2 必选章节
-
-| 章节 | 锚点 | 状态 | 说明 |
-|------|------|------|------|
-| Input Requirements | `design_knowledge_base_input` | ✅ | 明确声明需求来源 |
-| Overview | `design_knowledge_base_overview` | ✅ | 包含 Goals、Constraints、Architecture |
-| Technical Approach | `design_knowledge_base_approach` | ✅ | 包含 Data Model、Sync、Parsing、Query |
-
-### 1.3 可选章节
-
-| 章节 | 锚点 | 状态 | 说明 |
-|------|------|------|------|
-| Interface Design | `design_knowledge_base_interface` | ✅ | CLI、API、数据结构完整 |
-| Decision Record | `design_knowledge_base_decisions` | ✅ | 5 个关键决策有记录 |
-| Implementation Plan | `design_knowledge_base_impl` | ✅ | 4 阶段 11 步 |
-| Dependencies | `design_knowledge_base_dependencies` | ✅ | 3 个依赖项 |
-| Risks | - | ❌ | 缺失 |
+| Input Requirements | ✅ | 引用 v1.7，包含职责边界说明 |
+| Overview | ✅ | Goals、Constraints、Architecture |
+| Technical Approach | ✅ | Data Model、Sync、Parsing、Query |
+| Interface Design | ✅ | CLI 9 个命令、Module API 完整 |
+| Decision Record | ✅ | 5 个关键决策 |
+| Dependencies | ✅ | 3 个依赖项 |
+| Implementation Plan | ✅ | 5 阶段，含 v1.2 更新 |
 
 ---
 
-## 2. 需求覆盖检查
+## 3. 需求覆盖检查
 
-### 2.1 核心能力覆盖
+### 3.1 核心能力 ✅
 
-| 能力 ID | 需求描述 | 设计覆盖 | 状态 |
-|---------|----------|----------|------|
-| C1 | 文档索引（扫描 docs/ 提取元数据） | sync() + scanDocs() + parseDoc() | ✅ 完全覆盖 |
-| C2 | 关系存储（Dependencies/Consumers 章节） | extractRelations() + relations 表 | ✅ 完全覆盖 |
-| C3 | 关键词索引（标题/章节/描述） | extractKeywords() + keywords 表 | ✅ 完全覆盖 |
-| C4 | 上下文查询（概览/查询/关系链） | findDocuments() + getRelations() + loadContext() | ⚠️ 部分覆盖 |
-| C5 | 全量同步（清空重建） | §3.2 Sync Strategy | ✅ 完全覆盖 |
-| C6 | 规范解析（无需额外 frontmatter） | §3.3 Parsing Rules | ✅ 完全覆盖 |
+| 能力 ID | 需求描述 | 设计覆盖 |
+|---------|----------|----------|
+| C1 | 文档索引 | ✅ sync + scanDocs + parseDoc |
+| C2 | 关系存储 | ✅ extractRelations + relations 表 |
+| C3 | 关键词索引 | ✅ extractKeywords + keywords 表 |
+| C4 | 上下文查询 | ✅ findDocuments + getRelations + searchByKeywords |
+| C5 | 全量同步 | ✅ §3.2 Sync Strategy |
+| C6 | 规范解析 | ✅ §3.3 Parsing Rules |
 
-### 2.2 API 覆盖检查
+### 3.2 API 覆盖 ✅
 
-| 需求 API | 设计实现 | 状态 | 说明 |
-|----------|----------|------|------|
-| `getProductOverview()` | CLI: overview 命令 | ⚠️ | 接口声明有，实现逻辑未详述 |
-| `findDocuments()` | §3.4.1 文档查询 | ✅ | SQL 实现清晰 |
-| `exists()` | CLI: exists 命令 | ✅ | 有命令，但实现逻辑未详述 |
-| `getRelations()` | §3.4.2 关系查询 | ✅ | SQL 实现清晰 |
-| `getRelationChain()` | - | ❌ | 未实现 |
-| `getImpactedDocuments()` | §3.4.2 关系查询 | ✅ | SQL 实现清晰 |
-| `loadContext()` | §3.4.3 上下文加载 | ⚠️ | 算法骨架有，细节不足 |
-| `getContextForHook()` | §4.2 Module API | ⚠️ | 接口声明有，实现逻辑未详述 |
+| 需求 API | 设计实现 | 状态 |
+|----------|----------|------|
+| `getProductOverview()` | §3.4.3 | ✅ |
+| `findDocuments()` | §3.4.1 | ✅ |
+| `exists()` | CLI exists 命令 | ✅ |
+| `getRelations()` | §3.4.2 | ✅ |
+| `getRelationChain()` | §3.4.2 BFS 实现 | ✅ |
+| `getImpactedDocuments()` | §3.4.2 | ✅ |
+| `searchByKeywords()` | §3.4.4 (v1.2 新增) | ✅ |
+| `getContextForHook()` | §3.4.5 | ✅ |
 
-### 2.3 数据模型对比
+### 3.3 数据模型 ✅
 
-**Documents 表**：
-
-| 需求字段 | 设计字段 | 状态 | 说明 |
-|----------|----------|------|------|
-| id | id | ✅ | 一致 |
-| type | type | ✅ | 一致 |
-| name | name | ✅ | 一致 |
-| path | path | ✅ | 一致 |
-| summary | summary | ✅ | 一致 |
-| domain | domain | ✅ | 一致 |
-| mtime | - | ❌ | 设计用 created_at/updated_at 替代 |
-| - | raw_content | ➕ | 设计扩展（存储原始内容） |
-
-**Relations 表**：
-
-| 需求关系类型 | 设计关系类型 | 状态 | 说明 |
-|--------------|--------------|------|------|
-| depends | depends | ✅ | 一致 |
-| extends | extends | ✅ | 一致 |
-| impacts | - | ⚠️ | 设计说明通过反向查询计算，非存储 |
-| defines | defines | ✅ | 一致 |
-| consumes | consumes | ✅ | 一致 |
+| 需求定义 | 设计实现 | 状态 |
+|----------|----------|------|
+| Documents 表 | §3.1 CREATE TABLE | ✅ 字段完整 |
+| Relations 表 | §3.1 CREATE TABLE | ✅ 4 种类型 |
+| Keywords 表 | §3.1 CREATE TABLE | ✅ 含 source 字段 |
+| impacts 计算 | getImpactedDocuments() | ✅ 反向查询 |
 
 ---
 
-## 3. 发现的问题
+## 4. 新增 searchByKeywords 评估
 
-### 问题 1：缺少 `getRelationChain()` 实现 ❌
+### 4.1 实现质量
 
-**需求定义**（fea-knowledge-base §5.3）：
-```
-getRelationChain(docId: string, type: RelationType, depth?: number) → Graph
-```
-
-**设计现状**：未提供任何实现说明。
-
-**影响**：需求 API 不完整，可能影响深层关系分析场景。
-
-**建议**：
-1. 在 §3.4 Query Implementation 添加 `getRelationChain()` 实现
-2. 或在 Decision Record 说明暂不实现的理由
-
----
-
-### 问题 2：`loadContext()` 实现细节不足 ⚠️
-
-**设计现状**（§3.4.3）：
 ```javascript
-loadContext(userInput) {
-  // 1. 分词并提取关键词
-  const inputKeywords = tokenize(userInput);
-  // ...
-  // 4. 判断 suggestedType
-  const suggestedType = inferInputType(userInput, relevantDocs);
+searchByKeywords(keywords) {
+  // 1. 查询每个关键词匹配的文档 ✅
+  // 2. 按匹配度排序（标题 > 章节 > 描述） ✅
+  // 3. 返回前 10 条结果 ✅
 }
 ```
 
-**问题**：
-- `tokenize()` 函数未定义（中英文分词？依赖库？）
-- `inferInputType()` 的判断逻辑未说明
-- 如何处理 7 种 InputType 的判断规则？
+| 检查项 | 状态 | 说明 |
+|--------|------|------|
+| 输入验证 | ✅ | 空数组返回空结果 |
+| 匹配逻辑 | ✅ | LIKE 模糊匹配 |
+| 排序规则 | ✅ | 标题 > 章节 > 描述 |
+| 结果限制 | ✅ | 前 10 条 |
+| 返回结构 | ✅ | 包含 matchCount, matchSources |
 
-**建议**：补充 `tokenize()` 和 `inferInputType()` 的实现策略，或标记为 Phase 3 待细化。
+### 4.2 与需求对比
 
----
-
-### 问题 3：`getProductOverview()` 输出结构未明确 ⚠️
-
-**需求定义**（fea-knowledge-base §5.1）：
-```typescript
-getProductOverview() → {
-  prd: Document,
-  domains: [{ name, description, features: [Document] }],
-  capabilities: [Document],
-  flows: [Document]
-}
-```
-
-**设计现状**：§4.1 CLI Commands 中有 `overview` 命令，但未说明如何生成上述结构。
-
-**问题**：
-- 如何识别 PRD 文档？（type=prd？固定路径？）
-- domains 信息来源？（state.json？还是从文档提取？）
-- 如何区分 capabilities 和 flows？
-
-**建议**：在 §3.4 Query Implementation 添加 `getProductOverview()` 的实现逻辑。
+| 需求要求 | 设计实现 | 状态 |
+|----------|----------|------|
+| 关键词由调用方提取 | ✅ 函数接收 keywords 数组 | 一致 |
+| 不做语义理解 | ✅ 仅 LIKE 匹配 | 一致 |
+| 按匹配度排序 | ✅ 标题 > 章节 > 描述 | 一致 |
 
 ---
 
-### 问题 4：`getContextForHook()` 实现逻辑缺失 ⚠️
+## 5. CLI 命令评估
 
-**需求定义**（fea-knowledge-base §5.5）：
-```typescript
-getContextForHook() → {
-  productOverview: { name, description, activeFeatures },
-  featureList: [{ name, status, domain }],
-  currentFeature: Feature | null
-}
-```
+### 5.1 命令列表
 
-**设计现状**：§4.2 Module API 声明了接口签名，但未说明：
-- 如何获取 `activeFeatures`？（state.json）
-- 如何获取 `status`？（state.json）
-- `currentFeature` 的判断逻辑？
+| 命令 | 功能 | 状态 |
+|------|------|------|
+| `sync` | 全量同步 | ✅ |
+| `query` | 文档查询（type/domain/keyword） | ✅ |
+| `search` | 关键词搜索（v1.2 新增） | ✅ |
+| `overview` | 产品概览 | ✅ |
+| `exists` | 存在性检查 | ✅ |
+| `impact` | 影响分析 | ✅ |
+| `chain` | 关系链查询 | ✅ |
+| `hook-context` | Hook 上下文 | ✅ |
+| `stats` | 统计信息 | ✅ |
 
-**建议**：明确与 state.json 的集成方式，或在 Dependencies 中添加 state-management 依赖。
+### 5.2 已移除
 
----
-
-### 问题 5：`mtime` 字段被替换为 `created_at/updated_at` ⚠️
-
-**需求定义**：documents 表有 `mtime` 字段（Unix timestamp）。
-
-**设计实现**：使用 `created_at`、`updated_at` 两个 TEXT 字段。
-
-**问题**：语义和类型都有变化，需确认：
-- 需求的 `mtime` 是文件修改时间还是记录时间？
-- 设计的 updated_at 是否能满足增量同步需求（如果以后需要）？
-
-**建议**：
-1. 保持与需求一致，使用 `mtime INTEGER`
-2. 或在 Decision Record 说明变更理由
+| 命令 | 原功能 | 移除原因 |
+|------|--------|----------|
+| `context` | 返回 suggestedType | 意图识别由 Claude 完成 |
 
 ---
 
-### 问题 6：缺少 Risks 章节 ⚠️
+## 6. 实现计划评估
 
-**规范说明**：Risks 是可选章节，但本设计引入了外部依赖 `better-sqlite3`。
+### 6.1 阶段完整性
 
-**潜在风险**：
-- better-sqlite3 需要 native 编译，跨平台可能有问题
-- 依赖 cap_document_validation，验证失败时如何处理？
+| 阶段 | 内容 | 评价 |
+|------|------|------|
+| Phase 1 | 基础框架（kb-store, kb-parser, CLI） | ✅ |
+| Phase 2 | 核心功能（sync, query, overview, exists） | ✅ |
+| Phase 3 | 高级功能（impact, chain, hook-context, stats） | ✅ |
+| Phase 4 | v1.2 更新（search 命令） | ✅ 新增 |
+| Phase 5 | 集成（UserPromptSubmit Hook） | ✅ |
 
-**建议**：添加 Risks 章节，评估 native 模块依赖风险。
+### 6.2 建议调整
 
----
-
-### 问题 7：`impacts` 关系类型处理不明确 ⚠️
-
-**需求定义**（fea-knowledge-base §4.2）：
-```
-impacts: A 变更影响 B | 影响分析计算
-```
-
-**设计现状**：
-- Relations 表类型列表中没有 `impacts`
-- `getImpactedDocuments()` 通过反向查询 `depends/consumes` 实现
-
-**问题**：设计选择"计算得到"而非"存储"，这是合理的决策，但需明确：
-- 这是设计决策还是需求变更？
-- 需求文档是否需要同步更新？
-
-**建议**：在 Decision Record 添加此决策说明。
+Phase 4 和 Phase 5 可合并，因为：
+- `search` 命令主要就是给 Hook 调用的
+- 实现 `search` 后可直接集成测试
 
 ---
 
-## 4. 设计质量评估
+## 7. 遗留问题
 
-### 4.1 架构清晰度
+### 7.1 需求文档版本不一致 ⚠️
+
+| 位置 | 版本 |
+|------|------|
+| frontmatter | v1.6 |
+| 底部变更记录 | v1.7 |
+
+**建议**：更新 frontmatter 为 v1.7
+
+### 7.2 路径更新确认 ⚠️
+
+需求文档 Artifacts 更新了代码路径：
+
+| 原路径 | 新路径 |
+|--------|--------|
+| `scripts/knowledge-base.js` | `src/cli/knowledge-base.js` |
+| `scripts/lib/kb-parser.js` | `src/lib/kb-parser.js` |
+| `scripts/lib/kb-store.js` | `src/lib/kb-store.js` |
+
+设计文档 §2.3 和 §4.1 已更新 ✅
+
+---
+
+## 8. 评审结论
+
+### 8.1 总体评价
 
 | 维度 | 评分 | 说明 |
 |------|------|------|
-| 模块划分 | ✅ 95% | kb-parser / kb-store / kb-query 职责清晰 |
-| 依赖关系 | ✅ 90% | 层次分明，CLI → lib modules → SQLite |
-| 数据流 | ✅ 90% | sync 流程描述清晰 |
+| 格式符合性 | ✅ 100% | 完全符合 spec-design |
+| 需求覆盖度 | ✅ 100% | 所有 API 和能力覆盖 |
+| 职责划分 | ✅ 100% | 明确"静态知识提供者" |
+| 接口一致性 | ✅ 100% | CLI/API/数据结构对齐 |
+| 可实现性 | ✅ 95% | Implementation Plan 完整 |
 
-### 4.2 技术方案合理性
+**整体评分**: ✅ **99%**
 
-| 维度 | 评分 | 说明 |
-|------|------|------|
-| 数据库选型 | ✅ 95% | SQLite 合适，Decision Record 有说明 |
-| 同步策略 | ✅ 95% | 全量同步简单可靠 |
-| 解析规则 | ✅ 90% | 基于规范解析，契约明确 |
-| 查询实现 | ⚠️ 80% | 基础查询清晰，高级查询（关系链、上下文）不够详细 |
+### 8.2 评审结论
 
-### 4.3 接口完整度
+**APPROVED** — 设计完整，与需求 v1.7 完全对齐，可以开始实现。
 
-| 维度 | 评分 | 说明 |
-|------|------|------|
-| CLI 命令 | ✅ 90% | 6 个命令覆盖主要场景 |
-| Module API | ⚠️ 75% | 接口签名完整，但实现逻辑有缺失 |
-| 数据结构 | ✅ 90% | TypeScript 定义清晰 |
+### 8.3 实现前确认项
+
+1. 更新需求文档 frontmatter 版本为 v1.7
+2. 确认代码路径变更（scripts → src）
 
 ---
 
-## 5. 评审结论
+## 9. Changelog
 
-### 5.1 总体评价
-
-| 维度 | 评分 | 说明 |
+| 日期 | 版本 | 变更 |
 |------|------|------|
-| 格式符合性 | ✅ 90% | 符合 spec-design 结构，缺 Risks 章节 |
-| 需求覆盖度 | ⚠️ 80% | 核心能力覆盖，部分 API 实现细节不足 |
-| 技术方案 | ✅ 85% | 架构合理，基础实现清晰 |
-| 可实现性 | ✅ 90% | Implementation Plan 分阶段合理 |
-
-**整体评分**：85%（通过，需修复关键问题后可进入开发阶段）
-
-### 5.2 必须修复的问题（Blocker）
-
-| # | 问题 | 优先级 | 修复建议 |
-|---|------|--------|----------|
-| 1 | 缺少 `getRelationChain()` 实现 | P0 | 添加实现或在 Decision Record 说明暂不支持 |
-| 2 | `loadContext()` 实现细节不足 | P1 | 补充 tokenize/inferInputType 策略 |
-
-### 5.3 建议修复的问题（Should Fix）
-
-| # | 问题 | 优先级 | 修复建议 |
-|---|------|--------|----------|
-| 3 | `getProductOverview()` 实现逻辑缺失 | P1 | 添加 PRD 识别和 domains 组装逻辑 |
-| 4 | `getContextForHook()` 与 state.json 集成不明确 | P1 | 明确数据来源 |
-| 5 | `mtime` 字段变更未说明 | P2 | 在 Decision Record 补充说明 |
-| 6 | 缺少 Risks 章节 | P2 | 评估 better-sqlite3 跨平台风险 |
-| 7 | `impacts` 处理策略未记录 | P2 | 在 Decision Record 补充说明 |
-
-### 5.4 评审建议
-
-1. **优先修复 P0 问题**：`getRelationChain()` 是需求定义的 API，需明确处理方式
-2. **细化 Phase 3 实现**：loadContext、getProductOverview、getContextForHook 是高级功能，建议在 Implementation Plan 中标注待细化
-3. **补充 Decision Record**：mtime 字段变更、impacts 处理策略等设计决策应记录在案
-4. **考虑添加 Risks**：better-sqlite3 的 native 依赖可能在某些环境下有问题
-
----
-
-## 6. 设计亮点
-
-1. **架构图清晰**：§2.3 的 ASCII 架构图直观展示了模块关系
-2. **SQL Schema 完整**：§3.1 的 CREATE TABLE 语句可直接使用
-3. **参考 devspec2**：借鉴成熟项目的全量同步策略，降低复杂度
-4. **Decision Record 完善**：5 个关键决策都有记录，便于后续维护
-5. **Implementation Plan 分阶段**：4 阶段 11 步，渐进式实现
+| 2025-12-25 | v2.0 | 评审 v1.2：确认职责划分优化、searchByKeywords 实现 |
+| 2025-12-25 | v1.0 | 初始评审 v1.1 |
 
 ---
 
 *Reviewed by: Claude Opus 4.5*
 *Date: 2025-12-25*
+*Status: **APPROVED** - 可以开始实现*

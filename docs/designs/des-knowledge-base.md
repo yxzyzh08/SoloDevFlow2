@@ -1,6 +1,6 @@
 ---
 type: design
-version: "1.0"
+version: "1.2"
 inputs:
   - docs/requirements/features/fea-knowledge-base.md#feat_knowledge_base_intent
   - docs/requirements/capabilities/cap-document-validation.md#cap_document_validation_intent
@@ -16,7 +16,7 @@ inputs:
 
 本设计基于以下需求：
 
-- [Feature - Knowledge Base](../requirements/features/fea-knowledge-base.md#feat_knowledge_base_intent) v1.4
+- [Feature - Knowledge Base](../requirements/features/fea-knowledge-base.md#feat_knowledge_base_intent) v1.7
 - [Capability - Document Validation](../requirements/capabilities/cap-document-validation.md#cap_document_validation_intent) v1.2
 
 **核心需求摘要**：
@@ -29,6 +29,10 @@ inputs:
 | C4 上下文查询 | 产品概览、文档查询、关系链 |
 | C5 全量同步 | 每次同步清空并重建索引 |
 | C6 规范解析 | 基于现有规范解析，无需额外 frontmatter |
+
+**职责边界**（v1.7 明确）：
+
+知识库是**静态知识提供者**，不做意图判断。意图识别由 Claude 主 Agent 完成。
 
 ---
 
@@ -55,17 +59,17 @@ inputs:
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    knowledge-base.js (CLI)                   │
-│  Commands: sync | query | overview | context                │
+│  Commands: sync | query | search | overview | hook-context  │
 └─────────────────────────────────────────────────────────────┘
                               │
               ┌───────────────┼───────────────┐
               ▼               ▼               ▼
 ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-│  kb-parser.js   │  │  kb-store.js    │  │  kb-query.js    │
+│  kb-parser.js   │  │  kb-store.js    │  │  (integrated)   │
 │  ─────────────  │  │  ─────────────  │  │  ─────────────  │
 │  • scanDocs()   │  │  • initDB()     │  │  • findDocs()   │
 │  • parseDoc()   │  │  • clearAll()   │  │  • getRelations()│
-│  • extractID()  │  │  • insertDoc()  │  │  • loadContext()│
+│  • extractID()  │  │  • insertDoc()  │  │  • searchByKw() │
 │  • extractRels()│  │  • insertRel()  │  │  • exists()     │
 └─────────────────┘  └─────────────────┘  └─────────────────┘
                               │
@@ -291,7 +295,7 @@ getRelations(docId, direction) {
 }
 
 getImpactedDocuments(docId) {
-  // 反向查询所有 depends/consumes 关系
+  // 反向查询所有 depends/consumes 关系（计算 impacts）
   return db.prepare(`
     SELECT DISTINCT d.*
     FROM documents d
@@ -300,33 +304,180 @@ getImpactedDocuments(docId) {
     AND r.type IN ('depends', 'consumes')
   `).all(docId);
 }
-```
 
-#### 3.4.3 上下文加载
+getRelationChain(docId, relationType, maxDepth = 5) {
+  // 使用 BFS 查找关系链（参考 devspec2 的 find_path 实现）
+  const visited = new Set([docId]);
+  const queue = [{ id: docId, path: [docId], depth: 0 }];
+  const result = { nodes: [], edges: [] };
 
-```javascript
-loadContext(userInput) {
-  // 1. 分词并提取关键词
-  const inputKeywords = tokenize(userInput);
+  while (queue.length > 0) {
+    const { id, path, depth } = queue.shift();
 
-  // 2. 查询匹配的文档
-  const matchedDocs = [];
-  for (const kw of inputKeywords) {
-    const docs = findDocuments({ keyword: kw });
-    matchedDocs.push(...docs);
+    if (depth >= maxDepth) continue;
+
+    // 获取指定类型的出边关系
+    const relations = db.prepare(`
+      SELECT target_id, type FROM relations
+      WHERE source_id = ? AND (? IS NULL OR type = ?)
+    `).all(id, relationType, relationType);
+
+    for (const rel of relations) {
+      result.edges.push({ source: id, target: rel.target_id, type: rel.type });
+
+      if (!visited.has(rel.target_id)) {
+        visited.add(rel.target_id);
+        result.nodes.push(rel.target_id);
+        queue.push({
+          id: rel.target_id,
+          path: [...path, rel.target_id],
+          depth: depth + 1
+        });
+      }
+    }
   }
 
-  // 3. 去重并按匹配度排序
-  const relevantDocs = dedup(matchedDocs).slice(0, 5);
+  return result;  // { nodes: string[], edges: Edge[] }
+}
+```
 
-  // 4. 判断 suggestedType
-  const suggestedType = inferInputType(userInput, relevantDocs);
+#### 3.4.3 产品概览
 
-  return {
-    relevantDocs,
-    matchedKeywords: inputKeywords.filter(k => /* 有匹配 */),
-    suggestedType
+```javascript
+getProductOverview() {
+  // 1. 获取 PRD 文档（type='prd'）
+  const prd = db.prepare('SELECT * FROM documents WHERE type = ?').get('prd');
+
+  // 2. 获取所有 domains（从 state.json 读取或从文档 domain 字段聚合）
+  const domains = db.prepare(`
+    SELECT DISTINCT domain FROM documents WHERE domain IS NOT NULL
+  `).all().map(row => {
+    const features = db.prepare(`
+      SELECT * FROM documents WHERE domain = ? AND type = 'feature'
+    `).all(row.domain);
+    return { name: row.domain, features };
+  });
+
+  // 3. 获取所有 capabilities
+  const capabilities = db.prepare('SELECT * FROM documents WHERE type = ?').all('capability');
+
+  // 4. 获取所有 flows
+  const flows = db.prepare('SELECT * FROM documents WHERE type = ?').all('flow');
+
+  return { prd, domains, capabilities, flows };
+}
+```
+
+#### 3.4.4 关键词搜索
+
+> **简化设计**（v1.2）：移除意图推断职责，仅提供关键词匹配能力。意图识别由 Claude 完成。
+
+```javascript
+/**
+ * 基于关键词搜索文档
+ * @param {string[]} keywords - 关键词数组
+ * @returns {Document[]} - 匹配的文档列表，按匹配度排序
+ */
+searchByKeywords(keywords) {
+  if (!keywords || keywords.length === 0) {
+    return [];
+  }
+
+  // 1. 查询每个关键词匹配的文档
+  const matchCounts = new Map(); // docId -> { doc, count, sources }
+
+  for (const kw of keywords) {
+    const keyword = kw.toLowerCase().trim();
+    if (!keyword) continue;
+
+    // 查询匹配的关键词记录
+    const matches = db.prepare(`
+      SELECT k.doc_id, k.source, d.*
+      FROM keywords k
+      JOIN documents d ON k.doc_id = d.id
+      WHERE k.keyword LIKE ?
+    `).all(`%${keyword}%`);
+
+    for (const match of matches) {
+      const existing = matchCounts.get(match.doc_id);
+      if (existing) {
+        existing.count++;
+        existing.sources.add(match.source);
+      } else {
+        matchCounts.set(match.doc_id, {
+          doc: {
+            id: match.id,
+            type: match.type,
+            name: match.name,
+            path: match.path,
+            summary: match.summary,
+            domain: match.domain
+          },
+          count: 1,
+          sources: new Set([match.source])
+        });
+      }
+    }
+  }
+
+  // 2. 按匹配度排序（标题匹配 > 章节匹配 > 描述匹配）
+  const results = Array.from(matchCounts.values())
+    .map(item => ({
+      ...item.doc,
+      matchCount: item.count,
+      matchSources: Array.from(item.sources)
+    }))
+    .sort((a, b) => {
+      // 优先级：title > section > description
+      const sourceScore = (sources) => {
+        if (sources.includes('title')) return 3;
+        if (sources.includes('section')) return 2;
+        return 1;
+      };
+      const scoreA = sourceScore(a.matchSources);
+      const scoreB = sourceScore(b.matchSources);
+      if (scoreA !== scoreB) return scoreB - scoreA;
+      return b.matchCount - a.matchCount;
+    });
+
+  // 3. 返回前 10 条结果
+  return results.slice(0, 10);
+}
+```
+
+**说明**：
+- 关键词由调用方（Hook 或 Claude）从用户输入中提取
+- 知识库只做简单的关键词匹配，不做语义理解
+- 返回结果按匹配度排序：标题匹配优先于章节匹配，章节匹配优先于描述匹配
+
+#### 3.4.5 Hook 上下文
+
+```javascript
+getContextForHook() {
+  // 从 state.json 读取活跃状态（与 state-management 集成）
+  const state = JSON.parse(fs.readFileSync('.solodevflow/state.json', 'utf-8'));
+
+  // 1. 产品概览（精简版）
+  const productOverview = {
+    name: state.project.name,
+    description: state.project.description,
+    activeFeatures: state.flow.activeFeatures || []
   };
+
+  // 2. Feature 列表摘要
+  const featureList = Object.entries(state.features)
+    .filter(([_, f]) => f.type === 'code' || f.type === 'document')
+    .map(([id, f]) => ({
+      name: id,
+      status: f.status,
+      domain: f.domain
+    }));
+
+  // 3. 当前 Feature（取 activeFeatures 的第一个）
+  const currentFeatureId = state.flow.activeFeatures?.[0];
+  const currentFeature = currentFeatureId ? state.features[currentFeatureId] : null;
+
+  return { productOverview, featureList, currentFeature };
 }
 ```
 
@@ -338,29 +489,44 @@ loadContext(userInput) {
 
 ```bash
 # 全量同步
-node scripts/knowledge-base.js sync
+node src/cli/knowledge-base.js sync
 # 输出: SyncReport JSON
 
 # 查询文档
-node scripts/knowledge-base.js query --type=feature --domain=process
-node scripts/knowledge-base.js query --keyword="状态"
+node src/cli/knowledge-base.js query --type=feature --domain=process
+node src/cli/knowledge-base.js query --keyword="状态"
+
+# 关键词搜索（v1.2 新增）
+node src/cli/knowledge-base.js search "登录" "认证" "用户"
+node src/cli/knowledge-base.js search "登录" --json
+# 输出: Document[] JSON（按匹配度排序）
 
 # 产品概览
-node scripts/knowledge-base.js overview
+node src/cli/knowledge-base.js overview
 # 输出: ProductOverview JSON
 
-# 上下文加载
-node scripts/knowledge-base.js context "登录功能怎么实现的"
-# 输出: ContextResult JSON
-
 # 存在性检查
-node scripts/knowledge-base.js exists "state-management"
+node src/cli/knowledge-base.js exists "state-management"
 # 输出: true/false
 
 # 影响分析
-node scripts/knowledge-base.js impact "spec-meta"
+node src/cli/knowledge-base.js impact "spec-meta"
 # 输出: Document[] JSON
+
+# 关系链查询
+node src/cli/knowledge-base.js chain "feat_knowledge_base" --type=depends --depth=3
+# 输出: Graph JSON { nodes, edges }
+
+# Hook 上下文
+node src/cli/knowledge-base.js hook-context
+# 输出: HookContext JSON
+
+# 统计信息
+node src/cli/knowledge-base.js stats
+# 输出: { documents, relations, keywords }
 ```
+
+> **已移除**：`context` 命令（原返回 suggestedType），因意图识别由 Claude 完成，改为 `search` 命令仅返回匹配文档。
 
 ### 4.2 Module API
 
@@ -373,6 +539,14 @@ interface KBStore {
   insertRelation(rel: Relation): void;
   insertKeyword(kw: Keyword): void;
   getDocument(id: string): Document | null;
+  findDocuments(query: QueryOptions): Document[];
+  exists(name: string, type?: string): boolean;
+  searchByKeywords(keywords: string[]): SearchResult[];  // v1.2 新增
+  getRelations(docId: string, direction: 'outgoing' | 'incoming'): Relation[];
+  getImpactedDocuments(docId: string): Document[];
+  getRelationChain(docId: string, type?: string, depth?: number): Graph;
+  getProductOverview(): ProductOverview;
+  getStats(): Stats;
   close(): void;
 }
 
@@ -385,16 +559,17 @@ interface KBParser {
   extractKeywords(content: string, docId: string): Keyword[];
 }
 
-// kb-query.js (knowledge-base.js 导出)
-interface KnowledgeBase {
+// knowledge-base.js (CLI 导出)
+interface KnowledgeBaseCLI {
   sync(): SyncReport;
-  findDocuments(query: QueryOptions): Document[];
+  query(options: QueryOptions): Document[];
+  search(keywords: string[]): SearchResult[];  // v1.2 新增
+  overview(): ProductOverview;
   exists(name: string, type?: string): boolean;
-  getRelations(docId: string, direction: 'outgoing' | 'incoming'): Relation[];
-  getImpactedDocuments(docId: string): Document[];
-  loadContext(userInput: string): ContextResult;
-  getProductOverview(): ProductOverview;
-  getContextForHook(): HookContext;
+  impact(docId: string): Document[];
+  chain(docId: string, options?: ChainOptions): Graph;
+  hookContext(): HookContext;
+  stats(): Stats;
 }
 ```
 
@@ -432,21 +607,34 @@ interface SyncReport {
   errors: Array<{ path: string; error: string }>;
 }
 
-interface ContextResult {
-  relevantDocs: Document[];
-  matchedKeywords: string[];
-  suggestedType: InputType;
+// v1.2 新增：关键词搜索结果
+interface SearchResult extends Document {
+  matchCount: number;           // 匹配的关键词数量
+  matchSources: string[];       // 匹配来源：['title', 'section', 'description']
 }
 
-type InputType =
-  | 'direct_execute'
-  | 'consult'
-  | 'new_requirement'
-  | 'requirement_change'
-  | 'spec_change'
-  | 'irrelevant'
-  | 'unknown';
+interface Stats {
+  documents: number;
+  relations: number;
+  keywords: number;
+}
+
+interface HookContext {
+  productOverview: {
+    name: string;
+    description: string;
+    activeFeatures: string[];
+  };
+  featureList: Array<{
+    name: string;
+    status: string;
+    domain: string;
+  }>;
+  currentFeature: Feature | null;
+}
 ```
+
+> **已移除**：`ContextResult` 和 `InputType`（v1.1 定义），因意图识别职责已移交给 Claude。
 
 ---
 
@@ -474,31 +662,38 @@ type InputType =
 
 ## 7. Implementation Plan <!-- id: design_knowledge_base_impl -->
 
-### Phase 1: 基础框架
+### Phase 1: 基础框架 ✅
 
-1. 创建 `scripts/lib/kb-store.js` - SQLite 存储层
-2. 创建 `scripts/lib/kb-parser.js` - Markdown 解析器
-3. 创建 `scripts/knowledge-base.js` - CLI 入口
+1. 创建 `src/lib/kb-store.js` - SQLite 存储层
+2. 创建 `src/lib/kb-parser.js` - Markdown 解析器
+3. 创建 `src/cli/knowledge-base.js` - CLI 入口
 
-### Phase 2: 核心功能
+### Phase 2: 核心功能 ✅
 
 4. 实现 `sync` 命令 - 全量同步
 5. 实现 `query` 命令 - 文档查询
 6. 实现 `overview` 命令 - 产品概览
+7. 实现 `exists` 命令 - 存在性检查
 
-### Phase 3: 高级功能
+### Phase 3: 高级功能 ✅
 
-7. 实现 `context` 命令 - 上下文加载
 8. 实现 `impact` 命令 - 影响分析
-9. 实现 `getContextForHook()` - Hook 集成
+9. 实现 `chain` 命令 - 关系链查询（BFS）
+10. 实现 `hook-context` 命令 - Hook 上下文（集成 state.json）
+11. 实现 `stats` 命令 - 统计信息
 
-### Phase 4: 测试与集成
+### Phase 4: v1.2 更新
 
-10. 编写单元测试
-11. 集成到工作流
+12. 实现 `search` 命令 - 关键词搜索（替代原 context 命令）
+13. 更新单元测试
+
+### Phase 5: 集成
+
+14. 与 UserPromptSubmit Hook 集成
 
 ---
 
-*Version: v1.0*
+*Version: v1.2*
 *Created: 2025-12-25*
 *Updated: 2025-12-25*
+*Changes: v1.2 根据需求 v1.7 更新：移除意图识别职责（suggestedType），将 loadContext 简化为 searchByKeywords，更新 CLI 命令和接口定义；v1.1 根据评审修复：添加 getRelationChain() BFS 实现、补充 getProductOverview()/loadContext()/getContextForHook() 实现逻辑、明确 state.json 集成方式、新增 chain/hook-context CLI 命令*

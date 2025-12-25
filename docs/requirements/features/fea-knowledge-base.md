@@ -1,13 +1,13 @@
 ---
 type: feature
-version: "1.5"
+version: "1.7"
 priority: P0
 domain: process
 ---
 
 # Feature: Knowledge Base <!-- id: feat_knowledge_base -->
 
-> 产品知识库，提供文档索引、关系查询、上下文加载能力，支撑意图识别和智能路由
+> 产品知识库，提供文档索引、关系查询、上下文加载能力，为 AI 提供结构化产品知识
 
 ---
 
@@ -17,15 +17,28 @@ domain: process
 
 - AI 无法快速定位相关文档，每次需要重新搜索文件
 - 文档间的依赖关系（depends/extends/impacts）没有结构化存储，影响分析靠人工判断
-- 意图识别缺乏产品上下文，难以区分"新增需求"和"需求变更"
+- AI 缺乏产品上下文，难以区分"新增需求"和"需求变更"
 - 咨询类问题无法精准定位到相关 Feature/Capability/Flow
 
 ### 1.2 Value
 
-- **快速上下文加载**：AI 启动时可获取产品概览，输入时可加载相关文档
+- **快速上下文加载**：AI 启动时可获取产品概览，为 Claude 提供结构化产品知识
 - **关系可查询**：支持正向（A 依赖什么）和反向（谁依赖 A）查询
-- **意图识别支撑**：提供 Feature 列表、关键词索引，辅助判断用户输入类型
+- **存在性判断**：提供 `exists()` 接口，帮助 Claude 判断 Feature 是否已存在
 - **无额外元数据**：基于现有规范解析文档内容，不要求增加 frontmatter
+
+### 1.3 职责边界
+
+> 知识库是**静态知识提供者**，不做意图判断
+
+| 知识库职责 | 非知识库职责 |
+|-----------|-------------|
+| ✅ 提供产品结构（Features、Domains） | ❌ 理解用户意图 |
+| ✅ 关键词搜索文档 | ❌ 语义相关性判断 |
+| ✅ 查询文档关系（依赖/影响） | ❌ 判断"这是咨询还是需求" |
+| ✅ 判断 Feature 是否存在 | ❌ 从混合输入提取需求 |
+
+**意图识别由 Claude 主 Agent 根据 workflows.md 规则完成**，知识库仅提供数据支撑。
 
 ---
 
@@ -78,17 +91,18 @@ domain: process
 |------|------|------|
 | `source_id` | TEXT FK | 来源文档 ID |
 | `target_id` | TEXT FK | 目标文档 ID |
-| `type` | TEXT | 关系类型：`depends`/`extends`/`impacts`/`defines`/`consumes` |
+| `type` | TEXT | 关系类型：`depends`/`extends`/`defines`/`consumes` |
 
 **关系类型说明**：
 
-| 类型 | 语义 | 解析来源 |
-|------|------|----------|
-| `depends` | A 依赖 B（A 需要 B 先完成） | Dependencies 章节 |
-| `extends` | A 扩展 B（A 是 B 的增强） | Dependencies 章节 |
-| `impacts` | A 变更影响 B | 影响分析计算 |
-| `defines` | 规范 A 定义文档类型 B | 元规范映射 |
-| `consumes` | A 使用 Capability B | Consumers 章节 |
+| 类型 | 语义 | 解析来源 | 存储 |
+|------|------|----------|------|
+| `depends` | A 依赖 B（A 需要 B 先完成） | Dependencies 章节 | 是 |
+| `extends` | A 扩展 B（A 是 B 的增强） | Dependencies 章节 | 是 |
+| `defines` | 规范 A 定义文档类型 B | 元规范映射 | 是 |
+| `consumes` | A 使用 Capability B | Consumers 章节 | 是 |
+
+> **注**：`impacts`（影响关系）不存储在 relations 表中，而是通过 `getImpactedDocuments()` 反向查询 `depends`/`consumes` 关系计算得到。
 
 ### 4.3 Keyword Table
 
@@ -142,29 +156,20 @@ getImpactedDocuments(docId: string) → Document[]
   用于规范变更和需求变更的影响分析
 ```
 
-### 5.4 上下文加载
+### 5.4 关键词搜索（简化）
 
 ```
-loadContext(userInput: string) → {
-  relevantDocs: Document[],
-  matchedKeywords: string[],
-  suggestedType: InputType
-}
+searchByKeywords(keywords: string[]) → Document[]
 ```
 
-**InputType 定义**（与 flow-workflows §3.1 对齐）：
+基于关键词返回匹配的文档列表。
 
-| 类型 | 说明 | 判断依据 |
-|------|------|----------|
-| `direct_execute` | 直接执行 | 简单明确的操作指令，无需上下文 |
-| `consult` | 产品咨询 | 询问功能、进度、实现方式 |
-| `new_requirement` | 新增需求 | 描述新功能，且 Feature 不存在 |
-| `requirement_change` | 需求变更 | 修改已有功能的行为或描述 |
-| `spec_change` | 规范变更 | 修改文档规范、模板、写作规则 |
-| `irrelevant` | 无关想法 | 与本产品完全无关 |
-| `unknown` | 无法判断 | 需向用户澄清 |
+**说明**：
+- 从用户输入中提取关键词由调用方（Hook 或 Claude）完成
+- 知识库只做简单的关键词匹配，不做语义理解
+- 返回结果按匹配度排序（标题匹配 > 章节匹配 > 描述匹配）
 
-> **注**：知识库提供 `suggestedType` 作为意图识别的参考，最终判断由主 Agent 结合上下文决定。
+> **已移除**：原 `loadContext()` 接口包含 `suggestedType` 意图建议，因意图识别需要语义理解能力，已改由 Claude 主 Agent 完成。
 
 ### 5.5 Hook 集成
 
@@ -233,8 +238,7 @@ getContextForHook() → {
 | 文档索引 | 运行 `knowledge-base sync` | 所有 docs/ 下的 .md 文件被索引 |
 | 关系存储 | 查询 relations 表 | Dependencies 章节正确解析为关系记录 |
 | 关键词查询 | `findDocuments({ keyword: "状态" })` | 返回 state-management 相关文档 |
-| 上下文加载 | `loadContext("登录功能怎么实现的")` | 返回相关 Feature 和 suggestedType: consult |
-| 意图识别 | `loadContext("添加新功能")` | suggestedType 返回 7 种类型之一 |
+| 关键词搜索 | `searchByKeywords(["登录", "认证"])` | 返回相关文档列表，按匹配度排序 |
 | 存在性检查 | `exists("state-management")` | 返回 true |
 | 影响分析 | `getImpactedDocuments("spec-meta")` | 返回依赖该规范的文档列表 |
 | Hook 上下文 | `getContextForHook()` | 返回精简上下文（< 200 tokens） |
@@ -258,7 +262,7 @@ getContextForHook() → {
 
 | Consumer | 使用场景 |
 |----------|----------|
-| flow_workflows | 意图识别、咨询流程、需求流程中的关系分析 |
+| flow_workflows | 咨询流程、需求流程中的关系分析 |
 | feat_change_impact_tracking | 变更影响分析，通过 `getImpactedDocuments()` |
 | UserPromptSubmit Hook | 上下文注入，通过 `getContextForHook()` |
 | requirements-expert | 需求澄清时判断 Feature 是否存在 |
@@ -270,9 +274,9 @@ getContextForHook() → {
 | Type | Path | Description |
 |------|------|-------------|
 | Design | docs/designs/des-knowledge-base.md | 设计文档（设计阶段填写） |
-| Code | scripts/knowledge-base.js | 知识库 CLI（sync/query） |
-| Code | scripts/lib/kb-parser.js | 文档解析器 |
-| Code | scripts/lib/kb-store.js | SQLite 存储层 |
+| Code | src/cli/knowledge-base.js | 知识库 CLI（sync/query） |
+| Code | src/lib/kb-parser.js | 文档解析器 |
+| Code | src/lib/kb-store.js | SQLite 存储层 |
 | Data | .solodevflow/knowledge.db | SQLite 数据库文件 |
 | Test | tests/knowledge-base.test.js | 单元测试 |
 
@@ -289,7 +293,7 @@ getContextForHook() → {
 
 ---
 
-*Version: v1.5*
+*Version: v1.7*
 *Created: 2024-12-24*
 *Updated: 2025-12-25*
-*Changes: v1.5 移除 mtime 字段（全量同步不需要）; v1.4 简化需求：C5 改为全量同步、移除关键词权重系统; v1.3 扩展 suggestedType、添加新 API、添加 Consumers 章节; v1.2 添加 cap-document-validation 依赖; v1.1 添加 frontmatter 可选字段*
+*Changes: v1.7 明确职责边界（静态知识提供者），移除 loadContext 的 suggestedType（意图识别由 Claude 完成），简化为 searchByKeywords; v1.6 明确 impacts 为计算值（非存储），从 relations.type 中移除; v1.5 移除 mtime 字段（全量同步不需要）; v1.4 简化需求：C5 改为全量同步、移除关键词权重系统; v1.3 扩展 suggestedType、添加新 API、添加 Consumers 章节; v1.2 添加 cap-document-validation 依赖; v1.1 添加 frontmatter 可选字段*

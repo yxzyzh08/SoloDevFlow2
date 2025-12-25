@@ -1,6 +1,6 @@
 ---
 type: feature
-version: "9.1"
+version: "10.0"
 priority: P0
 domain: process
 ---
@@ -84,7 +84,7 @@ domain: process
 
 ### 5.1 Schema Version
 
-当前版本：`9.0.0`
+当前版本：`11.0.0`
 
 版本命名规则（semver）：
 - MAJOR：结构性变更（字段增删、嵌套层级变化）
@@ -118,9 +118,10 @@ Feature 分为两种类型，工作流不同：
 
 ```json
 {
-  "schemaVersion": "8.0.0",
+  "schemaVersion": "11.0.0",
   "project": { ... },
   "flow": { ... },
+  "session": { ... },
   "features": { ... },
   "domains": { ... },
   "sparks": [],
@@ -133,6 +134,9 @@ Feature 分为两种类型，工作流不同：
 **单一数据源设计**（v8.0）：
 - `features`：扁平结构，唯一数据源，包含完整数据
 - `domains`：只存储 domain 描述，树形视图由程序从 `features.{}.domain` 派生
+
+**会话状态**（v11.0）：
+- `session`：跨对话保持的临时状态，支持咨询/需求混合场景
 
 ### 5.4 Field Definitions
 
@@ -177,6 +181,66 @@ Feature 分为两种类型，工作流不同：
 - ~~`currentPhase`~~：每个 Feature 已有 `phase` 字段
 - ~~`currentFeature`~~：改为 `activeFeatures` 数组
 - ~~`currentDomain`~~：可从 `features[name].domain` 派生
+
+#### session (required, v11.0 新增)
+
+跨对话保持的会话状态，支持咨询/需求混合场景。
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `mode` | enum | 当前会话模式 |
+| `context` | object | 会话上下文 |
+
+**session.mode 枚举**：
+
+| 值 | 说明 | 进入条件 | 退出条件 |
+|----|------|----------|----------|
+| `idle` | 空闲 | Session 开始 / 任务完成 | 接收到输入 |
+| `consulting` | 咨询中 | 纯咨询或咨询+需求 | 隐式/显式结束 |
+| `delivering` | 需求交付中 | 纯需求 / 处理临时需求 | 交付完成 |
+
+**session.context 字段**：
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `topic` | string\|null | 当前咨询/交付主题 |
+| `relatedFeatures` | string[] | 关联的 Feature 列表 |
+| `pendingRequirements` | array | 暂存的临时需求（咨询中提取） |
+
+**session.context.pendingRequirements 元素格式**：
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | 唯一标识（`pr_{timestamp}_{seq}`） |
+| `content` | string | 需求内容描述 |
+| `extractedAt` | string | 提取时间（ISO 8601） |
+| `source` | string | 来源输入的摘要 |
+
+**示例**：
+```json
+{
+  "session": {
+    "mode": "consulting",
+    "context": {
+      "topic": "登录功能实现方式",
+      "relatedFeatures": ["user-auth"],
+      "pendingRequirements": [
+        {
+          "id": "pr_1703123456789_001",
+          "content": "添加记住密码功能",
+          "extractedAt": "2025-12-25T10:00:00Z",
+          "source": "用户说：顺便加个记住密码"
+        }
+      ]
+    }
+  }
+}
+```
+
+**设计说明**：
+- `pendingRequirements` 在咨询过程中由 AI 提取并暂存
+- 咨询结束后提示用户处理暂存需求
+- `pendingCount` 不存储，由 `pendingRequirements.length` 计算得出
 
 #### features (required)
 
@@ -374,6 +438,7 @@ function buildDomainTree(state) {
 **Required Fields**：
 - `schemaVersion`、`project.name`、`project.type`、`project.createdAt`
 - `flow.researchMethod`、`flow.activeFeatures`
+- `session.mode`、`session.context`
 - `features`、`domains`、`sparks`、`pendingDocs`
 - `metadata.stateFileVersion`、`lastUpdated`
 
@@ -385,6 +450,11 @@ function buildDomainTree(state) {
 - 当 `features.{}.phase` 为 `done` 时，`status` 应为 `completed`
 - `flow.activeFeatures` 中的 Feature 的 `status` 应为 `in_progress` 或 `blocked`（警告级别）
 - `features.{}.scripts` 如存在，每个路径对应的文件应存在（警告级别）
+
+**Session Validation**（v11.0 新增）：
+- `session.mode` 必须是 `idle` / `consulting` / `delivering` 之一
+- `session.context.relatedFeatures` 中的每个 Feature 必须在 `features` 中存在
+- `session.context.pendingRequirements` 中的每个元素必须有 `id`、`content`、`extractedAt` 字段
 
 **Artifacts Validation**（v9.0 新增，v10.0 简化）：
 - `type: code` 的 Feature 必须有 `designDepth` 和 `artifacts` 字段
@@ -409,6 +479,7 @@ function buildDomainTree(state) {
 | v8.0 | 移除 domainTree（冗余），新增 domains（只存描述），树形视图由程序派生 |
 | v9.0 | 新增 designDepth 和 artifacts 字段（code 类型产物追踪，支持代码文件级别影响分析） |
 | v10.0 | 简化 designDepth 为 2 级（none/required），移除 L0-L3 |
+| v11.0 | 新增 session 字段（会话状态：mode + context + pendingRequirements） |
 
 **Schema 升级**：由 AI 直接编辑 state.json 执行，无需迁移脚本。
 
@@ -445,6 +516,13 @@ node scripts/state.js add-subtask <feature> --desc="任务描述" --source=ai
 node scripts/state.js complete-subtask <feature> <subtaskId>
 node scripts/state.js skip-subtask <feature> <subtaskId>
 node scripts/state.js record-commit              # 记录最新 git commit 到 metadata
+
+# Session 操作（v11.0 新增）
+node scripts/state.js session-mode <mode>        # 设置会话模式 (idle/consulting/delivering)
+node scripts/state.js session-topic <topic>      # 设置当前主题
+node scripts/state.js add-pending "<content>"    # 添加暂存需求
+node scripts/state.js clear-pending              # 清空暂存需求
+node scripts/state.js list-pending               # 列出暂存需求
 ```
 
 **直接读取**（适用于小型项目或简单场景）：
@@ -483,7 +561,7 @@ document 类型：pending → drafting → done
 
 ```json
 {
-  "schemaVersion": "9.0.0",
+  "schemaVersion": "11.0.0",
   "project": {
     "name": "SoloDevFlow 2.0",
     "description": "为超级个体打造的自进化人机协作开发系统",
@@ -494,6 +572,14 @@ document 类型：pending → drafting → done
   "flow": {
     "researchMethod": "bottom-up",
     "activeFeatures": ["prd-validator", "state-management"]
+  },
+  "session": {
+    "mode": "idle",
+    "context": {
+      "topic": null,
+      "relatedFeatures": [],
+      "pendingRequirements": []
+    }
   },
   "features": {
     "prd-validator": {
@@ -551,8 +637,8 @@ document 类型：pending → drafting → done
 
 ---
 
-*Version: v9.1*
+*Version: v10.0*
 *Created: 2024-12-20*
-*Updated: 2025-12-24*
-*Changes: v9.1 添加 frontmatter 可选字段（priority, domain）符合 spec-requirements v2.5*
+*Updated: 2025-12-25*
+*Changes: v10.0 新增 session 字段（会话状态管理），支持工作流咨询/交付模式切换和临时需求暂存; v9.1 添加 frontmatter 可选字段（priority, domain）符合 spec-requirements v2.5*
 *Applies to: SoloDevFlow 2.0*

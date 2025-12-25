@@ -16,4 +16,18 @@
 
 ---
 
+## 元规则 (Meta Rules)
+
+### Bilingual Convention
+
+项目全局遵循以下双语约定：
+
+- **文件名 (Filenames)**: 英文
+- **标题和术语 (Titles & Terms)**: 英文
+- **描述和逻辑 (Descriptions & Logic)**: 中文
+
+此规则适用于所有文档、代码注释和规范文件，无需在单个文档中重复声明。
+
+---
+
 

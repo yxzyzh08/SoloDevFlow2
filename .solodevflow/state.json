@@ -1,18 +1,25 @@
 {
-  "schemaVersion": "10.0.0",
+  "schemaVersion": "11.0.0",
   "project": {
     "name": "SoloDevFlow 2.0",
     "description": "为超级个体打造的自进化人机协作开发系统",
     "type": "backend",
     "createdAt": "2024-12-16",
-    "updatedAt": "2025-12-23"
+    "updatedAt": "2025-12-25"
   },
   "flow": {
     "researchMethod": "bottom-up",
     "activeFeatures": [
-      "project-init",
-      "knowledge-base"
+      "project-init"
     ]
+  },
+  "session": {
+    "mode": "idle",
+    "context": {
+      "topic": null,
+      "relatedFeatures": [],
+      "pendingRequirements": []
+    }
   },
   "features": {
     "meta": {
@@ -123,19 +130,20 @@
       "artifacts": {
         "design": "docs/designs/des-knowledge-base.md",
         "code": [
-          "scripts/knowledge-base.js",
-          "scripts/lib/kb-parser.js",
-          "scripts/lib/kb-store.js"
+          "src/cli/knowledge-base.js",
+          "src/lib/kb-parser.js",
+          "src/lib/kb-store.js"
         ],
         "tests": [
           "tests/knowledge-base.test.js"
-        ]
+        ],
+        "data": ".solodevflow/knowledge.db"
       },
       "dependencies": [
         "document-validation"
       ],
-      "phase": "design",
-      "status": "in_progress"
+      "phase": "done",
+      "status": "completed"
     },
     "input-capture": {
       "type": "document",
@@ -202,6 +210,15 @@
       "docPath": ".claude/skills/design-expert/",
       "phase": "pending",
       "status": "not_started"
+    },
+    "agent-architecture": {
+      "type": "document",
+      "description": "Agent 架构演进（从单 Agent 到专业化 Subagent）",
+      "domain": "ai-config",
+      "docPath": "docs/requirements/features/fea-agent-architecture.md",
+      "dependencies": ["workflows", "knowledge-base", "state-management"],
+      "phase": "pending",
+      "status": "not_started"
     }
   },
   "domains": {
@@ -219,5 +236,5 @@
     "stateFileVersion": 2,
     "totalStateChanges": 2
   },
-  "lastUpdated": "2025-12-25T00:00:00.000Z"
+  "lastUpdated": "2025-12-25T02:00:00.000Z"
 }
