@@ -1,13 +1,13 @@
 ---
 type: feature
-version: "1.0"
+version: "2.0"
 priority: P0
 domain: ai-config
 ---
 
 # Feature: Requirements Expert <!-- id: feat_requirements_expert -->
 
-> 需求专家技能，解决需求处理全流程的问题：新增需求澄清、需求变更分析、规范变更影响评估
+> 需求处理领域的方法论专家，提供需求澄清、影响分析、依赖分析的结构化方法
 
 ---
 
@@ -15,33 +15,51 @@ domain: ai-config
 
 ### 1.1 Problem
 
-- **新增需求模糊**：用户描述的需求往往不够清晰，直接编写文档会导致质量低、返工多
-- **新增需求缺乏影响分析**：新增功能可能需要老模块提供新接口，或者深入分析后发现其实是需求变更而非新增
-- **需求变更缺乏影响分析**：修改现有需求时，不知道会影响哪些需求文档和设计文档
-- **规范变更影响范围大**：修改规范文档后，不知道有多少文档需要同步更新
-- **依赖关系未记录**：新增或修改 Feature 时，未分析和记录对其他 Feature 的依赖关系，导致开发阶段无法判断开发顺序
-- **意图识别只是简单判断**：工作流中的意图识别是初步分类，深入需求分析后可能发现分类不准确（如"新增"实际是"变更"）
-- **影响分析边界不清**：需求阶段应只分析到设计文档，代码影响分析是设计阶段的职责
+- **需求澄清缺乏方法论**：用户描述的需求往往模糊，直接编写文档质量低、返工多，缺乏系统化的澄清方法
+- **影响分析边界不清**：不知道应该分析到什么层级（需求/设计/代码），输出格式不统一
+- **依赖关系未规范**：依赖类型（hard/soft）的判断标准不明确，未持久化到文档中
+- **文档类型判断随意**：何时用 Feature、何时用 Capability、何时用 Flow，缺乏明确判断规则
+- **变更处理流程不一致**：新增需求、需求变更、规范变更的处理流程不统一
 
 ### 1.2 Value
 
-- **结构化澄清**：通过 3-5 轮对话，将模糊想法转化为清晰的结构化需求
-- **智能分类**：自动判断变更类型和文档类型，选择正确的处理流程
-- **深度分析可纠偏**：深入需求分析后，可发现初始分类错误并切换到正确流程（如发现"新增"实际是"变更"）
-- **全流程影响分析**：新增、变更、规范变更都进行影响分析，展示对需求文档和设计文档的影响
-- **依赖关系持久化**：分析并记录 Feature 间的依赖关系到文档 Dependencies 章节，为开发阶段提供依据
-- **边界清晰**：需求阶段只分析到设计文档，代码影响留给设计阶段处理
-- **流程闭环**：从澄清到编写/更新文档，再到影响处理，形成完整闭环
+- **结构化澄清方法**：提供 3-5 轮结构化对话框架（问题空间/方案空间/验证空间），将模糊想法转化为清晰需求
+- **标准化分析规则**：定义影响分析边界（需求阶段只到设计文档）、依赖类型判断标准（hard/soft）
+- **统一输出格式**：定义影响分析报告、依赖关系表格、subtasks 清单的标准格式
+- **明确判断规则**：提供文档类型选择的决策树（Feature/Capability/Flow 的适用场景）
+- **方法论可复用**：流程和规则定义在 Skill 中，可持续优化和演进
 
 ### 1.3 Scope Boundary
 
-| Requirements Expert 职责 | 非 Requirements Expert 职责 |
-|-------------------------|---------------------------|
-| 澄清用户的变更意图 | 编写设计文档（由 design-expert 处理） |
-| 判断变更类型（新增/变更/规范变更） | 编写代码（由开发流程处理） |
-| 分析变更影响范围 | 编写测试（由测试流程处理） |
-| 调用 write-* 命令生成文档 | 意图识别（由 CLAUDE.md 定义规则） |
-| 生成 subtasks 处理影响 | 产品咨询回答（由知识库 + AI 处理） |
+**requirements-expert 是方法论专家，不是基础能力提供者**
+
+| Requirements Expert 职责 | 非 Requirements Expert 职责（由 Claude CLI 提供） |
+|-------------------------|-----------------------------------------------|
+| **定义需求澄清方法**（问什么问题、EARS 格式） | 理解用户输入（语言理解能力） |
+| **定义影响分析规则**（边界、深度、输出格式） | 查询知识库（通过 MCP Server） |
+| **定义依赖分析规则**（类型判断标准） | 读取文件（Read/Grep 工具） |
+| **定义文档结构**（调用 write-* 命令） | 网络搜索（WebSearch 工具） |
+| **定义处理流程**（Flow A/B/C） | 路由决策（Claude 根据规范判断） |
+
+**与 Claude CLI 的协作模式**：
+
+```
+用户输入："给状态管理加个版本号字段"
+    ↓
+[Claude CLI] 理解输入 → 判断涉及需求处理
+    ↓
+[Claude CLI] 通过 MCP 查询知识库 → 确认 state-management 存在
+    ↓
+[Claude CLI] 调用 requirements-expert Skill
+    ↓
+[requirements-expert] 提供方法论指导：
+    - 这是"需求变更"（Feature 已存在）
+    - 使用 Flow B 处理
+    - 执行澄清方法（问影响范围、变更原因）
+    - 执行影响分析规则（检查关联设计文档）
+    - 执行依赖分析规则（检查依赖关系变化）
+    - 调用 /write-feature 更新文档
+```
 
 ---
 
@@ -49,120 +67,168 @@ domain: ai-config
 
 | ID | Capability | 描述 |
 |----|------------|------|
-| C1 | 变更类型分类 | 根据用户输入判断：新增需求 / 需求变更 / 规范变更 |
-| C2 | 需求澄清 | 通过结构化对话澄清问题空间、方案空间、验证空间、上下文 |
-| C3 | 文档类型判断 | 根据澄清结果判断应创建的文档类型（PRD/Feature/Capability/Flow） |
-| C4 | 影响分析 | 分析变更对现有需求文档和设计文档的影响 |
-| C5 | 依赖关系分析 | 分析 Feature 对其他 Feature/Capability 的依赖，保存到 Dependencies 章节 |
-| C6 | 文档生成 | 调用 write-* 命令生成或更新规格文档（包含 Dependencies 章节） |
-| C7 | Subtasks 生成 | 规范变更时生成处理清单，逐项处理受影响的文档 |
+| C1 | **需求澄清方法论** | 定义结构化澄清对话框架（问题空间/方案空间/验证空间）、EARS 格式 |
+| C2 | **文档类型判断规则** | 定义 Feature/Capability/Flow 的选择决策树 |
+| C3 | **影响分析规则** | 定义分析边界（需求阶段到设计文档）、分析深度、输出格式 |
+| C4 | **依赖关系分析规则** | 定义依赖类型（hard/soft）判断标准、持久化格式 |
+| C5 | **文档生成规范** | 定义文档结构（调用 write-* 命令）、必选章节 |
+| C6 | **Subtasks 生成规范** | 定义 subtask 格式、处理流程、完成标准 |
 
 ---
 
 ## 3. Workflow <!-- id: feat_requirements_expert_workflow -->
 
-### 3.1 Phase 0: CLASSIFY_CHANGE（变更类型分类）
+### 3.1 Flow A: 新增需求处理
 
-根据用户输入判断变更类型：
-
-```
-用户输入分析
-    ├─ 描述新功能/新想法 → 新增需求
-    ├─ 修改现有功能 → 需求变更
-    │   └─ 信号：提到已有 Feature 名称、"修改"、"更新"、"调整"
-    ├─ 修改规范文档 → 规范变更
-    │   └─ 信号：提到 spec-*.md、"规范"、"标准"、"模板"
-    └─ 无法判断 → 询问用户确认
-```
-
-**判断规则**：
-1. 检查用户输入是否提及已有 Feature（通过知识库 `exists()` 查询）
-2. 检查是否涉及 `docs/specs/` 目录下的文档
-3. 根据关键词匹配（新增/修改/变更/规范）
-
-### 3.2 Flow A: 新增需求
+> **前提**：Claude CLI 已通过 MCP 确认 Feature 不存在，判断为"新增需求"，调用 requirements-expert
 
 ```
-Phase 1: GATHER → 读取项目状态、产品上下文
-Phase 2: CLARIFY → 3-5 轮结构化对话澄清需求
-Phase 3: IMPACT（影响分析）
+Phase 1: GATHER（收集上下文）
+  ├─ Claude 读取 state.json（当前产品状态）
+  ├─ Claude 通过 MCP 查询 productOverview（产品结构）
+  └─ Claude 读取相关规范文档
+
+Phase 2: CLARIFY（需求澄清 - C1 方法论）
+  ├─ 问题空间（3 个核心问题）：
+  │   - 要解决什么问题？（用户痛点）
+  │   - 为什么现有方案不能满足？（gap 分析）
+  │   - 预期达到什么效果？（成功标准）
+  │
+  ├─ 方案空间（2 个核心问题）：
+  │   - 核心能力是什么？（Capabilities 定义）
+  │   - 与现有功能如何协作？（集成点）
+  │
+  └─ 验证空间（1 个核心问题）：
+      - 如何验证达到预期？（验收标准）
+
+Phase 3: IMPACT（影响分析 - C3 规则）
+  ├─ Claude 通过 MCP 查询相关 Feature
   ├─ 检查是否与现有 Feature 功能重叠
-  ├─ 检查是否需要现有模块提供新接口/能力
-  ├─ 检查是否实际是需求变更（现有功能可满足）
-  └─ 如发现是需求变更 → 切换到 Flow B
-Phase 4: DEPENDENCY（依赖关系分析）
-  ├─ 分析新 Feature 依赖哪些现有 Feature/Capability
-  ├─ 分析依赖类型（hard: 必须先完成 / soft: 可选增强）
+  ├─ 检查是否需要现有模块提供新接口
+  ├─ 如发现实际是"需求变更" → 切换到 Flow B
+  └─ 生成影响分析报告（标准格式）
+
+Phase 4: DEPENDENCY（依赖分析 - C4 规则）
+  ├─ 识别新 Feature 依赖的现有 Feature/Capability
+  ├─ 判断依赖类型：
+  │   - hard: 必须先完成（阻塞性依赖）
+  │   - soft: 可选增强（非阻塞）
   └─ 生成 Dependencies 章节内容
-Phase 5: CLASSIFY → 判断文档类型（PRD/Feature/Capability/Flow）
-Phase 6: STRUCTURE → EARS 格式结构化需求
-Phase 7: ACTION → 确认后调用 /write-* 命令（包含 Dependencies 章节）
-Phase 8: VERIFY → 验证文档完整性（包括依赖关系是否记录）
+
+Phase 5: CLASSIFY（文档类型判断 - C2 规则）
+  ├─ Feature：独立业务功能，有完整生命周期
+  ├─ Capability：跨 Feature 的横向公共能力
+  └─ Flow：跨 Feature 的业务流程
+
+Phase 6: STRUCTURE（结构化需求 - C1 方法论）
+  ├─ 使用 EARS 格式结构化需求
+  └─ 确认所有章节内容完整
+
+Phase 7: GENERATE（文档生成 - C5 规范）
+  ├─ 调用对应的 write-* 命令
+  └─ 包含完整的 Dependencies 章节
+
+Phase 8: VERIFY（验证完整性）
+  └─ 检查必选章节、依赖关系是否记录
 ```
 
-**说明**：意图识别阶段的分类是简单判断，需求专家在 CLARIFY 和 IMPACT 阶段会进行深入的需求分析，可能会发现初始分类不准确（如"新增需求"实际是"需求变更"），此时应切换到正确的处理流程。
+**C1 需求澄清方法论细节**：
 
-**依赖关系用途**：开发阶段根据 Dependencies 章节判断开发顺序（hard 依赖必须先完成）。
+- **3-5 轮对话**：不超过 5 轮，每轮聚焦一个空间
+- **渐进式深入**：从问题 → 方案 → 验证，逐步明确
+- **EARS 格式**：结构化表达（When [condition], the [system] shall [action]）
 
-### 3.3 Flow B: 需求变更
+**C3 影响分析规则细节**：
+
+- **分析边界**：需求阶段只分析到设计文档，代码影响由设计阶段处理
+- **例外情况**：designDepth: None 的 Feature，分析到直接关联的脚本
+- **输出格式**：
+  ```markdown
+  ## 影响分析结果
+
+  ### 需求层影响
+  | 文档 | 类型 | 影响原因 | 处理方式 |
+
+  ### 设计层影响
+  | 文档 | 类型 | 影响原因 | 处理方式 |
+
+  ### 处理清单
+  - [ ] 任务1
+  - [ ] 任务2
+  ```
+
+**C4 依赖关系分析规则细节**：
+
+- **hard 依赖判断标准**：
+  - 必须先有 A 才能实现 B
+  - A 的接口是 B 的核心功能基础
+  - 示例：认证模块（A）是用户管理（B）的 hard 依赖
+
+- **soft 依赖判断标准**：
+  - B 没有 A 也能工作，但功能受限
+  - A 是 B 的增强而非基础
+  - 示例：日志模块（A）是大多数功能（B）的 soft 依赖
+
+### 3.2 Flow B: 需求变更处理
+
+> **前提**：Claude CLI 已通过 MCP 确认 Feature 存在，判断为"需求变更"，调用 requirements-expert
 
 ```
-Phase 1b: GATHER
-  ├─ 读取现有需求文档（通过知识库定位）
-  ├─ 读取现有 Dependencies 章节
-  ├─ 了解当前状态和历史上下文
-  └─ 加载相关的设计文档（从 Artifacts 章节）
+Phase 1b: GATHER（收集现有信息）
+  ├─ Claude 通过 MCP 查询现有需求文档
+  ├─ Claude 读取现有 Dependencies 章节
+  ├─ Claude 读取关联的设计文档（从 Artifacts 章节）
+  └─ Claude 了解历史上下文（从文档 Changes 记录）
 
-Phase 2b: CLARIFY
-  ├─ 澄清变更内容（改什么）
-  ├─ 澄清变更原因（为什么改）
-  └─ 澄清变更范围（只改这个还是连带其他）
+Phase 2b: CLARIFY（澄清变更内容 - C1 方法论）
+  ├─ 变更什么？（具体改动点）
+  ├─ 为什么改？（变更原因）
+  └─ 影响范围？（只改这个还是连带其他）
 
-Phase 3b: IMPACT（影响分析）
-  ├─ 检查是否有关联的设计文档 → 标记需要更新
-  ├─ 检查是否有依赖此 Feature 的其他 Feature → 标记需要评估
-  └─ 生成影响清单
+Phase 3b: IMPACT（影响分析 - C3 规则）
+  ├─ Claude 通过 MCP 查询依赖此 Feature 的其他 Feature
+  ├─ 检查关联的设计文档是否需要更新
+  └─ 生成影响分析报告
 
-Phase 4b: DEPENDENCY（依赖关系更新）
-  ├─ 变更是否引入新的依赖？→ 添加到 Dependencies
+Phase 4b: DEPENDENCY（依赖关系更新 - C4 规则）
+  ├─ 变更是否引入新依赖？→ 添加到 Dependencies
   ├─ 变更是否移除某些依赖？→ 从 Dependencies 删除
   └─ 生成更新后的 Dependencies 章节
 
-Phase 5b: CONFIRM
+Phase 5b: CONFIRM（变更确认）
   ├─ 展示变更摘要
   ├─ 展示影响范围
   ├─ 展示依赖关系变化
   └─ 等待用户确认
 
-Phase 6b: ACTION
-  ├─ 调用 /write-feature 更新需求文档（包含更新后的 Dependencies）
+Phase 6b: UPDATE（文档更新 - C5 规范）
+  ├─ 调用 /write-feature 更新需求文档
   └─ 生成后续任务清单（更新设计文档）
 
-Phase 7b: VERIFY
-  └─ 验证文档更新完整性（包括依赖关系是否正确更新）
+Phase 7b: VERIFY（验证完整性）
+  └─ 验证依赖关系是否正确更新
 ```
 
-### 3.4 Flow C: 规范变更
+### 3.3 Flow C: 规范变更处理
+
+> **前提**：Claude CLI 识别到用户要修改规范文档（spec-*.md），调用 requirements-expert
 
 ```
-Phase 1c: GATHER
-  ├─ 读取目标规范文档
+Phase 1c: GATHER（读取规范）
+  ├─ Claude 读取目标规范文档
   └─ 理解规范的作用范围
 
-Phase 2c: CLARIFY
-  ├─ 澄清变更内容（改什么）
-  ├─ 澄清变更原因（为什么改）
-  └─ 澄清变更范围（新增章节/修改章节/删除章节）
+Phase 2c: CLARIFY（澄清变更 - C1 方法论）
+  ├─ 改什么？（新增/修改/删除章节）
+  ├─ 为什么改？（变更原因）
+  └─ 影响范围？（哪些文档依赖此规范）
 
-Phase 3c: IMPACT（影响分析）
-  ├─ 运行 `node scripts/analyze-impact.js <spec-file>`
+Phase 3c: IMPACT（影响分析 - C3 规则）
+  ├─ 运行 analyze-impact.js <spec-file>
   ├─ 获取所有受影响的文档列表
-  │   ├─ 规范 → 需求文档（如 spec-requirements.md → 所有 Feature Spec）
-  │   ├─ 规范 → 设计文档（如 spec-design.md → 所有 Design Doc）
-  │   └─ 规范 → 代码（如有模板/生成器）
-  └─ 生成处理清单（subtasks）
+  └─ 生成处理清单（subtasks - C6 规范）
 
-Phase 4c: CONFIRM & ACTION
+Phase 4c: CONFIRM & EXECUTE（确认并执行）
   ├─ 展示影响范围和处理清单
   ├─ 用户确认后，逐项处理：
   │   ├─ 更新规范文档本身
@@ -173,107 +239,36 @@ Phase 4c: CONFIRM & ACTION
   └─ 汇报处理结果
 ```
 
+**C6 Subtasks 生成规范细节**：
+
+```markdown
+## Subtasks
+
+- [ ] 更新 fea-xxx.md §2 Capabilities 章节
+- [ ] 评估 fea-yyy.md 是否需要修改
+- [ ] 标记 des-xxx.md 需要设计阶段处理
+```
+
+格式要求：
+- 使用 Markdown checklist 格式
+- 每个 subtask 明确操作对象和操作内容
+- 区分"更新"（必须做）和"评估"（可能需要）
+
 ---
 
-## 4. Impact Analysis <!-- id: feat_requirements_expert_impact -->
-
-### 4.1 影响分析触发条件
-
-| 变更类型 | 触发影响分析 | 触发依赖分析 | 分析方式 |
-|----------|-------------|-------------|----------|
-| 新增需求 | 必须 | 必须 | 检查与现有 Feature 的关系、是否需要老模块提供新能力、分析依赖关系 |
-| 需求变更 | 必须 | 必须 | 检查关联的需求文档和设计文档、更新依赖关系 |
-| 规范变更 | 必须 | 不适用 | 运行 analyze-impact.js 全量扫描 |
-
-### 4.2 影响分析边界
-
-**需求阶段的影响分析只分析到设计文档，不分析代码影响**。
-
-| 分析范围 | 需求阶段 | 设计阶段 |
-|----------|----------|----------|
-| 需求文档（PRD/Feature/Capability/Flow） | ✅ 分析 | - |
-| 设计文档（des-*.md） | ✅ 分析 | ✅ 分析 |
-| 代码文件 | ❌ 不分析 | ✅ 分析 |
-| 测试文件 | ❌ 不分析 | ✅ 分析 |
-
-**例外情况**：当需求文档的 Artifacts 直接关联脚本（designDepth: None，无设计文档）时，影响分析会包含这些脚本文件。
-
-```
-Feature Spec (Artifacts)
-  ├─ Design: des-xxx.md → 分析到此为止（正常情况）
-  │     └─ Code: src/xxx.js → 设计阶段分析
-  │
-  └─ Code: scripts/xxx.js → 无设计文档，需求阶段分析（例外）
-```
-
-### 4.3 影响分析输出格式
-
-```markdown
-## 影响分析结果
-
-### 变更文档
-- {变更的文档路径}
-
-### 需求层影响
-| 文档 | 类型 | 影响原因 | 处理方式 |
-|------|------|----------|----------|
-| fea-xxx.md | Feature | 需要提供新接口 | 更新 Capabilities 章节 |
-| fea-yyy.md | Feature | 功能边界调整 | 评估是否需要修改 |
-
-### 设计层影响
-| 文档 | 类型 | 影响原因 | 处理方式 |
-|------|------|----------|----------|
-| des-xxx.md | Design | 接口变更 | 设计阶段处理 |
-
-### 直接关联脚本（无设计文档）
-| 文件 | 关联需求 | 影响原因 |
-|------|----------|----------|
-| scripts/xxx.js | fea-yyy | 需要同步更新 |
-
-### 处理清单
-1. [ ] 更新 fea-xxx.md 的 Capabilities 章节
-2. [ ] 评估 fea-yyy.md 是否需要修改
-3. [ ] 标记 des-xxx.md 需要设计阶段处理
-```
-
-### 4.4 依赖关系分析
-
-**依赖关系必须保存到文档的 Dependencies 章节**，供开发阶段使用。
-
-#### 依赖类型
-
-| 类型 | 含义 | 开发阶段影响 |
-|------|------|-------------|
-| `hard` | 必须先完成 | 被依赖的 Feature 必须先开发完成 |
-| `soft` | 可选增强 | 可以并行开发，后续集成 |
-
-#### 依赖分析输出格式
-
-```markdown
-## Dependencies <!-- id: feat_{name}_dependencies -->
+## 4. Dependencies <!-- id: feat_requirements_expert_dependencies -->
 
 | Dependency | Type | 说明 |
 |------------|------|------|
-| feat_auth | hard | 需要认证模块提供用户身份验证接口 |
-| feat_logging | soft | 可选集成日志记录能力 |
-| cap_cache | hard | 依赖缓存能力提升性能 |
-```
+| spec-requirements | hard | 依赖需求规范定义的文档结构 |
+| feat_knowledge_base | hard | **通过 MCP Server 集成**，提供 Feature 存在性查询、相关文档搜索、产品概览 |
+| feat_change_impact_tracking | hard | 依赖影响分析脚本（analyze-impact.js） |
+| feat_write_commands | hard | 依赖 write-* 命令生成文档 |
 
-#### 依赖变更检测（需求变更时）
-
-```markdown
-## 依赖关系变化
-
-### 新增依赖
-| Dependency | Type | 原因 |
-|------------|------|------|
-| feat_xxx | hard | 变更后需要 xxx 提供新接口 |
-
-### 移除依赖
-| Dependency | 原因 |
-|------------|------|
-| feat_yyy | 变更后不再需要 yyy 的能力 |
-```
+**重要说明**：
+- knowledge_base 应作为 **MCP Server** 实现，而不是 Skill 内部能力
+- requirements-expert 通过 Claude CLI 的 MCP 集成访问知识库
+- 不在 Skill 内部实现知识库查询逻辑
 
 ---
 
@@ -283,58 +278,51 @@ Feature Spec (Artifacts)
 
 | Item | 人类验收方式 | 通过标准 |
 |------|-------------|----------|
-| 变更类型分类 | 人类观察 AI 对输入的分类结果 | AI 能区分新增需求、需求变更、规范变更，分类错误时人类可纠正 |
 | 需求澄清质量 | 人类评估澄清对话的有效性 | 澄清问题切中要害，3-5 轮后需求明显比输入时清晰 |
+| EARS 格式应用 | 人类审核结构化需求 | 需求使用 EARS 格式表达，结构清晰 |
 | 影响分析完整性 | 人类审核影响分析结果 | 列出的影响范围与人类预期一致，无重大遗漏 |
-| 依赖关系准确性 | 人类审核 Dependencies 章节 | 依赖关系符合实际，Type（hard/soft）判断合理 |
 | 影响分析边界 | 人类检查分析结果 | 需求阶段只分析到设计文档，不越界分析代码（除非无设计文档） |
-| 流程切换正确 | 人类观察流程切换时机 | 深入分析后发现分类错误时，AI 能主动切换到正确流程 |
+| 依赖关系准确性 | 人类审核 Dependencies 章节 | 依赖关系符合实际，Type（hard/soft）判断合理 |
+| 文档类型判断 | 人类确认文档类型选择 | Feature/Capability/Flow 选择符合判断规则 |
 | 文档生成质量 | 人类审核生成的文档 | 文档符合规范，包含完整的 Dependencies 章节 |
 | Subtasks 可执行 | 人类审核处理清单 | 清单条目明确、可执行，覆盖所有受影响文档 |
 
 ---
 
-## 6. Dependencies <!-- id: feat_requirements_expert_dependencies -->
-
-| Dependency | Type | 说明 |
-|------------|------|------|
-| spec-requirements | hard | 依赖需求规范定义的文档结构 |
-| feat_knowledge_base | hard | 依赖知识库判断 Feature 是否存在 |
-| feat_change_impact_tracking | hard | 依赖影响分析脚本 |
-| feat_write_commands | hard | 依赖 write-* 命令生成文档 |
-
----
-
-## 7. Consumers <!-- id: feat_requirements_expert_consumers -->
+## 6. Consumers <!-- id: feat_requirements_expert_consumers -->
 
 | Consumer | 使用场景 |
 |----------|----------|
-| flow_workflows | 需求交付流程中调用需求专家澄清需求 |
-| CLAUDE.md | 定义何时触发需求专家技能 |
+| CLAUDE.md | 定义何时触发 requirements-expert Skill |
+| flow_workflows | 需求交付流程中调用需求专家 |
 
 ---
 
-## 8. Artifacts <!-- id: feat_requirements_expert_artifacts -->
+## 7. Artifacts <!-- id: feat_requirements_expert_artifacts -->
 
 | Type | Path | Description |
 |------|------|-------------|
 | Skill | .claude/skills/requirements-expert/SKILL.md | 技能定义文件 |
-| Reference | .claude/skills/requirements-expert/reference/ | 参考资料（澄清清单、EARS 格式） |
+| Reference | .claude/skills/requirements-expert/reference/clarify-checklist.md | 澄清问题清单 |
+| Reference | .claude/skills/requirements-expert/reference/ears-format.md | EARS 格式说明 |
+| Reference | .claude/skills/requirements-expert/reference/impact-analysis-template.md | 影响分析报告模板 |
+| Reference | .claude/skills/requirements-expert/reference/dependency-rules.md | 依赖类型判断规则 |
 
 **Design Depth**: None（文档型 Feature，无需设计文档）
 
 ---
 
-## 9. Open Questions <!-- id: feat_requirements_expert_questions -->
+## 8. Open Questions <!-- id: feat_requirements_expert_questions -->
 
 | Question | Context | Impact |
 |----------|---------|--------|
-| 是否需要自动触发？ | 当前需要用户显式调用 /requirements-expert | 可在 CLAUDE.md 中定义智能触发规则 |
-| 影响分析的深度？ | 当前仅分析直接依赖 | 可扩展为多层级联影响分析 |
+| 知识库 MCP Server 何时实现？ | requirements-expert 依赖知识库查询 | 在知识库 MCP 实现前，需要临时方案（Read/Grep） |
+| EARS 格式是否强制？ | 当前定义为推荐格式 | 可在实践中调整为可选 |
+| 影响分析深度是否可配置？ | 当前仅分析直接依赖 | 可扩展为多层级联影响分析 |
 
 ---
 
-*Version: v1.2*
+*Version: v2.0*
 *Created: 2025-12-25*
 *Updated: 2025-12-25*
-*Changes: v1.2 新增依赖关系分析能力（C5），依赖关系必须保存到文档 Dependencies 章节供开发阶段使用；v1.1 新增需求也需要影响分析（检查与现有模块的关系）；明确影响分析边界（只到设计文档，除非无设计直接关联代码）*
+*Changes: v2.0 重大重构：基于"集成而非重造"原则，删除与 Claude CLI 重复的能力（C1/C2/C10/C11、Flow D/M），专注于需求处理领域的方法论（澄清方法、影响分析规则、依赖分析规则、文档生成规范）；明确知识库应作为 MCP Server 实现*

@@ -1,6 +1,6 @@
 ---
 type: prd
-version: "3.0"
+version: "3.5"
 ---
 
 # SoloDevFlow 2.0 <!-- id: prod_solodevflow -->
@@ -62,6 +62,58 @@ version: "3.0"
    - 生成 subtasks 逐个处理
 
 **详细执行规范**：参见 [workflows](flows/flow-workflows.md)
+
+### 1.5 Design Principles <!-- id: prod_design_principles -->
+
+**核心原则：集成而非重造**
+
+SoloDevFlow 2.0 基于 **Claude Code CLI** 构建，核心价值是**规范+方法论**，而非重新实现 Claude CLI 已有的基础能力。
+
+#### 能力分层
+
+| 层级 | 提供者 | 职责 | 示例 |
+|------|--------|------|------|
+| **基础能力层** | Claude Code CLI | 语言理解、工具调用、MCP 集成、上下文管理 | 理解用户意图、Read/Grep/WebSearch、知识库 MCP Server、Session 管理 |
+| **规范引导层** | SoloDevFlow | 文档规范、流程定义、状态管理 | Feature Spec 结构、workflows 流程、state.json schema |
+| **方法论层** | SoloDevFlow | 领域专业方法、分析规则、输出标准 | 需求澄清方法（EARS）、影响分析规则、依赖类型定义 |
+
+#### 设计决策指南
+
+**当设计新 Feature 时，遵循以下原则**：
+
+| 能力类型 | ✅ 利用 Claude CLI | ❌ 不要重造 | SoloDevFlow 的职责 |
+|---------|------------------|------------|-------------------|
+| **意图理解** | Claude 的语言理解能力 | 不要实现意图识别系统 | 通过 CLAUDE.md/Skill 引导理解方向 |
+| **知识查询** | MCP Server 集成 | 不要在 Skill 内部实现查询逻辑 | 定义知识库 Schema（文档结构、关系类型） |
+| **文件操作** | Read/Grep/Glob/Edit/Write 工具 | 不要用 Bash cat/grep 替代 | 定义何时读取哪些文件（规范、模板） |
+| **网络搜索** | WebSearch 工具 | 不要实现搜索 API 调用 | 定义何时需要搜索外部知识 |
+| **上下文管理** | Session 机制、对话历史 | 不要重复管理上下文 | 定义持久化状态（state.json） |
+| **需求澄清** | - | - | ✅ 定义澄清方法论（问什么问题、EARS 格式） |
+| **影响分析** | - | - | ✅ 定义分析规则（边界、深度、输出格式） |
+| **文档生成** | - | - | ✅ 定义文档结构和模板（PRD/Feature/Design） |
+| **状态追踪** | - | - | ✅ 定义状态机制（state.json schema） |
+
+#### 典型反例
+
+**❌ 错误示例**：在 Skill 中实现知识库查询
+```markdown
+Skill 内部逻辑：
+  1. 连接 SQLite 数据库
+  2. 执行 SQL 查询
+  3. 解析结果返回
+```
+**问题**：重复实现了 MCP Server 应该提供的能力。
+
+**✅ 正确示例**：通过 MCP 集成知识库
+```markdown
+知识库作为 MCP Server：
+  - 提供标准 MCP 接口（query/search/exists）
+  - Claude CLI 通过 MCP 调用
+
+Skill 职责：
+  - 定义何时查询知识库
+  - 定义如何使用查询结果（判断新增 vs 变更）
+```
 
 ---
 
@@ -322,11 +374,12 @@ Agent 架构演进，从单 Agent 演进到专业化 Subagent 架构。支持多
 
 ### Design Principles
 
-核心设计原则定义在设计文档规范中：[spec-design.md](../specs/spec-design.md)
+- **产品级设计原则**：参见 [§1.5 Design Principles](#prod_design_principles)（集成而非重造）
+- **技术级设计原则**：参见 [spec-design.md](../specs/spec-design.md)（架构、接口、数据模型设计原则）
 
 ---
 
-*Version: v3.4*
+*Version: v3.5*
 *Created: 2024-12-16*
 *Updated: 2025-12-25*
-*Changes: v3.4 扩展 requirements-expert 职责（新增需求+需求变更+规范变更+影响分析）；v3.3 修复引用路径错误；v3.2 新增 document-validation Capability（文档验证能力）；v3.1 新增 knowledge-base Feature；v3.0 删除 spark-box，改为临时需求机制*
+*Changes: v3.5 新增 §1.5 Design Principles（核心原则：集成而非重造），明确 SoloDevFlow 与 Claude CLI 的能力分层；v3.4 扩展 requirements-expert 职责（新增需求+需求变更+规范变更+影响分析）；v3.3 修复引用路径错误；v3.2 新增 document-validation Capability（文档验证能力）；v3.1 新增 knowledge-base Feature；v3.0 删除 spark-box，改为临时需求机制*
