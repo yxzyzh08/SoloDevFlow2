@@ -1,14 +1,13 @@
 {
-  "generated": "2025-12-28T14:30:43.271+08:00",
+  "generated": "2025-12-28T20:45:12.086+08:00",
   "summary": {
-    "total": 18,
-    "done": 7,
-    "in_progress": 5,
-    "not_started": 6
+    "total": 19,
+    "done": 8,
+    "in_progress": 3,
+    "not_started": 8
   },
   "activeFeatures": [
-    "project-init",
-    "requirements-expert"
+    "project-init"
   ],
   "documents": [
     {
@@ -82,31 +81,6 @@
       "priority": "P0",
       "domain": "process",
       "path": "docs/requirements/capabilities/cap-document-validation.md"
-    },
-    {
-      "id": "agent-architecture",
-      "type": "feature",
-      "title": "Agent Architecture",
-      "workMode": "document",
-      "status": "not_started",
-      "phase": null,
-      "priority": "P2",
-      "domain": "ai-config",
-      "path": "docs/requirements/features/fea-agent-architecture.md",
-      "dependencies": [
-        {
-          "id": "workflows",
-          "type": "hard"
-        },
-        {
-          "id": "knowledge-base",
-          "type": "soft"
-        },
-        {
-          "id": "state-management",
-          "type": "hard"
-        }
-      ]
     },
     {
       "id": "change-impact-tracking",
@@ -234,35 +208,6 @@
       ]
     },
     {
-      "id": "requirements-expert",
-      "type": "feature",
-      "title": "Requirements Expert",
-      "workMode": "document",
-      "status": "in_progress",
-      "phase": null,
-      "priority": "P0",
-      "domain": "ai-config",
-      "path": "docs/requirements/features/fea-requirements-expert.md",
-      "dependencies": [
-        {
-          "id": "flow-requirements",
-          "type": "hard"
-        },
-        {
-          "id": "spec-requirements",
-          "type": "hard"
-        },
-        {
-          "id": "change-impact-tracking",
-          "type": "soft"
-        },
-        {
-          "id": "write-commands",
-          "type": "hard"
-        }
-      ]
-    },
-    {
       "id": "review-assistant",
       "type": "feature",
       "title": "Review Assistant",
@@ -330,6 +275,60 @@
       ]
     },
     {
+      "id": "design-flow",
+      "type": "flow",
+      "title": "Design",
+      "workMode": "document",
+      "status": "not_started",
+      "phase": null,
+      "priority": "P0",
+      "domain": "process",
+      "path": "docs/requirements/flows/flow-design.md",
+      "dependencies": [
+        {
+          "id": "flow-workflows",
+          "type": "hard"
+        },
+        {
+          "id": "flow-requirements",
+          "type": "hard"
+        }
+      ]
+    },
+    {
+      "id": "implementation-flow",
+      "type": "flow",
+      "title": "Implementation",
+      "workMode": "document",
+      "status": "not_started",
+      "phase": null,
+      "priority": "P0",
+      "domain": "process",
+      "path": "docs/requirements/flows/flow-implementation.md",
+      "dependencies": [
+        {
+          "id": "flow-workflows",
+          "type": "hard"
+        },
+        {
+          "id": "flow-design",
+          "type": "soft"
+        },
+        {
+          "id": "flow-requirements",
+          "type": "hard"
+        },
+        {
+          "id": "spec-dev",
+          "type": "soft"
+        },
+        {
+          "id": "spec-test",
+          "type": "soft"
+        }
+      ]
+    },
+    {
       "id": "refactoring",
       "type": "flow",
       "title": "Refactoring",
@@ -370,12 +369,41 @@
       ]
     },
     {
+      "id": "testing-flow",
+      "type": "flow",
+      "title": "Testing",
+      "workMode": "document",
+      "status": "not_started",
+      "phase": null,
+      "priority": "P0",
+      "domain": "process",
+      "path": "docs/requirements/flows/flow-testing.md",
+      "dependencies": [
+        {
+          "id": "flow-workflows",
+          "type": "hard"
+        },
+        {
+          "id": "flow-implementation",
+          "type": "hard"
+        },
+        {
+          "id": "flow-requirements",
+          "type": "hard"
+        },
+        {
+          "id": "spec-test",
+          "type": "soft"
+        }
+      ]
+    },
+    {
       "id": "workflows",
       "type": "flow",
       "title": "Workflows",
       "workMode": "document",
-      "status": "in_progress",
-      "phase": "feature_implementation",
+      "status": "done",
+      "phase": null,
       "priority": "P0",
       "domain": "process",
       "path": "docs/requirements/flows/flow-workflows.md",
@@ -385,7 +413,7 @@
           "type": "hard"
         },
         {
-          "id": "input-capture",
+          "id": "hooks-integration",
           "type": "soft"
         },
         {
@@ -484,31 +512,6 @@
       }
     ],
     "feature": [
-      {
-        "id": "agent-architecture",
-        "type": "feature",
-        "title": "Agent Architecture",
-        "workMode": "document",
-        "status": "not_started",
-        "phase": null,
-        "priority": "P2",
-        "domain": "ai-config",
-        "path": "docs/requirements/features/fea-agent-architecture.md",
-        "dependencies": [
-          {
-            "id": "workflows",
-            "type": "hard"
-          },
-          {
-            "id": "knowledge-base",
-            "type": "soft"
-          },
-          {
-            "id": "state-management",
-            "type": "hard"
-          }
-        ]
-      },
       {
         "id": "change-impact-tracking",
         "type": "feature",
@@ -635,35 +638,6 @@
         ]
       },
       {
-        "id": "requirements-expert",
-        "type": "feature",
-        "title": "Requirements Expert",
-        "workMode": "document",
-        "status": "in_progress",
-        "phase": null,
-        "priority": "P0",
-        "domain": "ai-config",
-        "path": "docs/requirements/features/fea-requirements-expert.md",
-        "dependencies": [
-          {
-            "id": "flow-requirements",
-            "type": "hard"
-          },
-          {
-            "id": "spec-requirements",
-            "type": "hard"
-          },
-          {
-            "id": "change-impact-tracking",
-            "type": "soft"
-          },
-          {
-            "id": "write-commands",
-            "type": "hard"
-          }
-        ]
-      },
-      {
         "id": "review-assistant",
         "type": "feature",
         "title": "Review Assistant",
@@ -733,6 +707,60 @@
     ],
     "flow": [
       {
+        "id": "design-flow",
+        "type": "flow",
+        "title": "Design",
+        "workMode": "document",
+        "status": "not_started",
+        "phase": null,
+        "priority": "P0",
+        "domain": "process",
+        "path": "docs/requirements/flows/flow-design.md",
+        "dependencies": [
+          {
+            "id": "flow-workflows",
+            "type": "hard"
+          },
+          {
+            "id": "flow-requirements",
+            "type": "hard"
+          }
+        ]
+      },
+      {
+        "id": "implementation-flow",
+        "type": "flow",
+        "title": "Implementation",
+        "workMode": "document",
+        "status": "not_started",
+        "phase": null,
+        "priority": "P0",
+        "domain": "process",
+        "path": "docs/requirements/flows/flow-implementation.md",
+        "dependencies": [
+          {
+            "id": "flow-workflows",
+            "type": "hard"
+          },
+          {
+            "id": "flow-design",
+            "type": "soft"
+          },
+          {
+            "id": "flow-requirements",
+            "type": "hard"
+          },
+          {
+            "id": "spec-dev",
+            "type": "soft"
+          },
+          {
+            "id": "spec-test",
+            "type": "soft"
+          }
+        ]
+      },
+      {
         "id": "refactoring",
         "type": "flow",
         "title": "Refactoring",
@@ -773,12 +801,41 @@
         ]
       },
       {
+        "id": "testing-flow",
+        "type": "flow",
+        "title": "Testing",
+        "workMode": "document",
+        "status": "not_started",
+        "phase": null,
+        "priority": "P0",
+        "domain": "process",
+        "path": "docs/requirements/flows/flow-testing.md",
+        "dependencies": [
+          {
+            "id": "flow-workflows",
+            "type": "hard"
+          },
+          {
+            "id": "flow-implementation",
+            "type": "hard"
+          },
+          {
+            "id": "flow-requirements",
+            "type": "hard"
+          },
+          {
+            "id": "spec-test",
+            "type": "soft"
+          }
+        ]
+      },
+      {
         "id": "workflows",
         "type": "flow",
         "title": "Workflows",
         "workMode": "document",
-        "status": "in_progress",
-        "phase": "feature_implementation",
+        "status": "done",
+        "phase": null,
         "priority": "P0",
         "domain": "process",
         "path": "docs/requirements/flows/flow-workflows.md",
@@ -788,7 +845,7 @@
             "type": "hard"
           },
           {
-            "id": "input-capture",
+            "id": "hooks-integration",
             "type": "soft"
           },
           {

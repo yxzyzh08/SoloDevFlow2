@@ -3,6 +3,7 @@
 > AI 执行规范：定义 AI 如何响应用户输入并维护状态
 
 **需求文档**：[flow-workflows.md](../../docs/requirements/flows/flow-workflows.md)
+> 本文档由 AI 根据需求文档生成。需求文档是 Truth，本文档是派生物。
 
 ---
 
@@ -102,7 +103,7 @@
 
 ## 5. Requirements Flow（需求流程）
 
-> 方法论参考：[fea-requirements-expert.md](../../docs/requirements/features/fea-requirements-expert.md)
+> 详细流程：[flow-requirements.md](../../docs/requirements/flows/flow-requirements.md)
 
 ### 5.1 流程选择
 
@@ -333,7 +334,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 ---
 
-*Version: v8.0*
-*Aligned with: flow-workflows.md v7.0*
+*Version: v8.1*
+*Aligned with: flow-workflows.md v7.1*
 *Updated: 2025-12-28*
-*Changes: v8.0 移除 session 结构，使用立即澄清代替 pendingRequirements*
+*Changes: v8.1 明确本文档为 AI 生成的派生物，修复对已删除 fea-requirements-expert.md 的引用*

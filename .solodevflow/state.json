@@ -24,19 +24,62 @@
     "lastGitCommit": "",
     "lastGitCommitMessage": "",
     "lastGitCommitAt": "",
-    "stateFileVersion": 72,
+    "stateFileVersion": 137,
     "totalStateChanges": 22
   },
-  "lastUpdated": "2025-12-28T14:31:01.763+08:00",
+  "lastUpdated": "2025-12-28T20:52:18.621+08:00",
   "subtasks": [
     {
-      "id": "st_1766903410353_001",
+      "id": "st_1766914641599_002",
       "featureId": "workflows",
-      "description": "Fix setPhase to sync status with phase",
+      "description": "等待人类评审需求文档",
+      "status": "in_progress",
+      "source": "ai",
+      "createdAt": "2025-12-28T17:37:21.599+08:00",
+      "updatedAt": "2025-12-28T17:38:41.272+08:00"
+    },
+    {
+      "id": "st_1766926287809_002",
+      "featureId": "workflows",
+      "description": "修复版本号不一致（frontmatter vs 底部）",
       "status": "completed",
       "source": "ai",
-      "createdAt": "2025-12-28T14:30:10.354+08:00",
-      "completedAt": "2025-12-28T14:31:01.763+08:00"
+      "createdAt": "2025-12-28T20:51:27.809+08:00",
+      "completedAt": "2025-12-28T20:52:18.621+08:00"
+    },
+    {
+      "id": "st_1766926287809_003",
+      "featureId": "workflows",
+      "description": "重新编号函数列表（C1-C9）",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-28T20:51:27.809+08:00",
+      "completedAt": "2025-12-28T20:52:18.621+08:00"
+    },
+    {
+      "id": "st_1766926287809_004",
+      "featureId": "workflows",
+      "description": "澄清脚本路径处理",
+      "status": "in_progress",
+      "source": "ai",
+      "createdAt": "2025-12-28T20:51:27.809+08:00",
+      "updatedAt": "2025-12-28T20:52:18.621+08:00"
+    },
+    {
+      "id": "st_1766926287809_005",
+      "featureId": "workflows",
+      "description": "澄清自举后目录结构",
+      "status": "pending",
+      "source": "ai",
+      "createdAt": "2025-12-28T20:51:27.809+08:00"
+    },
+    {
+      "id": "st_1766926287809_006",
+      "featureId": "workflows",
+      "description": "澄清 init vs upgrade 命令行为",
+      "status": "pending",
+      "source": "ai",
+      "createdAt": "2025-12-28T20:51:27.809+08:00"
     }
   ]
 }

@@ -1,6 +1,6 @@
 ---
 type: prd
-version: "3.9"
+version: "4.2"
 ---
 
 # SoloDevFlow 2.0 <!-- id: prod_solodevflow -->
@@ -157,7 +157,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 | **specification** | 规范文档（元规范/需求/设计/开发/测试） | 5 |
 | **process** | 协作流程（核心流程/状态管理/输入捕获/影响追踪/文档验证/项目重构） | 6 |
 | **tooling** | 独立工具（项目初始化） | 1 |
-| **ai-config** | AI 协作配置（Hooks/CLAUDE.md/命令/技能/架构演进） | 5 |
+| **ai-config** | AI 协作配置（Hooks/CLAUDE.md/命令/审核/架构演进） | 4 |
 
 ---
 
@@ -254,13 +254,6 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 - **Type**: document
 - **Feature**: [fea-input-capture.md](features/fea-input-capture.md)
 
-#### ~~knowledge-base~~ (已废弃) <!-- id: feat_ref_knowledge_base -->
-
-> **v12.0.0 废弃**：知识库功能已被 Claude CLI 原生能力 + 文档索引（index.js）取代。
->
-> 原设计使用 SQLite 存储文档索引，但发现 Claude CLI 已具备强大的文件搜索能力。
-> 现改为轻量级 index.json 扫描脚本，利用 Claude 原生 Glob/Grep 能力。
-
 #### document-validation <!-- id: cap_ref_document_validation -->
 
 文档格式验证能力，确保需求/设计/测试文档符合规范定义的结构。验证 Frontmatter、必选章节、锚点格式、引用有效性。被 change-impact-tracking 消费。
@@ -328,19 +321,6 @@ AI 行为入口，解决 AI 对话启动时缺乏上下文和导航的问题。�
 - **Feature**: [fea-write-commands.md](features/fea-write-commands.md)
 - **Artifact**: [.claude/commands/](../../.claude/commands/)
 
-#### requirements-expert <!-- id: feat_ref_requirements_expert -->
-
-需求专家技能，解决需求处理全流程的问题。核心能力包括：
-1. **新增需求**：通过 3-5 轮结构化对话澄清需求，自动判断文档类型，将模糊想法转化为符合规范的规格文档
-2. **需求变更**：澄清变更内容，分析对现有设计/代码的影响，更新相关文档
-3. **规范变更**：澄清变更原因，运行影响分析，生成 subtasks 处理所有受影响的文档
-
-**元信息**：
-- **Priority**: P0
-- **Type**: document
-- **Feature**: [fea-requirements-expert.md](features/fea-requirements-expert.md)
-- **Flow**: [flow-requirements.md](flows/flow-requirements.md)
-
 #### review-assistant <!-- id: feat_ref_review_assistant -->
 
 需求审核助手 Subagent，协助人类审核需求文档。自动加载 PRD 和需求文档上下文，搜索行业最佳实践，生成结构化审核报告。作为独立流程，人类可随时发起。
@@ -349,15 +329,6 @@ AI 行为入口，解决 AI 对话启动时缺乏上下文和导航的问题。�
 - **Priority**: P0
 - **Type**: code
 - **Feature**: [fea-review-assistant.md](features/fea-review-assistant.md)
-
-#### agent-architecture <!-- id: feat_ref_agent_architecture -->
-
-Agent 架构演进，从单 Agent 演进到专业化 Subagent 架构。支持多窗口并行工作，每个 Agent 专注特定阶段（需求/设计/开发/测试），实现上下文精简和专业化分工。
-
-**元信息**：
-- **Priority**: P2
-- **Type**: document
-- **Feature**: [fea-agent-architecture.md](features/fea-agent-architecture.md)
 
 ---
 
@@ -407,7 +378,7 @@ Agent 架构演进，从单 Agent 演进到专业化 Subagent 架构。支持多
 
 ---
 
-*Version: v3.9*
+*Version: v4.2*
 *Created: 2024-12-16*
 *Updated: 2025-12-28*
-*Changes: v3.9 新增 review-assistant Feature（ai-config domain，P0），需求审核助手 Subagent；v3.8 新增 project-refactor Feature（process domain，P1）；v3.7 新增 hooks-integration Feature*
+*Changes: v4.2 删除废弃条目（knowledge-base, requirements-expert, agent-architecture）保持 PRD 简洁*

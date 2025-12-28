@@ -1,65 +1,55 @@
-# 编写 Capability Spec
+---
+description: 编写或更新 Capability Spec 文档
+argument-hint: <name>
+---
 
-编写或更新横向能力规格文档。
+编写或更新能力规格文档（Capability Spec）。Capability 是横向技术能力，被多个 Feature 复用，具有基础设施性质。
 
 ## 参数
 
-- `name`：能力名称（必填）
-
-## 输出位置
-
-`docs/requirements/capabilities/cap-{name}.md`
-
-## 加载文件
-
-### 步骤0: 获取项目信息
-
-读取 `.solodevflow/state.json` 获取:
-- `project.type`（项目类型：`backend` | `web-app` | `mobile-app`）
-
-### 步骤1: 加载规范
-
-1. 规范文档：`docs/specs/spec-requirements.md`（Section 5: Capability Spec Structure）
-2. 现有 Capability Spec：`docs/requirements/capabilities/cap-{name}.md`（如存在）
-
-**注意**: 直接从规范生成文档，不使用模板。
+- `$1`：能力名称（必填），如 `auth`、`logging`、`cache`
 
 ## 执行步骤
 
-### 2. 前置检查
+1. 检查参数：如 `$1` 缺失，提示用户提供能力名称后终止
+2. 加载规范文档：@docs/specs/spec-requirements.md（§5 Capability Spec Structure）
+3. 确定输出路径：`docs/requirements/capabilities/cap-{$1}.md`
+4. 检查目标文件是否存在
+   - 不存在 → 新建模式
+   - 存在 → 更新模式（保留未变更章节）
+5. 根据用户输入编写/更新文档
+6. 输出文件
 
-1. 检测目标文件是否存在
-2. 读取规范文档 Section 5，了解 Capability Spec 结构要求
+## 输出要求
 
-**如果不存在（新建模式）**：
+**Frontmatter**：
 
-1. 根据规范 Section 5 的表格，生成文档结构
-2. 必选章节（Required=Yes）必须包含
-3. 替换锚点中的 `{name}` 为实际能力名
-4. 根据用户提供的能力信息填充内容
-5. 输出到目标位置
+```yaml
+---
+type: capability
+id: {$1}
+workMode: code
+status: not_started
+priority: {P0|P1|P2}
+version: "1.0"
+---
+```
 
-**如果存在（更新模式）**：
+**必选章节**：
 
-1. 读取现有 Capability Spec 内容
-2. 根据用户输入的需求，自动判断需要更新哪些章节
-3. 保留未变更的章节，只修改相关部分
-4. 确保锚点和结构完整
-5. 输出更新后的文件
+| Section | Anchor | Description |
+|---------|--------|-------------|
+| Intent | `cap_{name}_intent` | 为什么需要这个能力 |
+| Consumers | `cap_{name}_consumers` | 哪些 Feature/Domain 使用 |
+| Requirements | `cap_{name}_requirements` | 功能需求（不涉及实现） |
+| Acceptance Criteria | `cap_{name}_acceptance` | 可验证的完成条件 |
 
-**最后**：
-- 运行校验：`npm run validate:docs {输出文件路径}`，确保符合规范
+**可选章节**：Boundaries、Constraints、Artifacts
 
-## 创建时机
-
-满足以下任一条件时创建：
-- 横向功能被 2 个以上 Feature 使用
-- 横向功能有复杂需求需要独立描述
-- 横向功能需要定义统一的使用规范
-
-简单横向功能可在 PRD 的 Capability Roadmap 中一句话描述，不需要独立文档。
+**锚点格式**：`cap_{name}_{section}`（`{name}` = `$1`）
 
 ## 注意事项
 
-- 必须包含：Intent、Consumers、Requirements、Acceptance Criteria
-- 更新时保留文档版本历史（末尾的 Version/Changes 信息）
+- Capability 需要列出 Consumers（谁使用这个能力）
+- Consumers 表格格式：| Consumer | Type | 使用场景 |
+- 创建条件：被 2+ Feature 使用，或有复杂需求需独立描述

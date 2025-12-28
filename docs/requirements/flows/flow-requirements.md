@@ -13,6 +13,8 @@ version: "1.0"
 > 需求处理子流程，定义新增需求、需求变更、规范变更的处理方法论
 
 **Parent Flow**: [flow-workflows.md](flow-workflows.md) §6
+**执行规范**：`.solodevflow/flows/requirements.md`
+> 执行规范由 AI 根据本需求文档生成，模板位于 `template/flows/requirements.md`。
 
 ---
 
@@ -350,7 +352,7 @@ Phase 4c: CONFIRM & EXECUTE（确认并执行）
 
 ---
 
-*Version: v1.0*
+*Version: v1.1*
 *Created: 2025-12-28*
 *Updated: 2025-12-28*
-*Changes: v1.0 从 fea-requirements-expert.md 提取，作为独立子流程*
+*Changes: v1.1 添加执行规范引用；v1.0 从 fea-requirements-expert.md 提取，作为独立子流程*

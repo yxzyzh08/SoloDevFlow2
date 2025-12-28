@@ -195,7 +195,7 @@ function setPhase(featureId, phase) {
     'feature_review',
     'feature_design',
     'feature_implementation',
-    'feature_verification',
+    'feature_testing',
     'done'
   ];
   if (!validPhases.includes(phase)) {
@@ -211,7 +211,7 @@ function setPhase(featureId, phase) {
     'feature_review': 'in_progress',
     'feature_design': 'in_progress',
     'feature_implementation': 'in_progress',
-    'feature_verification': 'in_progress',
+    'feature_testing': 'in_progress',
     'done': 'done'
   };
   const status = phaseToStatus[phase];
@@ -307,7 +307,7 @@ Feature:
   deactivate-feature <id>  Deactivate Feature
   set-phase <id> <phase>   Set Feature phase (updates frontmatter)
                            Phases: pending, feature_requirements, feature_review,
-                                   feature_design, feature_implementation, done
+                                   feature_design, feature_implementation, feature_testing, done
 
 Subtask:
   add-subtask --feature=<id> --desc="desc" [--source=ai|impact-analysis|user|interrupted] [--status=pending|in_progress]

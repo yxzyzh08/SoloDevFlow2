@@ -65,11 +65,13 @@ version: "1.3"
 |----|------------|------|
 | C1 | 自身项目检测 | 检测目标项目是否为 SoloDevFlow 自身 |
 | C2 | 目录初始化 | 创建 `.solodevflow/` 目录和状态文件 |
-| C3 | 命令安装 | 安装 `.claude/commands/` 命令集 |
-| C4 | 规范复制 | 复制规范文档到目标项目（非自举模式） |
-| C5 | 配置生成 | 生成 `CLAUDE.md` 和更新 `package.json` |
-| C6 | 版本记录 | 记录安装的 SoloDevFlow 版本 |
-| C7 | 自举模式 | 自身项目的特殊处理（只更新工具文件，保留项目状态） |
+| C3 | 工作流安装 | 安装 `.solodevflow/flows/` 工作流 |
+| C4 | 命令安装 | 安装 `.claude/commands/` 命令集 |
+| C5 | 规范复制 | 复制规范文档到目标项目（非自举模式） |
+| C6 | 脚本安装 | 复制运行时脚本（非自举模式） |
+| C7 | 配置生成 | 生成 `CLAUDE.md` 和更新 `package.json` |
+| C8 | 版本记录 | 记录安装的 SoloDevFlow 版本 |
+| C9 | 操作模式 | 区分 init/upgrade/bootstrap 三种模式 |
 
 > **已消除**：模板复制能力（v2.4）。AI 命令现在直接从 `spec-requirements.md` 生成文档。
 
@@ -175,7 +177,7 @@ target-project/
 - 自举模式跳过（SoloDevFlow 自身已有规范）
 - 完整复制所有规范文件
 
-#### C6: 脚本安装
+#### C6: 脚本安装（非自举模式）
 
 复制运行时脚本到目标项目的运行时目录，使其能独立运行状态管理和验证。
 
@@ -197,6 +199,13 @@ target-project/
 - 选择性复制运行时脚本（排除 init.js 等安装脚本）
 - 复制的脚本列表：state.js, status.js, validate-state.js, validate-docs.js, analyze-impact.js
 - 覆盖已存在的文件（升级场景）
+
+**自举模式特殊处理**：
+- **跳过脚本复制**：SoloDevFlow 自身直接使用源码 `scripts/`
+- **不创建 `.solodevflow/scripts/`**：避免源码与副本混淆
+- **package.json 差异**：
+  - 常规项目：`"status": "node .solodevflow/scripts/status.js"`
+  - SoloDevFlow：`"status": "node scripts/status.js"`（使用源码）
 
 #### C7: 配置生成
 
@@ -244,11 +253,11 @@ target-project/
 - `upgradedAt`: 最后升级时间（升级时更新）
 - `sourcePath`: SoloDevFlow 源目录的绝对路径（用于引用规范）
 
-#### C9: 升级模式与自举模式
+#### C9: 操作模式
 
-**三种操作场景**的差异：
+**三种操作模式**的差异：
 
-##### 场景1：常规项目初次安装（`solodevflow init <path>`）
+##### 模式1：常规项目初次安装（`solodevflow init <path>`）
 
 | 文件/目录 | 操作 | 说明 |
 |----------|------|------|
@@ -259,7 +268,11 @@ target-project/
 | `docs/specs/` | **创建** | 从 `docs/specs/` 复制（完整规范文档） |
 | `CLAUDE.md` | **创建** | 从模板生成 |
 
-##### 场景2：常规项目升级（`solodevflow upgrade <path>`）
+**命令行为**：
+- 如果目标项目已安装（`.solodevflow/` 存在）→ 报错提示使用 `upgrade`
+- 支持 `--force` 覆盖已安装项目
+
+##### 模式2：常规项目升级（`solodevflow upgrade <path>`）
 
 | 文件/目录 | 操作 | 说明 |
 |----------|------|------|
@@ -270,20 +283,21 @@ target-project/
 | `docs/specs/` | **覆盖** | 从 `docs/specs/` 更新（规范可能有变化） |
 | `CLAUDE.md` | **覆盖** | 从模板重新生成 |
 
-**state.json 更新规则**（场景2）：
+**命令行为**：
+- 如果目标项目未安装 → 报错提示使用 `init`
+
+**state.json 更新规则**：
 ```javascript
 // ✅ 只更新版本信息
 state.solodevflow.version = newVersion;
 state.solodevflow.upgradedAt = new Date().toISOString();
-state.solodevflow.sourcePath = SOLODEVFLOW_ROOT;  // 可能变化
-state.lastUpdated = new Date().toISOString();
+state.solodevflow.sourcePath = SOLODEVFLOW_ROOT;
 
 // ❌ 保留不变（用户数据）
-// state.domains, state.pendingDocs
-// state.project（项目配置）
+// state.domains, state.pendingDocs, state.project
 ```
 
-##### 场景3：自举模式（`solodevflow init . / upgrade .` 在 SoloDevFlow 自身）
+##### 模式3：自举模式（`solodevflow init . / upgrade .` 在 SoloDevFlow 自身）
 
 **使用场景**：AI 开发完成新的产物（commands、template、flows 等）后，人类审核通过，手动执行命令应用变更到运行态。
 
@@ -291,26 +305,47 @@ state.lastUpdated = new Date().toISOString();
 |----------|------|------|
 | `.solodevflow/state.json` | **部分更新** | 只更新版本信息，**保留项目数据** |
 | `.solodevflow/flows/` | **覆盖** | 从 `template/flows/` 同步 |
+| `.solodevflow/scripts/` | **不创建** | 使用根目录 `scripts/` 源码 |
 | `.claude/commands/` | **覆盖** | 从 `template/commands/` 同步 |
 | `docs/specs/` | **跳过** | 源码已存在，不复制给自己 |
 | `scripts/` | **跳过** | 源码已存在，不覆盖 |
 | `CLAUDE.md` | **跳过** | 保留项目自身的配置 |
 
-**命令示例**：
+**命令行为**：
 ```bash
-# 在 SoloDevFlow 项目根目录
-solodevflow init .      # 自动识别为自举模式
-solodevflow upgrade .   # 同样识别为自举模式（操作相同）
+# 两条命令在自举模式下等效
+solodevflow init .      # 检测到自身 → 打印提示 → 执行 bootstrap
+solodevflow upgrade .   # 检测到自身 → 执行 bootstrap
+```
+
+**自举后目录结构**：
+```
+SoloDevFlow/
+├── scripts/              # 源码（直接使用，不复制）
+├── template/
+│   ├── flows/            # 源码
+│   └── commands/         # 源码
+├── .solodevflow/
+│   ├── flows/            # ✅ 从 template/flows/ 同步
+│   │   └── workflows.md
+│   ├── state.json        # ✅ 保留项目数据
+│   └── [无 scripts/]     # ❌ 不创建
+└── .claude/
+    └── commands/         # ✅ 从 template/commands/ 同步
 ```
 
 **核心差异总结**：
 
-| 操作 | 常规项目安装 | 常规项目升级 | 自举模式 |
-|------|-------------|-------------|---------|
-| `.solodevflow/` 运行时目录 | ✅ 全部创建 | ✅ 更新工具文件 | ✅ 同步运行态 |
-| `.solodevflow/scripts/` | ✅ 复制 | ✅ 更新 | ❌ 跳过（已有源码） |
-| `docs/specs/` 规范文档 | ✅ 复制 | ✅ 更新 | ❌ 跳过（已有源码） |
-| state.json | 创建空数据 | 保留用户数据 | 保留项目数据 |
+| 操作 | 常规安装 | 常规升级 | 自举模式 |
+|------|---------|---------|---------|
+| `.solodevflow/flows/` | ✅ 创建 | ✅ 覆盖 | ✅ 同步 |
+| `.solodevflow/scripts/` | ✅ 创建 | ✅ 覆盖 | ❌ 不创建 |
+| `.claude/commands/` | ✅ 创建 | ✅ 覆盖 | ✅ 同步 |
+| `docs/specs/` | ✅ 复制 | ✅ 覆盖 | ❌ 跳过 |
+| `CLAUDE.md` | ✅ 生成 | ✅ 覆盖 | ❌ 跳过 |
+| `state.json` | 创建空数据 | 保留数据 | 保留数据 |
+| `init` 命令 | 首次安装 | 报错 | 等效 upgrade |
+| `upgrade` 命令 | 报错 | 更新 | 执行 bootstrap |
 
 ---
 
@@ -335,12 +370,14 @@ solodevflow upgrade .   # 同样识别为自举模式（操作相同）
 
 | Item | Verification | Pass Criteria |
 |------|--------------|---------------|
-| 自身检测 | 运行 `solodevflow init .` | 识别为自举模式 |
+| 自身检测 | 运行 `solodevflow init .` | 识别为自举模式，打印提示信息 |
+| init/upgrade 等效 | 分别运行两条命令 | 行为一致，都执行 bootstrap |
 | 工作流更新 | 检查 `.solodevflow/flows/` | 从 `template/flows/` 同步 |
 | 命令更新 | 检查 `.claude/commands/` | 从 `template/commands/` 同步 |
 | 规范不复制 | 检查 `docs/specs/` | 保持不变（源码不复制给自己） |
 | 脚本不复制 | 检查根目录 `scripts/` | 保持不变（源码不覆盖） |
-| 运行时脚本不复制 | 检查 `.solodevflow/scripts/` | 保持不变（使用根目录源码） |
+| 运行时脚本不创建 | 检查 `.solodevflow/scripts/` | 目录不存在（使用根目录源码） |
+| package.json | 检查 scripts 字段 | 指向 `scripts/`（非 `.solodevflow/scripts/`）|
 | 状态保留 | 检查 state.json | `domains`, `pendingDocs` 保持不变 |
 | 版本更新 | 检查 state.json | `solodevflow.version` 已更新 |
 | 幂等性 | 重复运行自举 | 可多次执行，不破坏项目数据 |
@@ -387,7 +424,7 @@ solodevflow upgrade .   # 同样识别为自举模式（操作相同）
 
 ---
 
-*Version: v1.2*
+*Version: v1.4*
 *Created: 2025-12-21*
-*Updated: 2025-12-24*
-*Changes: v1.2 添加 frontmatter 可选字段（priority, domain）符合 spec-requirements v2.5; v1.1 消除模板层*
+*Updated: 2025-12-28*
+*Changes: v1.4 澄清自举模式：脚本路径处理、目录结构、init/upgrade 命令行为；v1.3 函数编号修正；v1.2 添加 frontmatter 可选字段*
