@@ -2,12 +2,13 @@
 type: design
 id: design-hooks-integration
 status: done
-version: "1.3"
+version: "1.4"
 inputs:
   - docs/requirements/flows/flow-workflows.md#flow_hooks
+  - docs/requirements/features/fea-hooks-integration.md
 ---
 
-# Hooks Integration Design v1.3 <!-- id: design_hooks_integration -->
+# Hooks Integration Design v1.4 <!-- id: design_hooks_integration -->
 
 > Claude Code Hooks Integration - 工作流自动化技术设计
 
@@ -156,12 +157,12 @@ const fs = require('fs');
 const path = require('path');
 
 const STATE_PATH = path.join(process.cwd(), '.solodevflow', 'state.json');
+const INDEX_PATH = path.join(process.cwd(), '.solodevflow', 'index.json');
 
 function readState() {
   if (!fs.existsSync(STATE_PATH)) {
     return { error: 'STATE_NOT_FOUND' };
   }
-
   try {
     const content = fs.readFileSync(STATE_PATH, 'utf-8');
     return { data: JSON.parse(content) };
@@ -170,25 +171,55 @@ function readState() {
   }
 }
 
+function readIndex() {
+  if (!fs.existsSync(INDEX_PATH)) {
+    return { error: 'INDEX_NOT_FOUND' };
+  }
+  try {
+    const content = fs.readFileSync(INDEX_PATH, 'utf-8');
+    return { data: JSON.parse(content) };
+  } catch (err) {
+    return { error: 'INDEX_PARSE_ERROR', message: err.message };
+  }
+}
+
 function getActiveFeature(state) {
   const activeId = state?.flow?.activeFeatures?.[0];
-  if (!activeId || !state?.features?.[activeId]) {
-    return null;
+  if (!activeId) return null;
+
+  // 从 index.json 获取 feature 信息（包含 phase 和 status）
+  const indexResult = readIndex();
+  if (indexResult.error) {
+    return { id: activeId, phase: 'feature_implementation' };
   }
-  return {
+
+  const feature = indexResult.data?.documents?.find(doc => doc.id === activeId);
+  return feature ? {
     id: activeId,
-    ...state.features[activeId]
-  };
+    phase: feature.phase || 'feature_implementation',
+    status: feature.status,
+    path: feature.path
+  } : { id: activeId, phase: 'feature_implementation' };
 }
 
-function getSession(state) {
-  return state?.session || {
-    mode: 'idle',
-    pendingRequirements: []
-  };
+function getSubtasks(state) {
+  return state?.subtasks || [];
 }
 
-module.exports = { readState, getActiveFeature, getSession, STATE_PATH };
+// v1.2 新增：获取指定 Feature 的未完成 subtasks
+function getPendingSubtasksForFeature(state, featureId) {
+  const subtasks = state?.subtasks || [];
+  return subtasks.filter(s =>
+    s.featureId === featureId &&
+    (s.status === 'pending' || s.status === 'in_progress')
+  );
+}
+
+module.exports = {
+  readState, readIndex, getActiveFeature,
+  getSubtasks, getPendingSubtasksForFeature,
+  STATE_PATH, INDEX_PATH
+};
 ```
 
 ### 3.5 Keyword Extraction
@@ -295,16 +326,40 @@ interface PreToolUseOutput {
 
 #### 4.3.1 Phase Guard Rules
 
-基于需求 §9.4，阶段守卫规则如下：
+基于需求文档，阶段守卫规则如下：
 
-| 当前阶段 | 阻止操作 | 原因 |
-|----------|----------|------|
-| `pending` | Write/Edit 任意文件（Read 除外） | 初始阶段，尚未开始工作 |
-| `feature_requirements` | Write/Edit `src/**/*.{js,ts}`, `tests/**/*` | 需求阶段不应写代码/测试 |
-| `feature_design` | Write/Edit `src/**/*.{js,ts}`, `tests/**/*` | 设计阶段不应写代码/测试 |
-| 任意 | Edit `.solodevflow/state.json` | 使用 State CLI 而非直接编辑 |
+| 当前阶段 | 阻止操作 | 决策 | 原因 |
+|----------|----------|------|------|
+| `pending` | Write/Edit 任意文件（Read 除外） | block | 初始阶段，尚未开始工作 |
+| `done` | Write/Edit `src/**/*.{js,ts}`, `scripts/**/*.js`, `.claude/hooks/**/*.js` | **ask** | 软性引导：提示进行根因分析 |
+| `feature_requirements` | Write/Edit `src/**/*.{js,ts}`, `scripts/**/*.js`, `.claude/hooks/**/*.js`, `tests/**/*` | block | 需求阶段不应写代码/测试 |
+| `feature_review` | Write/Edit `docs/designs/**/*.md`, `src/**/*`, `scripts/**/*.js`, `.claude/hooks/**/*.js`, `tests/**/*` | block | 等待人工审核 |
+| `feature_design` | Write/Edit `src/**/*.{js,ts}`, `scripts/**/*.js`, `tests/**/*` | block | 设计阶段不应写代码/测试 |
+| 任意 | Edit `.solodevflow/state.json` | block | 使用 State CLI 而非直接编辑 |
 
-#### 4.3.2 Protected File Rules
+**v1.4 变更**：`done` 状态从 `block` 改为 `ask`，配合根因分析流程使用。
+
+#### 4.3.2 Done Status Root Cause Analysis
+
+当修改 `done` 状态 Feature 的代码时，Hook 显示 ask 确认，提示进行根因分析：
+
+```
+Feature is done. Before modifying code, perform ROOT CAUSE ANALYSIS:
+  • Requirements issue → Update requirements doc first
+  • Design issue → Update design doc first
+  • Implementation issue → Proceed with code fix directly
+Confirm you have analyzed the root cause?
+```
+
+详见 `workflows.md §7 Bug Fix Flow`。
+
+#### 4.3.3 Set-Phase Done Guard
+
+执行 `node scripts/state.js set-phase <id> done` 命令时，检查是否有未完成的 subtasks：
+- 如有未完成任务 → 返回 `ask` 决策，列出所有未完成任务
+- 用户确认后允许执行
+
+#### 4.3.4 Protected File Rules
 
 | 文件模式 | 保护行为 | 原因 |
 |----------|----------|------|
@@ -312,7 +367,7 @@ interface PreToolUseOutput {
 | `.env`, `*.key`, `*.pem` | block | 安全敏感文件 |
 | `docs/specs/*.md` | ask | 触发警告，提示运行影响分析 |
 
-#### 4.3.3 Auto-Approve Rules
+#### 4.3.5 Auto-Approve Rules
 
 | 工具 | 文件模式 | 决策 |
 |------|----------|------|
@@ -321,7 +376,7 @@ interface PreToolUseOutput {
 | Glob | `*` | allow |
 | Grep | `*` | allow |
 
-### 4.4 PostToolUse Hook (Optional)
+### 4.4 PostToolUse Hook
 
 **Input** (stdin JSON):
 ```typescript
@@ -329,16 +384,49 @@ interface PostToolUseInput {
   session_id: string;
   cwd: string;
   hook_event_name: 'PostToolUse';
-  tool_name: 'Write' | 'Edit';
-  tool_input: { file_path: string };
+  tool_name: 'Write' | 'Edit' | 'TodoWrite';
+  tool_input: { file_path?: string; todos?: Todo[] };
   tool_response: { success: boolean };
+}
+
+interface Todo {
+  content: string;
+  status: 'pending' | 'in_progress' | 'completed';
 }
 ```
 
 **Output** (stdout plain text):
-Validation result message, injected as context.
+Validation result message or sync status, injected as context.
 
-#### 4.4.1 Validation Rules
+#### 4.4.1 TodoWrite Sync (v1.2 新增)
+
+当 AI 使用 TodoWrite 工具时，自动同步到 state.json 的 subtasks：
+
+| 行为 | 说明 |
+|------|------|
+| 同步方向 | TodoWrite → subtasks（单向） |
+| 冲突策略 | 只追加，不删除已有 subtasks |
+| 匹配方式 | 通过 description 字段判断是否已存在 |
+| featureId | 使用当前活跃 Feature，无则标记为 `unassigned` |
+
+**状态映射**：
+| TodoWrite status | Subtask status |
+|------------------|----------------|
+| pending | pending |
+| in_progress | in_progress |
+| completed | completed |
+
+**输出示例**：
+```
+[TodoSync] Synced: 3 added, 1 updated
+```
+
+**警告情况**：
+```
+[TodoSync] Warning: No active feature. Subtasks will be marked as "unassigned".
+```
+
+#### 4.4.2 Validation Rules
 
 | 文件模式 | 验证动作 |
 |----------|----------|
@@ -357,6 +445,9 @@ Validation result message, injected as context.
 | 文档索引方式 | SQLite 知识库 / JSON 索引 | JSON (index.json) | v12.0.0 决策：利用 Claude CLI 原生 Glob/Grep，零外部依赖 |
 | PreToolUse matcher | Write\|Edit / Write\|Edit\|Bash | +Bash | 危险 shell 命令（rm -rf, git push --force）也需要阶段守卫保护 |
 | input-log.md | 同步实现 / 延后实现 | 延后 (Phase 2) | 依赖 input-capture feature (soft dependency) |
+| TodoWrite 同步 | 双向同步 / 单向同步 | 单向 (TodoWrite→subtasks) | 简化实现，避免冲突；AI 主导任务创建 |
+| done 状态守卫 | block / ask | **ask** | 软性引导，配合根因分析流程，允许实现层 bug 直接修复 |
+| 阶段守卫范围扩展 | 仅 src / +scripts +hooks | +scripts +hooks | 脚本和 hooks 也是代码，需要同等保护 |
 
 ---
 
@@ -473,8 +564,30 @@ Based on requirements §9.10:
 
 ---
 
-*Version: v1.3*
+*Version: v1.4*
 *Created: 2025-12-25*
-*Updated: 2025-12-27*
-*Changes: v1.3 适配 v12.0.0：移除知识库依赖，改用 index.json 文档索引；v1.2 源代码与运行时分离*
+*Updated: 2025-12-28*
 *Author: Claude Opus 4.5*
+
+---
+
+## Changelog
+
+### v1.4 (2025-12-28)
+- `done` 状态守卫改为软性引导（ask），配合根因分析流程
+- 新增 §4.3.2 Done Status Root Cause Analysis
+- 新增 §4.3.3 Set-Phase Done Guard
+- 扩展阶段守卫范围：`scripts/**/*.js`、`.claude/hooks/**/*.js`
+- 新增 `feature_review` 阶段守卫规则
+- 更新 §3.4 State Reader Design：添加新函数
+- 更新 §5 Decision Record：添加新决策
+
+### v1.3 (2025-12-27)
+- 适配 v12.0.0：移除知识库依赖，改用 index.json 文档索引
+
+### v1.2 (2025-12-26)
+- 新增 §4.4.1 TodoWrite Sync：AI 任务自动同步到 subtasks
+- 源代码与运行时分离架构
+
+### v1.1 (2025-12-25)
+- 初始版本

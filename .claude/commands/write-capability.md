@@ -1,60 +1,55 @@
-# 编写 Capability Spec
+---
+description: 编写或更新 Capability Spec 文档
+argument-hint: <name>
+---
 
-编写或更新横向能力规格文档。
+编写或更新能力规格文档（Capability Spec）。Capability 是横向技术能力，被多个 Feature 复用，具有基础设施性质。
 
 ## 参数
 
-- `name`：能力名称（必填）
-
-## 加载文件
-
-### 步骤0: 获取规范路径
-
-1. 读取 `.flow/state.json` 获取:
-   - `project.type`（项目类型：`backend` | `web-app` | `mobile-app`）
-   - `solodevflow.sourcePath`（SoloDevFlow 源路径）
-
-### 步骤1: 加载规范和模板
-
-1. 规范文档：`{sourcePath}/docs/requirements/specs/requirements-doc.spec.md`
-2. Capability 模板：`docs/requirements/templates/{projectType}/capability.spec.md`
-3. 现有 Capability Spec：`docs/requirements/_capabilities/{name}.spec.md`（如存在）
-
-**注意**: 规范文档来自 SoloDevFlow 源目录，为只读文件。
+- `$1`：能力名称（必填），如 `auth`、`logging`、`cache`
 
 ## 执行步骤
 
-### 2. 前置检查
+1. 检查参数：如 `$1` 缺失，提示用户提供能力名称后终止
+2. 加载规范文档：@docs/specs/spec-requirements.md（§5 Capability Spec Structure）
+3. 确定输出路径：`docs/requirements/capabilities/cap-{$1}.md`
+4. 检查目标文件是否存在
+   - 不存在 → 新建模式
+   - 存在 → 更新模式（保留未变更章节）
+5. 根据用户输入编写/更新文档
+6. 输出文件
 
-1. 检测 `docs/requirements/_capabilities/{name}.spec.md` 是否存在
-2. 读取规范文档，了解 Capability Spec 结构要求（Section 6）
+## 输出要求
 
-**如果不存在（新建模式）**：
-3. 读取 Capability 模板，作为文档骨架
-4. 根据用户提供的能力信息，填充模板内容
-5. 按模板中的锚点要求添加锚点（替换 `{name}` 为实际能力名）
-6. 输出到 `docs/requirements/_capabilities/{name}.spec.md`
+**Frontmatter**：
 
-**如果存在（更新模式）**：
-3. 读取现有 Capability Spec 内容
-4. 根据用户输入的需求，自动判断需要更新哪些章节
-5. 保留未变更的章节，只修改相关部分
-6. 确保锚点和结构完整
-7. 输出更新后的文件
+```yaml
+---
+type: capability
+id: {$1}
+workMode: code
+status: not_started
+priority: {P0|P1|P2}
+version: "1.0"
+---
+```
 
-**最后**：
-- 运行校验：`npm run validate:docs docs/requirements/_capabilities/{name}.spec.md`，确保符合规范
+**必选章节**：
 
-## 创建时机
+| Section | Anchor | Description |
+|---------|--------|-------------|
+| Intent | `cap_{name}_intent` | 为什么需要这个能力 |
+| Consumers | `cap_{name}_consumers` | 哪些 Feature/Domain 使用 |
+| Requirements | `cap_{name}_requirements` | 功能需求（不涉及实现） |
+| Acceptance Criteria | `cap_{name}_acceptance` | 可验证的完成条件 |
 
-满足以下任一条件时创建：
-- 横向功能被 2 个以上 Feature 使用
-- 横向功能有复杂需求需要独立描述
-- 横向功能需要定义统一的使用规范
+**可选章节**：Boundaries、Constraints、Artifacts
 
-简单横向功能可在 PRD 的 Capability Roadmap 中一句话描述，不需要独立文档。
+**锚点格式**：`cap_{name}_{section}`（`{name}` = `$1`）
 
 ## 注意事项
 
-- 必须包含：Capability Overview、Core Functions、Usage Guidelines
-- 更新时保留文档版本历史（末尾的 Version/Changes 信息）
+- Capability 需要列出 Consumers（谁使用这个能力）
+- Consumers 表格格式：| Consumer | Type | 使用场景 |
+- 创建条件：被 2+ Feature 使用，或有复杂需求需独立描述

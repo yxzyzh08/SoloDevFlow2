@@ -2,7 +2,7 @@
 type: flow
 id: testing-flow
 workMode: document
-status: not_started
+status: done
 priority: P0
 domain: process
 version: "1.0"

@@ -1,16 +1,17 @@
 ---
 type: feature
 id: change-impact-tracking
-workMode: document
-status: not_started
+workMode: code
+status: done
+phase: done
 priority: P0
 domain: process
-version: "1.5"
+version: "2.3"
 ---
 
 # Feature: Change Impact Tracking <!-- id: feat_change_impact_tracking -->
 
-> 变更影响追踪机制，自动分析文档变更影响、验证契约一致性、生成子任务
+> 变更影响追踪机制，自动分析文档变更影响并生成子任务，通过 Hook 实现自动化触发
 
 ---
 
@@ -18,21 +19,19 @@ version: "1.5"
 
 ### 1.1 Problem
 
-- 修改规范文档（requirements-doc.spec.md）或模板后，不知道哪些下游文档受影响
+- 修改规范文档（spec-requirements.md）或模板后，不知道哪些下游文档受影响
 - 修改 PRD 后，难以追踪对 Feature Spec 的影响
 - 影响分析依赖人工列举，容易遗漏
-- 生成的影响项无法在 state.json 中跟踪执行
-- 文档可能不符合规范定义的契约（缺少章节、锚点格式错误、引用失效）
-- 规范变更后，难以发现哪些文档"确实不符合"而非"可能需要检查"
+- 需要手动运行影响分析脚本，容易忘记
+- 生成的影响项需要手动添加到 state.json
 
 ### 1.2 Value
 
 - **自动化分析**：基于依赖图自动计算影响范围
-- **契约验证**：验证文档是否符合规范定义的结构和引用
-- **精准定位**：不只是"可能需要检查"，而是"确实不符合"
-- **子任务追踪**：将影响项转为 state.json 中的 subtasks
+- **Hook 自动触发**：规范文件修改后自动运行影响分析
+- **子任务自动写入**：影响项直接写入 state.json subtasks
 - **标准化输出**：与 CLAUDE.md 影响分析格式一致
-- **可追溯**：每个子任务记录来源，便于回溯
+- **可追溯**：每个子任务记录来源（impact-analysis），便于回溯
 
 ---
 
@@ -42,16 +41,15 @@ version: "1.5"
 
 - 依赖图构建（按需扫描，不持久化）
 - 影响分析算法（直接 + 间接影响）
-- 子任务生成（写入 state.json）
 - 影响分析脚本（analyze-impact.js）
-- 调用 document-validation Capability 验证受影响文档
+- 子任务自动写入（`--write` 参数）
+- PostToolUse Hook 自动触发
 
 ### 2.2 Out of Scope
 
 - 变更检测（Git diff 集成）→ 后续迭代
-- 任务跟踪命令（list/complete/skip）→ 后续迭代
 - 依赖图持久化缓存 → 后续迭代
-- AI Skill 智能分析 → 后续迭代
+- document-validation 集成 → 保持独立 Capability，AI 按需调用
 
 ---
 
@@ -60,8 +58,9 @@ version: "1.5"
 | ID | Function | 描述 |
 |----|------------|------|
 | C1 | 依赖图构建 | 扫描文档构建节点和边，支持多种依赖来源 |
-| C3 | 影响分析 | 基于依赖图计算变更影响范围 |
-| C4 | 子任务生成 | 将影响项转为 state.json 中的 subtasks |
+| C2 | 影响分析 | 基于依赖图计算变更影响范围 |
+| C3 | 子任务写入 | 通过 `--write` 参数将影响项写入 state.json |
+| C4 | Hook 自动触发 | PostToolUse Hook 检测规范文件修改并自动触发分析 |
 
 ### 3.1 C1: 依赖图构建
 
@@ -91,7 +90,7 @@ version: "1.5"
 - `produces`：A 产出 B（Feature 产出 Artifact，v1.2 新增）
 - `tests`：A 测试 B（Test 测试 Code，v1.2 新增）
 
-### 3.2 C3: 影响分析
+### 3.2 C2: 影响分析
 
 **输入**：变更文件路径 + 依赖图
 
@@ -122,32 +121,65 @@ version: "1.5"
 【建议操作顺序】：{顺序}
 ```
 
-### 3.3 C4: 子任务生成
+### 3.3 C3: 子任务写入
 
-**输入**：影响分析结果 + 目标 Feature
+**命令**：
+```bash
+# 仅输出分析结果（默认）
+node scripts/analyze-impact.js docs/specs/spec-requirements.md
 
-**输出**：state.json 中的 subtasks 数组
+# 输出并写入 state.json
+node scripts/analyze-impact.js docs/specs/spec-requirements.md --write
+```
 
-**规则**：
+**写入规则**：
 - 每个影响项生成一个 subtask
 - ID 格式：`st_{timestamp}_{index}`
 - 初始状态：`pending`
 - source：`impact-analysis`
-- 需人类确认后写入
+- 写入前检查是否已存在相同 target 的 subtask，避免重复
 
-### 3.4 与 document-validation 的集成
-
-影响分析通过调用 `cap-document-validation` Capability 来精确判断文档状态：
-
+**subtask 结构**：
+```json
+{
+  "id": "st_1703145600000_001",
+  "featureId": "current-active-feature",
+  "description": "检查 fea-xxx.md 是否需要更新",
+  "target": "docs/requirements/features/fea-xxx.md",
+  "status": "pending",
+  "source": "impact-analysis",
+  "createdAt": "2024-12-21T12:00:00.000+08:00"
+}
 ```
-1. 影响分析找到"可能受影响的文档"
-       ↓
-2. 调用 document-validation 验证这些文档
-       ↓
-3. 不符合的项目生成子任务（带具体错误信息）
+
+### 3.4 C4: Hook 自动触发
+
+**触发条件**：PostToolUse Hook 检测到以下文件被修改时自动触发：
+
+| 文件模式 | 说明 |
+|----------|------|
+| `docs/specs/*.md` | 规范文档 |
+| `docs/requirements/prd.md` | PRD 文档 |
+| `template/**/*.md` | 文档模板 |
+
+**Hook 逻辑**：
+```javascript
+// PostToolUse Hook
+if (toolName === 'Write' || toolName === 'Edit') {
+  if (matchesSpecPattern(filePath)) {
+    // 自动运行影响分析
+    const result = exec(`node scripts/analyze-impact.js "${filePath}"`);
+    // 将分析结果作为 additionalContext 返回给 Claude
+    return {
+      hookSpecificOutput: {
+        additionalContext: result
+      }
+    };
+  }
+}
 ```
 
-> 详细验证规则见 [cap-document-validation.md](../capabilities/cap-document-validation.md)
+**输出**：影响分析结果作为上下文注入 Claude，由 AI 决定是否使用 `--write` 写入
 
 ---
 
@@ -155,12 +187,12 @@ version: "1.5"
 
 | Item | Verification | Pass Criteria |
 |------|--------------|---------------|
-| Schema v7.0 | `npm run validate` | 输出 "state.json is valid!" |
-| subtasks 结构 | 检查 state.json | 活跃 Feature 有 subtasks 字段 |
 | 影响分析脚本 | `node scripts/analyze-impact.js docs/specs/spec-requirements.md` | 输出标准格式报告 |
 | 依赖图构建 | 脚本输出 | 正确识别 Feature Dependencies |
-| 子任务生成 | 脚本输出 | 输出建议子任务列表 |
-| 验证集成 | 影响分析调用 document-validation | 不符合规范的文档生成带错误信息的子任务 |
+| 子任务输出 | 脚本输出 | 输出建议子任务列表 |
+| --write 参数 | `node scripts/analyze-impact.js <file> --write` | subtasks 写入 state.json |
+| 重复检测 | 多次运行 --write | 相同 target 不重复添加 |
+| Hook 自动触发 | 修改 docs/specs/*.md | PostToolUse 返回影响分析结果 |
 
 ---
 
@@ -168,40 +200,32 @@ version: "1.5"
 
 | Dependency | Type | 说明 |
 |------------|------|------|
-| state-management | hard | 需要扩展 state.json schema 到 v7.0 |
-| cap-document-validation | hard | 调用文档验证能力判断文档是否符合规范 |
+| state-management | hard | 依赖 state.json subtasks 字段（当前 schema v13.0.0） |
+| hooks-integration | hard | C4 Hook 自动触发依赖 PostToolUse Hook |
 | spec-meta | soft | 依赖图构建基于元规范定义的锚点和引用系统 |
 
 ---
 
 ## 5. Design <!-- id: feat_change_impact_tracking_design -->
 
-### 5.1 state.json v7.0 Schema 扩展
+### 5.1 state.json subtasks 结构（当前 schema v13.0.0）
 
-在 `features.{featureName}` 中新增 `subtasks` 字段：
+subtasks 位于 state.json 根级别：
 
 ```json
 {
-  "schemaVersion": "7.0.0",
-  "features": {
-    "{featureName}": {
-      "type": "code|document",
-      "domain": "...",
-      "docPath": "...",
-      "phase": "...",
-      "status": "...",
-      "subtasks": [
-        {
-          "id": "st_1703145600000_001",
-          "description": "检查 feature.spec.md 模板是否需要更新",
-          "target": "docs/templates/backend/feature.spec.md",
-          "status": "pending",
-          "createdAt": "2024-12-21T12:00:00.000Z",
-          "source": "impact-analysis"
-        }
-      ]
+  "schemaVersion": "13.0.0",
+  "subtasks": [
+    {
+      "id": "st_1703145600000_001",
+      "featureId": "change-impact-tracking",
+      "description": "检查 fea-xxx.md 是否需要更新",
+      "target": "docs/requirements/features/fea-xxx.md",
+      "status": "pending",
+      "createdAt": "2024-12-21T12:00:00.000+08:00",
+      "source": "impact-analysis"
     }
-  }
+  ]
 }
 ```
 
@@ -210,10 +234,11 @@ version: "1.5"
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | `id` | string | 是 | 唯一标识，格式 `st_{timestamp}_{index}` |
+| `featureId` | string | 是 | 关联的 Feature ID |
 | `description` | string | 是 | 任务描述 |
-| `target` | string | 否 | 目标文件路径或锚点 |
-| `status` | enum | 是 | `pending` / `in_progress` / `completed` / `skipped` |
-| `createdAt` | string | 是 | ISO 8601 时间戳 |
+| `target` | string | 否 | 目标文件路径（用于去重检测） |
+| `status` | enum | 是 | `pending` / `in_progress` / `completed` |
+| `createdAt` | string | 是 | ISO 8601 时间戳（北京时区） |
 | `source` | string | 是 | 来源：`impact-analysis` / `user` / `ai` |
 
 ### 5.3 依赖图数据结构
@@ -284,37 +309,67 @@ Feature 名称出现在 PRD Feature Roadmap 表格中
 
 | 文件 | 用途 |
 |------|------|
+| `scripts/analyze-impact.js` | 影响分析脚本（需实现 --write 参数） |
+| `src/hooks/post-tool-use.js` | PostToolUse Hook（需添加影响分析触发） |
 | `docs/specs/spec-meta.md` | 元规范文档（锚点和引用系统） |
-| `scripts/analyze-impact.js` | 影响分析脚本 |
 | `docs/requirements/features/fea-state-management.md` | state.json Schema 文档 |
-| `docs/requirements/capabilities/cap-document-validation.md` | 文档验证能力（被调用） |
 
 ### 6.2 Usage
 
 ```bash
-# 分析规范文档变更的影响
+# 分析规范文档变更的影响（仅输出）
 node scripts/analyze-impact.js docs/specs/spec-requirements.md
 
-# 分析 PRD 变更的影响
-node scripts/analyze-impact.js docs/requirements/prd.md
+# 分析并写入 state.json
+node scripts/analyze-impact.js docs/specs/spec-requirements.md --write
+
+# 输出 JSON 格式（用于程序调用）
+node scripts/analyze-impact.js docs/specs/spec-requirements.md --json
 ```
 
-### 6.3 Integration with CLAUDE.md
+### 6.3 自动化流程
 
-当修改以下文件时，AI 必须运行影响分析：
-- 规范文档 (`docs/specs/*.spec.md`)
-- 文档模板 (`docs/templates/**`)
-- PRD (`docs/prd.md`)
+通过 PostToolUse Hook 自动触发：
 
-流程：
-1. 运行 `node scripts/analyze-impact.js {changed-file}`
-2. 展示影响分析报告
-3. 人类确认后，将建议子任务添加到 state.json
-4. 按优先级处理子任务
+```
+修改规范文件（Write/Edit）
+    ↓
+PostToolUse Hook 检测到 docs/specs/*.md 变更
+    ↓
+自动运行 analyze-impact.js
+    ↓
+影响分析结果作为 additionalContext 返回给 Claude
+    ↓
+Claude 根据结果决定下一步操作
+    ├─ 直接处理影响项
+    └─ 使用 --write 写入 subtasks 后逐项处理
+```
 
 ---
 
-*Version: v1.4*
+## 7. Artifacts <!-- id: feat_change_impact_tracking_artifacts -->
+
+| Type | Path | Description |
+|------|------|-------------|
+| Script | scripts/analyze-impact.js | 影响分析脚本（需实现 --write） |
+| Hook | src/hooks/post-tool-use.js | PostToolUse Hook（需添加影响分析触发） |
+
+**Design Depth**: None（增量实现，无需独立设计文档）
+
+---
+
+## Changelog
+
+- **v2.3** (2025-12-28): 实现完成，适配 index.json，添加 --write/--depth 参数，Hook 自动触发
+- **v2.2** (2025-12-28): 修复 Core Functions 编号（C1-C4 连续）
+- **v2.1** (2025-12-28): 修改 workMode 为 code
+- **v2.0** (2025-12-28): 重构需求，添加 --write 参数、Hook 自动触发，移除 document-validation 集成
+- **v1.4** (2025-12-24): 移除契约验证，改为依赖 cap-document-validation Capability
+- **v1.3**: 添加 frontmatter 可选字段
+- **v1.2**: 扩展支持代码文件级别依赖
+
+---
+
+*Version: v2.3*
 *Created: 2024-12-21*
-*Updated: 2025-12-24*
-*Changes: v1.4 移除 C5 契约验证，改为依赖 cap-document-validation Capability; v1.3 添加 frontmatter 可选字段; v1.2 扩展支持代码文件级别依赖*
+*Updated: 2025-12-28*

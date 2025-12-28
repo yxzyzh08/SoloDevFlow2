@@ -2,10 +2,11 @@
 type: feature
 id: project-init
 workMode: code
-status: in_progress
+status: done
+phase: done
 priority: P0
 domain: tooling
-version: "1.3"
+version: "1.5"
 ---
 
 # Feature: Project Init <!-- id: feat_project_init -->
@@ -67,11 +68,12 @@ version: "1.3"
 | C2 | 目录初始化 | 创建 `.solodevflow/` 目录和状态文件 |
 | C3 | 工作流安装 | 安装 `.solodevflow/flows/` 工作流 |
 | C4 | 命令安装 | 安装 `.claude/commands/` 命令集 |
-| C5 | 规范复制 | 复制规范文档到目标项目（非自举模式） |
-| C6 | 脚本安装 | 复制运行时脚本（非自举模式） |
-| C7 | 配置生成 | 生成 `CLAUDE.md` 和更新 `package.json` |
-| C8 | 版本记录 | 记录安装的 SoloDevFlow 版本 |
-| C9 | 操作模式 | 区分 init/upgrade/bootstrap 三种模式 |
+| C5 | Hooks 安装 | 安装 `.claude/hooks/` 工作流钩子 |
+| C6 | 规范复制 | 复制规范文档到目标项目（非自举模式） |
+| C7 | 脚本安装 | 复制运行时脚本（非自举模式） |
+| C8 | 配置生成 | 生成 `CLAUDE.md` 和更新 `package.json` |
+| C9 | 版本记录 | 记录安装的 SoloDevFlow 版本 |
+| C10 | 操作模式 | 区分 init/upgrade/bootstrap 三种模式 |
 
 > **已消除**：模板复制能力（v2.4）。AI 命令现在直接从 `spec-requirements.md` 生成文档。
 
@@ -99,7 +101,7 @@ const isSelfProject = packageJson.name === 'solodevflow';
 ```
 target-project/
 ├── .solodevflow/
-│   ├── state.json        # 初始状态（空 Feature 列表 + sourcePath）
+│   ├── state.json        # 初始状态（空 Feature 列表）
 │   ├── input-log.md      # 空的输入日志
 │   └── pending-docs.md   # 空的待处理文档
 ```
@@ -109,7 +111,6 @@ target-project/
 - 如果 `.solodevflow/` 已存在，提示用户选择：覆盖 / 跳过 / 取消
 - 如果检测到遗留的 `.flow/` 目录，自动触发迁移
 - `state.json` 使用当前最新 Schema 版本
-- `state.json` 中 `solodevflow.sourcePath` 记录 SoloDevFlow 源目录路径
 
 #### C3: 工作流安装
 
@@ -154,7 +155,32 @@ target-project/
 - 完整复制所有命令文件
 - 覆盖已存在的文件（升级场景）
 
-#### C5: 规范复制（非自举模式）
+#### C5: Hooks 安装
+
+从 `src/hooks/` 复制工作流钩子到 `.claude/hooks/` 目录。
+
+**输出**：
+```
+target-project/
+└── .claude/
+    └── hooks/
+        ├── session-start.js       # 会话启动钩子
+        ├── user-prompt-submit.js  # 用户输入钩子
+        ├── pre-tool-use.js        # 工具调用前钩子
+        ├── post-tool-use.js       # 工具调用后钩子
+        └── lib/                   # 钩子依赖库
+            ├── output.js
+            └── state-reader.js
+```
+
+**源路径**：`SoloDevFlow/src/hooks/` → 目标项目 `.claude/hooks/`
+
+**规则**：
+- 完整复制所有钩子文件和 lib/ 目录
+- 覆盖已存在的文件（升级场景）
+- Hooks 是工作流自动化的核心，必须安装
+
+#### C6: 规范复制（非自举模式）
 
 复制规范文档到目标项目，作为项目的规范定义。
 
@@ -177,7 +203,7 @@ target-project/
 - 自举模式跳过（SoloDevFlow 自身已有规范）
 - 完整复制所有规范文件
 
-#### C6: 脚本安装（非自举模式）
+#### C7: 脚本安装（非自举模式）
 
 复制运行时脚本到目标项目的运行时目录，使其能独立运行状态管理和验证。
 
@@ -190,14 +216,18 @@ target-project/
         ├── status.js            # 状态摘要显示
         ├── validate-state.js    # state.json 验证
         ├── validate-docs.js     # 文档验证
-        └── analyze-impact.js    # 影响分析
+        ├── analyze-impact.js    # 影响分析
+        ├── index.js             # 文档索引生成
+        └── lib/                 # 共享库
+            └── doc-parser.js    # 文档解析器
 ```
 
 **源路径**：`SoloDevFlow/scripts/` → 目标项目 `.solodevflow/scripts/`
 
 **规则**：
 - 选择性复制运行时脚本（排除 init.js 等安装脚本）
-- 复制的脚本列表：state.js, status.js, validate-state.js, validate-docs.js, analyze-impact.js
+- 复制的脚本列表：state.js, status.js, validate-state.js, validate-docs.js, analyze-impact.js, index.js
+- 复制 `scripts/lib/` 目录（共享依赖）
 - 覆盖已存在的文件（升级场景）
 
 **自举模式特殊处理**：
@@ -207,7 +237,7 @@ target-project/
   - 常规项目：`"status": "node .solodevflow/scripts/status.js"`
   - SoloDevFlow：`"status": "node scripts/status.js"`（使用源码）
 
-#### C7: 配置生成
+#### C8: 配置生成
 
 生成 CLAUDE.md 和更新 package.json。
 
@@ -233,16 +263,16 @@ target-project/
 - 如果 `package.json` 不存在，创建最小版本
 - 如果 `package.json` 存在，合并 scripts（不覆盖已有脚本）
 
-#### C8: 版本记录
+#### C9: 版本记录
 
-在 state.json 中记录安装信息和源路径。
+在 state.json 中记录安装信息。
 
 ```json
 {
   "solodevflow": {
     "version": "2.0.0",
     "installedAt": "2025-12-21T00:00:00Z",
-    "sourcePath": "/absolute/path/to/solodevflow"
+    "upgradedAt": "2025-12-28T00:00:00Z"
   }
 }
 ```
@@ -251,9 +281,8 @@ target-project/
 - `version`: 当前安装的 SoloDevFlow 版本
 - `installedAt`: 首次安装时间（升级时保留）
 - `upgradedAt`: 最后升级时间（升级时更新）
-- `sourcePath`: SoloDevFlow 源目录的绝对路径（用于引用规范）
 
-#### C9: 操作模式
+#### C10: 操作模式
 
 **三种操作模式**的差异：
 
@@ -263,8 +292,9 @@ target-project/
 |----------|------|------|
 | `.solodevflow/state.json` | **创建** | 从模板生成，空的 features 列表 |
 | `.solodevflow/flows/` | **创建** | 从 `template/flows/` 复制 |
-| `.solodevflow/scripts/` | **创建** | 从 `scripts/` 复制运行时脚本（5个） |
+| `.solodevflow/scripts/` | **创建** | 从 `scripts/` 复制运行时脚本（6个 + lib/） |
 | `.claude/commands/` | **创建** | 从 `template/commands/` 复制 |
+| `.claude/hooks/` | **创建** | 从 `src/hooks/` 复制（含 lib/） |
 | `docs/specs/` | **创建** | 从 `docs/specs/` 复制（完整规范文档） |
 | `CLAUDE.md` | **创建** | 从模板生成 |
 
@@ -280,6 +310,7 @@ target-project/
 | `.solodevflow/flows/` | **覆盖** | 从 `template/flows/` 更新 |
 | `.solodevflow/scripts/` | **覆盖** | 从 `scripts/` 更新运行时脚本 |
 | `.claude/commands/` | **覆盖** | 从 `template/commands/` 更新 |
+| `.claude/hooks/` | **覆盖** | 从 `src/hooks/` 更新 |
 | `docs/specs/` | **覆盖** | 从 `docs/specs/` 更新（规范可能有变化） |
 | `CLAUDE.md` | **覆盖** | 从模板重新生成 |
 
@@ -291,7 +322,6 @@ target-project/
 // ✅ 只更新版本信息
 state.solodevflow.version = newVersion;
 state.solodevflow.upgradedAt = new Date().toISOString();
-state.solodevflow.sourcePath = SOLODEVFLOW_ROOT;
 
 // ❌ 保留不变（用户数据）
 // state.domains, state.pendingDocs, state.project
@@ -307,6 +337,7 @@ state.solodevflow.sourcePath = SOLODEVFLOW_ROOT;
 | `.solodevflow/flows/` | **覆盖** | 从 `template/flows/` 同步 |
 | `.solodevflow/scripts/` | **不创建** | 使用根目录 `scripts/` 源码 |
 | `.claude/commands/` | **覆盖** | 从 `template/commands/` 同步 |
+| `.claude/hooks/` | **不覆盖** | 使用 `src/hooks/` 源码（自举模式） |
 | `docs/specs/` | **跳过** | 源码已存在，不复制给自己 |
 | `scripts/` | **跳过** | 源码已存在，不覆盖 |
 | `CLAUDE.md` | **跳过** | 保留项目自身的配置 |
@@ -341,6 +372,7 @@ SoloDevFlow/
 | `.solodevflow/flows/` | ✅ 创建 | ✅ 覆盖 | ✅ 同步 |
 | `.solodevflow/scripts/` | ✅ 创建 | ✅ 覆盖 | ❌ 不创建 |
 | `.claude/commands/` | ✅ 创建 | ✅ 覆盖 | ✅ 同步 |
+| `.claude/hooks/` | ✅ 创建 | ✅ 覆盖 | ❌ 跳过 |
 | `docs/specs/` | ✅ 复制 | ✅ 覆盖 | ❌ 跳过 |
 | `CLAUDE.md` | ✅ 生成 | ✅ 覆盖 | ❌ 跳过 |
 | `state.json` | 创建空数据 | 保留数据 | 保留数据 |
@@ -355,15 +387,16 @@ SoloDevFlow/
 
 | Item | Verification | Pass Criteria |
 |------|--------------|---------------|
-| 运行时目录 | 检查目标项目 | `.solodevflow/` 目录和 4 个文件存在 |
+| 运行时目录 | 检查目标项目 | `.solodevflow/` 目录和初始文件存在 |
 | 工作流安装 | 检查目标项目 | `.solodevflow/flows/workflows.md` 存在 |
-| 脚本安装 | 检查目标项目 | `.solodevflow/scripts/` 包含 5 个运行时脚本 |
+| 脚本安装 | 检查目标项目 | `.solodevflow/scripts/` 包含 6 个运行时脚本 + lib/ |
 | 命令安装 | 检查目标项目 | `.claude/commands/` 包含 7 个 write-*.md |
+| Hooks 安装 | 检查目标项目 | `.claude/hooks/` 包含 4 个钩子文件 + lib/ |
 | 规范复制 | 检查目标项目 | `docs/specs/` 包含规范文件 |
 | CLAUDE.md | 检查目标项目 | 文件存在且包含项目信息 |
 | package.json | 检查目标项目 | scripts 字段包含状态管理命令（指向 .solodevflow/scripts/） |
 | 功能验证 | 运行 `npm run status` | 输出状态摘要 |
-| 版本记录 | 检查 state.json | `solodevflow` 字段包含 version 和 sourcePath |
+| 版本记录 | 检查 state.json | `solodevflow` 字段包含 version 和 installedAt |
 | 幂等性 | 重复运行 | 提示已安装，不破坏现有数据 |
 
 ### 3.2 自举模式
@@ -402,15 +435,17 @@ SoloDevFlow/
 
 ### In Scope
 
-- 初始化 SoloDevFlow 到目标项目
-- 复制规范、命令、工具
+- 初始化 SoloDevFlow 到目标项目（init 命令）
+- 升级已安装的 SoloDevFlow（upgrade 命令）
+- 自举模式（SoloDevFlow 自身升级）
+- 复制规范、命令、工具、Hooks
 - 生成配置文件
 
 ### Out of Scope
 
-- 升级已安装的 SoloDevFlow（未来 Feature）
 - 卸载 SoloDevFlow（未来 Feature）
 - 远程安装（从 npm registry）（未来 Feature）
+- 增量升级（只更新变更的文件）（未来 Feature）
 
 ---
 
@@ -424,7 +459,7 @@ SoloDevFlow/
 
 ---
 
-*Version: v1.4*
+*Version: v1.5*
 *Created: 2025-12-21*
 *Updated: 2025-12-28*
-*Changes: v1.4 澄清自举模式：脚本路径处理、目录结构、init/upgrade 命令行为；v1.3 函数编号修正；v1.2 添加 frontmatter 可选字段*
+*Changes: v1.5 添加 C5 Hooks 安装、移除 sourcePath、更新脚本列表（6个+lib/）、修复 Boundaries；v1.4 澄清自举模式；v1.3 函数编号修正*

@@ -238,12 +238,13 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 
 #### change-impact-tracking <!-- id: feat_ref_change_impact_tracking -->
 
-变更影响追踪机制，解决修改规范/PRD/Feature 时遗漏关联影响的问题。基于依赖图分析变更影响范围，通过锚点精确定位到具体 Feature。
+变更影响追踪机制，解决修改规范/PRD/Feature 时遗漏关联影响的问题。基于依赖图分析变更影响范围，通过 Hook 自动触发并生成子任务。
 
 **元信息**：
 - **Priority**: P0
-- **Type**: document
+- **Type**: code
 - **Feature**: [fea-change-impact-tracking.md](features/fea-change-impact-tracking.md)
+- **Artifact**: [scripts/analyze-impact.js](../../scripts/analyze-impact.js)
 
 #### input-capture <!-- id: feat_ref_input_capture -->
 

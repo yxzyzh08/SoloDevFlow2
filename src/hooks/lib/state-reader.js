@@ -114,6 +114,20 @@ function getSubtasks(state) {
 }
 
 /**
+ * 获取指定 Feature 的未完成子任务
+ * @param {object} state - state.json 数据
+ * @param {string} featureId - Feature ID
+ * @returns {Array}
+ */
+function getPendingSubtasksForFeature(state, featureId) {
+  const subtasks = state?.subtasks || [];
+  return subtasks.filter(s =>
+    s.featureId === featureId &&
+    (s.status === 'pending' || s.status === 'in_progress')
+  );
+}
+
+/**
  * 获取文档债务列表
  * @param {object} state - state.json 数据
  * @returns {Array}
@@ -128,6 +142,7 @@ module.exports = {
   getActiveFeature,
   getProject,
   getSubtasks,
+  getPendingSubtasksForFeature,
   getPendingDocs,
   STATE_PATH,
   INDEX_PATH

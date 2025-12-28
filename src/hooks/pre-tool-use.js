@@ -17,7 +17,7 @@
  */
 
 const path = require('path');
-const { readState, getActiveFeature } = require('./lib/state-reader');
+const { readState, getActiveFeature, getPendingSubtasksForFeature } = require('./lib/state-reader');
 const { formatBlockDecision, formatAllowDecision, formatAskDecision } = require('./lib/output');
 
 // =============================================================================
@@ -61,12 +61,28 @@ function matchesAny(patterns, filePath) {
  * 阶段守卫规则 (§4.3.1)
  * v12.3: 新增 feature_review 阶段
  * v6.8: 扩展 feature_requirements 阻止 scripts/*.js
+ * v6.9: 新增 done 阶段变更守卫
  */
 const PHASE_GUARD_RULES = {
   pending: {
     blockedTools: ['Write', 'Edit'],
     blockedPatterns: ['**/*'],  // All files
     reason: 'Cannot write/edit files in pending phase. Start a feature first.'
+  },
+  // done 状态的 feature 修改代码前需要进行根因分析
+  done: {
+    blockedTools: ['Write', 'Edit'],
+    blockedPatterns: [
+      'src/**/*.js', 'src/**/*.ts',
+      'scripts/**/*.js',
+      '.claude/hooks/**/*.js'
+    ],
+    decision: 'ask',  // 软性引导，而非硬性阻止
+    reason: 'Feature is done. Before modifying code, perform ROOT CAUSE ANALYSIS:\n' +
+            '  • Requirements issue → Update requirements doc first\n' +
+            '  • Design issue → Update design doc first\n' +
+            '  • Implementation issue → Proceed with code fix directly\n' +
+            'Confirm you have analyzed the root cause?'
   },
   feature_requirements: {
     blockedTools: ['Write', 'Edit'],
@@ -185,23 +201,61 @@ function checkProtectedFiles(toolName, filePath) {
 
 /**
  * 检查阶段守卫规则
+ * @param {string} phase - 当前阶段
+ * @param {string} status - 当前状态（用于检查 done 状态）
+ * @param {string} toolName - 工具名称
+ * @param {string} filePath - 文件路径
  */
-function checkPhaseGuard(phase, toolName, filePath) {
-  if (!phase || !filePath) return null;
+function checkPhaseGuard(phase, status, toolName, filePath) {
+  if (!filePath) return null;
 
-  const rule = PHASE_GUARD_RULES[phase];
+  // 优先检查 status=done（即使 phase 为空）
+  const effectivePhase = (status === 'done') ? 'done' : phase;
+  if (!effectivePhase) return null;
+
+  const rule = PHASE_GUARD_RULES[effectivePhase];
   if (!rule) return null;
 
   if (!rule.blockedTools.includes(toolName)) return null;
 
   if (matchesAny(rule.blockedPatterns, filePath)) {
+    // 支持 ask 或 block 决策（默认 block）
+    const decision = rule.decision || 'block';
     return {
-      decision: 'block',
+      decision,
       reason: rule.reason
     };
   }
 
   return null;
+}
+
+/**
+ * 检查 set-phase done 命令是否有未完成的 subtasks
+ * @returns {{ shouldWarn: boolean, featureId?: string, pendingCount?: number, pendingTasks?: Array }}
+ */
+function checkSetPhaseDone(toolName, toolInput, state) {
+  if (toolName !== 'Bash') return { shouldWarn: false };
+
+  const command = toolInput?.command || '';
+  // 匹配: node scripts/state.js set-phase <id> done
+  // 或: state.js set-phase <id> done
+  const match = command.match(/set-phase\s+(\S+)\s+done/i);
+  if (!match) return { shouldWarn: false };
+
+  const featureId = match[1];
+  const pendingTasks = getPendingSubtasksForFeature(state, featureId);
+
+  if (pendingTasks.length > 0) {
+    return {
+      shouldWarn: true,
+      featureId,
+      pendingCount: pendingTasks.length,
+      pendingTasks
+    };
+  }
+
+  return { shouldWarn: false };
 }
 
 /**
@@ -211,6 +265,18 @@ function makeDecision(toolName, toolInput, state) {
   const filePath = getFilePath(toolName, toolInput);
   const activeFeature = getActiveFeature(state);
   const phase = activeFeature?.phase || 'pending';
+  const status = activeFeature?.status;
+
+  // 0. 检查 set-phase done 是否有未完成的 subtasks（警告但不阻止）
+  const setPhaseCheck = checkSetPhaseDone(toolName, toolInput, state);
+  if (setPhaseCheck.shouldWarn) {
+    const taskList = setPhaseCheck.pendingTasks
+      .map(t => `  - ${t.description}`)
+      .join('\n');
+    return formatAskDecision(
+      `Feature "${setPhaseCheck.featureId}" has ${setPhaseCheck.pendingCount} pending subtask(s):\n${taskList}\n\nComplete or skip these subtasks before marking the feature as done.`
+    );
+  }
 
   // 1. 检查自动批准（最高优先级）
   if (checkAutoApprove(toolName, filePath)) {
@@ -228,9 +294,13 @@ function makeDecision(toolName, toolInput, state) {
     }
   }
 
-  // 3. 检查阶段守卫
-  const phaseResult = checkPhaseGuard(phase, toolName, filePath);
+  // 3. 检查阶段守卫（包含 done 状态检查）
+  const phaseResult = checkPhaseGuard(phase, status, toolName, filePath);
   if (phaseResult) {
+    // 支持 ask 或 block 决策
+    if (phaseResult.decision === 'ask') {
+      return formatAskDecision(phaseResult.reason);
+    }
     return formatBlockDecision(phaseResult.reason);
   }
 

@@ -36,15 +36,18 @@ function formatWorkflowContext(options) {
   const inProgressTasks = subtasks.filter(s => s.status === 'in_progress');
   if (inProgressTasks.length > 0) {
     lines.push(`In-Progress Tasks: ${inProgressTasks.length}`);
-    for (const task of inProgressTasks.slice(0, 3)) {
-      lines.push(`  - [${task.featureId}] ${task.description.substring(0, 50)}${task.description.length > 50 ? '...' : ''}`);
+    for (const task of inProgressTasks) {
+      lines.push(`  - [${task.featureId}] ${task.description.substring(0, 60)}${task.description.length > 60 ? '...' : ''}`);
     }
   }
 
-  // 注入 pending subtasks 数量
+  // 注入 pending subtasks（详细列出，便于跨 Session 追踪）
   const pendingSubtasks = subtasks.filter(s => s.status === 'pending');
   if (pendingSubtasks.length > 0) {
     lines.push(`Pending Subtasks: ${pendingSubtasks.length}`);
+    for (const task of pendingSubtasks) {
+      lines.push(`  - [${task.featureId}] ${task.description.substring(0, 60)}${task.description.length > 60 ? '...' : ''}`);
+    }
   }
 
   // 注入 pendingDocs 数量

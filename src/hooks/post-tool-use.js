@@ -32,6 +32,19 @@ const STATE_FILE = path.join(process.cwd(), '.solodevflow', 'state.json');
 const INDEX_FILE = path.join(process.cwd(), '.solodevflow', 'index.json');
 
 // =============================================================================
+// Impact Analysis Patterns (§3.4 C4)
+// =============================================================================
+
+/**
+ * 触发影响分析的文件模式
+ */
+const IMPACT_ANALYSIS_PATTERNS = [
+  'docs/specs/*.md',           // 规范文档
+  'docs/requirements/prd.md',  // PRD 文档
+  'template/**/*.md'           // 文档模板
+];
+
+// =============================================================================
 // Validation Rules (§4.4.1)
 // =============================================================================
 
@@ -87,6 +100,44 @@ function matchesAny(patterns, filePath) {
 }
 
 // =============================================================================
+// Impact Analysis Logic (§3.4 C4)
+// =============================================================================
+
+/**
+ * 检查文件是否触发影响分析
+ */
+function shouldTriggerImpactAnalysis(filePath) {
+  if (!filePath) return false;
+  return matchesAny(IMPACT_ANALYSIS_PATTERNS, filePath);
+}
+
+/**
+ * 运行影响分析脚本
+ * 返回分析结果作为 additionalContext
+ */
+function runImpactAnalysis(filePath) {
+  try {
+    const scriptPath = path.join(process.cwd(), 'scripts', 'analyze-impact.js');
+    if (!fs.existsSync(scriptPath)) {
+      console.error('[Impact] analyze-impact.js not found');
+      return null;
+    }
+
+    const result = execSync(`node "${scriptPath}" "${filePath}"`, {
+      encoding: 'utf-8',
+      timeout: 30000,
+      cwd: process.cwd(),
+      stdio: ['pipe', 'pipe', 'pipe']
+    });
+
+    return result.trim();
+  } catch (err) {
+    console.error(`[Impact] Analysis failed: ${err.message}`);
+    return null;
+  }
+}
+
+// =============================================================================
 // Validation Logic
 // =============================================================================
 
@@ -136,12 +187,15 @@ function runValidation(rule, filePath) {
 
 /**
  * 获取当前活跃的 Feature ID
+ * 返回 'unknown' 如果没有活跃的 Feature（后续会警告）
  */
 function getActiveFeatureId() {
   try {
     if (!fs.existsSync(STATE_FILE)) return 'unknown';
     const state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8'));
-    return state?.flow?.activeFeatures?.[0] || 'unknown';
+    const activeId = state?.flow?.activeFeatures?.[0];
+    // 返回 'unassigned' 而非 'unknown'，更明确地表示未分配
+    return activeId || 'unassigned';
   } catch (e) {
     return 'unknown';
   }
@@ -151,6 +205,7 @@ function getActiveFeatureId() {
  * 同步 TodoWrite 到 subtasks
  * - 只追加，不删除
  * - 通过 description 匹配判断是否已存在
+ * - 如果没有 activeFeature，输出警告但继续同步（使用 'unassigned'）
  */
 function syncTodoWriteToSubtasks(todos) {
   if (!fs.existsSync(STATE_FILE)) {
@@ -163,6 +218,11 @@ function syncTodoWriteToSubtasks(todos) {
     if (!state.subtasks) state.subtasks = [];
 
     const featureId = getActiveFeatureId();
+
+    // 警告：没有活跃的 Feature
+    if (featureId === 'unassigned' || featureId === 'unknown') {
+      console.error('[TodoSync] Warning: No active feature. Subtasks will be marked as "unassigned". Activate a feature first with: node scripts/state.js activate-feature <id>');
+    }
     let addedCount = 0;
     let updatedCount = 0;
 
@@ -271,22 +331,40 @@ function main() {
         process.exit(0);
       }
 
-      // 检查是否需要验证
-      const rule = getValidationRule(filePath);
-      if (!rule) {
+      // 只处理 Write/Edit 工具
+      if (tool_name !== 'Write' && tool_name !== 'Edit') {
         process.exit(0);
       }
 
-      // 执行验证
-      const result = runValidation(rule, filePath);
+      // 检查是否需要验证
+      const rule = getValidationRule(filePath);
+      let validationOutput = '';
 
-      if (result.success) {
-        // 验证通过，输出简短消息
-        console.log(`[Validation] ${result.message}`);
-      } else {
-        // 验证失败，输出详细信息到 stderr，简短消息到 stdout
-        console.error(`[Validation Warning] ${result.message}`);
-        console.log(`[Validation] ${rule.description}: Issues found, see above for details.`);
+      if (rule) {
+        // 执行验证
+        const result = runValidation(rule, filePath);
+
+        if (result.success) {
+          validationOutput = `[Validation] ${result.message}`;
+        } else {
+          console.error(`[Validation Warning] ${result.message}`);
+          validationOutput = `[Validation] ${rule.description}: Issues found, see above for details.`;
+        }
+      }
+
+      // 检查是否需要运行影响分析 (§3.4 C4)
+      let impactOutput = '';
+
+      if (shouldTriggerImpactAnalysis(filePath)) {
+        const analysis = runImpactAnalysis(filePath);
+        if (analysis) {
+          impactOutput = `\n\n[Impact Analysis]\n${analysis}`;
+        }
+      }
+
+      // 输出结果
+      if (validationOutput || impactOutput) {
+        console.log(validationOutput + impactOutput);
       }
 
       process.exit(0);

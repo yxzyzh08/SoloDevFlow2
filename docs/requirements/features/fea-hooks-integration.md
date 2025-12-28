@@ -3,9 +3,10 @@ type: feature
 id: hooks-integration
 workMode: code
 status: done
+phase: done
 priority: P0
 domain: ai-config
-version: "1.1"
+version: "1.3"
 ---
 
 # Feature: Hooks Integration <!-- id: feat_hooks_integration -->
@@ -60,6 +61,8 @@ version: "1.1"
 | H3 | PreToolUse 阶段守卫 | 基于当前阶段决定是否允许工具操作 |
 | H4 | PreToolUse 文件保护 | 保护敏感文件，防止意外修改 |
 | H5 | PostToolUse 验证触发 | 文档修改后触发验证脚本（可选） |
+| H6 | PostToolUse TodoWrite 同步 | AI 使用 TodoWrite 时自动同步到 state.json subtasks |
+| H7 | PreToolUse set-phase 守卫 | set-phase done 前检查是否有未完成的 subtasks |
 
 ### 3.1 H1: SessionStart 上下文注入
 
@@ -106,9 +109,13 @@ Session Mode: {session.mode}
 | 当前阶段 | 阻止操作 | 原因 |
 |----------|----------|------|
 | `pending` | Write/Edit 任意文件 | 初始阶段，尚未开始工作 |
-| `feature_requirements` | Write/Edit `src/**/*.{js,ts}`, `tests/**/*` | 需求阶段不应写代码 |
-| `feature_design` | Write/Edit `src/**/*.{js,ts}`, `tests/**/*` | 设计阶段不应写代码 |
+| `done` | Write/Edit `src/**/*.{js,ts}`, `scripts/**/*.js`, `.claude/hooks/**/*.js` | ask 确认 + 根因分析提示（软性引导） |
+| `feature_requirements` | Write/Edit `src/**/*.{js,ts}`, `scripts/**/*.js`, `.claude/hooks/**/*.js`, `tests/**/*` | 需求阶段不应写代码 |
+| `feature_review` | Write/Edit `docs/designs/**/*.md`, `src/**/*`, `scripts/**/*.js`, `.claude/hooks/**/*.js`, `tests/**/*` | 等待人工审核，批准后才能进入设计阶段 |
+| `feature_design` | Write/Edit `src/**/*.{js,ts}`, `scripts/**/*.js`, `tests/**/*` | 设计阶段不应写代码 |
 | 任意 | Edit `.solodevflow/state.json` | 使用 State CLI |
+
+**注意**：`done` 状态通过 status 字段判断，优先级高于 phase 字段。
 
 ### 3.4 H4: PreToolUse 文件保护
 
@@ -120,17 +127,63 @@ Session Mode: {session.mode}
 | `.env`, `*.key`, `*.pem` | block | 安全敏感文件 |
 | `docs/specs/*.md` | ask | 提示运行影响分析 |
 
+### 3.5 H6: PostToolUse TodoWrite 同步
+
+**触发条件**：AI 使用 TodoWrite 工具后
+
+**行为**：
+- 将 TodoWrite 中的任务自动同步到 state.json 的 subtasks
+- 同步方向：TodoWrite → subtasks（单向）
+- 冲突策略：只追加，不删除已有 subtasks
+- 通过 description 字段匹配判断是否已存在
+
+**featureId 分配**：
+- 使用 `state.json.flow.activeFeatures[0]` 作为 featureId
+- 如果没有活跃 Feature，标记为 `unassigned` 并输出警告
+
+**状态映射**：
+| TodoWrite status | Subtask status |
+|------------------|----------------|
+| pending | pending |
+| in_progress | in_progress |
+| completed | completed |
+
+### 3.6 H7: PreToolUse set-phase 守卫
+
+**触发条件**：执行 `node scripts/state.js set-phase <id> done` 命令时
+
+**行为**：
+- 检查该 Feature 是否有未完成的 subtasks（pending 或 in_progress）
+- 如果有未完成任务，返回 `ask` 决策，列出所有未完成任务
+- 用户可以选择继续或取消
+
+**输出示例**：
+```
+Feature "xxx" has 3 pending subtask(s):
+  - Task 1 description
+  - Task 2 description
+  - Task 3 description
+
+Complete or skip these subtasks before marking the feature as done.
+```
+
+**注意**：此守卫仅在命令不在 `settings.local.json` 的 allow list 中时生效。
+
 ---
 
 ## 4. Acceptance Criteria <!-- id: feat_hooks_integration_acceptance -->
 
 | Item | Verification | Pass Criteria |
 |------|--------------|---------------|
-| SessionStart 输出 | 启动 Claude Code | 显示 `<workflow-context>` 标签 |
+| SessionStart 输出 | 启动 Claude Code | 显示 `<workflow-context>` 标签，包含详细 subtasks 列表 |
 | UserPromptSubmit 输出 | 输入任意内容 | 上下文包含当前 Feature |
 | 阶段守卫 - 需求阶段 | 在 `feature_requirements` 阶段尝试 Edit `src/test.js` | 操作被阻止 |
+| 阶段守卫 - done 状态 | 在 `done` 状态尝试 Edit `src/*.js` | 显示 ask 确认，提示进行根因分析 |
 | 文件保护 - state.json | 尝试 Edit `.solodevflow/state.json` | 操作被阻止，提示使用 CLI |
 | 规范修改提示 | 修改 `docs/specs/*.md` | 显示 ask 确认 |
+| TodoWrite 同步 | AI 使用 TodoWrite | 任务同步到 state.json subtasks |
+| TodoWrite 警告 | 无活跃 Feature 时使用 TodoWrite | 输出警告，featureId 标记为 `unassigned` |
+| set-phase done 守卫 | 有未完成 subtasks 时执行 set-phase done | 显示 ask 确认，列出未完成任务 |
 
 ---
 
@@ -186,6 +239,25 @@ Session Mode: {session.mode}
 
 ---
 
-*Version: v1.0*
+*Version: v1.3*
 *Created: 2025-12-27*
-*Updated: 2025-12-27*
+*Updated: 2025-12-28*
+
+---
+
+## Changelog
+
+### v1.3 (2025-12-28)
+- `done` 状态守卫改为软性引导：block → ask
+- 增加根因分析提示：需求问题/设计问题/实现问题
+- 配合 workflows.md §7 Bug Fix Flow 使用
+
+### v1.2 (2025-12-28)
+- 新增 H6: PostToolUse TodoWrite 同步功能
+- 新增 H7: PreToolUse set-phase done 守卫
+- 扩展阶段守卫规则：添加 `done` 状态和 `feature_review` 阶段
+- 扩展阶段守卫范围：`scripts/**/*.js`、`.claude/hooks/**/*.js`
+- SessionStart 输出增强：详细列出所有 pending subtasks
+
+### v1.1 (2025-12-27)
+- 初始版本发布

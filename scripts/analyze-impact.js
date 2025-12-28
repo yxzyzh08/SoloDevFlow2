@@ -4,8 +4,16 @@
  * Change Impact Analysis Script
  * Analyzes the impact of changes to specification documents and templates
  *
- * Usage: node scripts/analyze-impact.js <changed-file>
- * Example: node scripts/analyze-impact.js docs/specs/spec-requirements.md
+ * Usage: node scripts/analyze-impact.js <changed-file> [options]
+ * Options:
+ *   --write       Write subtasks to state.json
+ *   --depth=N     Set max analysis depth (default: 2)
+ *   --json        Output subtasks as JSON
+ *
+ * Examples:
+ *   node scripts/analyze-impact.js docs/specs/spec-requirements.md
+ *   node scripts/analyze-impact.js docs/specs/spec-requirements.md --write
+ *   node scripts/analyze-impact.js docs/specs/spec-requirements.md --depth=3
  */
 
 const fs = require('fs');
@@ -15,6 +23,7 @@ const { toBeijingISOString } = require('./lib/datetime');
 const REQUIREMENTS_DIR = path.join(__dirname, '..', 'docs', 'requirements');
 const DESIGNS_DIR = path.join(__dirname, '..', 'docs', 'designs');
 const STATE_FILE = path.join(__dirname, '..', '.solodevflow', 'state.json');
+const INDEX_FILE = path.join(__dirname, '..', '.solodevflow', 'index.json');
 
 // Document type detection
 function getDocType(filePath) {
@@ -95,12 +104,12 @@ function buildDependencyGraph() {
   const nodes = new Map();
   const edges = [];
 
-  // Read state.json for feature information
-  let state = null;
+  // Read index.json for document information
+  let index = null;
   try {
-    state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+    index = JSON.parse(fs.readFileSync(INDEX_FILE, 'utf8'));
   } catch (e) {
-    console.error('Warning: Could not read state.json');
+    console.error('Warning: Could not read index.json');
   }
 
   // Scan docs directory recursively
@@ -163,134 +172,130 @@ function buildDependencyGraph() {
   scanDir(REQUIREMENTS_DIR);
   scanDir(DESIGNS_DIR);
 
-  // Add PRD Feature reference edges from state.json
-  // Parse feat_ref_ anchors in PRD to create precise relationships
-  if (state && state.features) {
+  // Add document edges from index.json
+  if (index && index.documents) {
     const prdPath = 'docs/requirements/prd.md';
     const prdNode = nodes.get(prdPath);
 
-    if (prdNode && prdNode.anchors) {
-      // Create edges from feat_ref_ anchors to Feature Specs
-      for (const [featureName, feature] of Object.entries(state.features)) {
-        if (feature.docPath) {
-          // Look for matching feat_ref_ anchor
-          const featureRefAnchor = `feat_ref_${featureName.replace(/-/g, '_')}`;
-          const anchorPath = `${prdPath}#${featureRefAnchor}`;
+    for (const doc of index.documents) {
+      // Skip if no path
+      if (!doc.path) continue;
 
-          if (prdNode.anchors.includes(featureRefAnchor)) {
-            // Create a virtual node for the feature reference
-            nodes.set(anchorPath, {
-              type: 'prd-feature-ref',
-              path: anchorPath,
-              anchors: [featureRefAnchor],
-              featureName
-            });
+      // Add PRD -> Feature/Flow/Capability edges
+      if (doc.type === 'feature' || doc.type === 'flow' || doc.type === 'capability') {
+        // Look for matching feat_ref_ anchor in PRD
+        const featureRefAnchor = `feat_ref_${doc.id.replace(/-/g, '_')}`;
+        const anchorPath = `${prdPath}#${featureRefAnchor}`;
 
-            // Edge: feat_ref anchor -> Feature Spec
-            edges.push({
-              from: anchorPath,
-              to: feature.docPath,
-              type: 'defines',
-              featureName
-            });
-          } else {
-            // Fallback: if no feat_ref_ anchor found, use whole PRD
-            edges.push({
-              from: prdPath,
-              to: feature.docPath,
-              type: 'defines',
-              featureName
-            });
-          }
-        }
-      }
-    } else {
-      // Fallback: if PRD not parsed, create edges from whole PRD
-      for (const [featureName, feature] of Object.entries(state.features)) {
-        if (feature.docPath) {
+        if (prdNode && prdNode.anchors && prdNode.anchors.includes(featureRefAnchor)) {
+          // Create a virtual node for the feature reference
+          nodes.set(anchorPath, {
+            type: 'prd-feature-ref',
+            path: anchorPath,
+            anchors: [featureRefAnchor],
+            featureName: doc.id
+          });
+
+          // Edge: feat_ref anchor -> Document
           edges.push({
-            from: 'docs/prd.md',
-            to: feature.docPath,
+            from: anchorPath,
+            to: doc.path,
             type: 'defines',
-            featureName
+            featureName: doc.id
+          });
+        } else {
+          // Fallback: use whole PRD
+          edges.push({
+            from: prdPath,
+            to: doc.path,
+            type: 'defines',
+            featureName: doc.id
           });
         }
       }
-    }
 
-    // Add artifacts edges for code type features (v1.2)
-    for (const [featureName, feature] of Object.entries(state.features)) {
-      if (feature.type === 'code' && feature.artifacts) {
-        const featureDocPath = feature.docPath;
+      // Add dependency edges from document's dependencies array
+      if (doc.dependencies && Array.isArray(doc.dependencies)) {
+        for (const dep of doc.dependencies) {
+          edges.push({
+            from: dep.id,
+            to: doc.path,
+            type: 'depends',
+            dependencyType: dep.type,
+            featureName: doc.id
+          });
+        }
+      }
+
+      // Add artifacts edges for code type features
+      if (doc.workMode === 'code' && doc.artifacts) {
+        const featureDocPath = doc.path;
 
         // Design doc edge
-        if (feature.artifacts.design) {
-          const designPath = feature.artifacts.design;
-          // Add design doc node if not exists
+        if (doc.artifacts.design) {
+          const designPath = doc.artifacts.design;
           if (!nodes.has(designPath)) {
             nodes.set(designPath, {
               type: 'design-doc',
               path: designPath,
               anchors: [],
-              featureName
+              featureName: doc.id
             });
           }
           edges.push({
             from: featureDocPath,
             to: designPath,
             type: 'produces',
-            featureName
+            featureName: doc.id
           });
         }
 
         // Code edges
-        if (feature.artifacts.code) {
-          for (const codePath of feature.artifacts.code) {
-            // Add code node if not exists
+        if (doc.artifacts.code) {
+          for (const codePath of doc.artifacts.code) {
             if (!nodes.has(codePath)) {
               nodes.set(codePath, {
                 type: 'code',
                 path: codePath,
                 anchors: [],
-                featureName
+                featureName: doc.id
               });
             }
             edges.push({
               from: featureDocPath,
               to: codePath,
               type: 'produces',
-              featureName
+              featureName: doc.id
             });
           }
         }
 
         // Test edges
-        if (feature.artifacts.tests) {
-          for (const testPath of feature.artifacts.tests) {
-            // Add test node if not exists
+        if (doc.artifacts.tests) {
+          for (const testPath of doc.artifacts.tests) {
             if (!nodes.has(testPath)) {
               nodes.set(testPath, {
                 type: 'test',
                 path: testPath,
                 anchors: [],
-                featureName
+                featureName: doc.id
               });
             }
             edges.push({
               from: featureDocPath,
               to: testPath,
               type: 'produces',
-              featureName
+              featureName: doc.id
             });
 
             // Test -> Code edges
-            if (feature.artifacts.code) {
-              for (const codePath of feature.artifacts.code) {
+            if (doc.artifacts.code) {
+              for (const codePath of doc.artifacts.code) {
                 edges.push({
                   from: testPath,
                   to: codePath,
                   type: 'tests',
-                  featureName
+                  featureName: doc.id
                 });
               }
             }
@@ -410,6 +415,67 @@ function generateSubtasks(directImpacts, indirectImpacts, changedFile) {
   return subtasks;
 }
 
+// Write subtasks to state.json (with deduplication)
+function writeSubtasksToState(subtasks, activeFeatureId) {
+  let state = null;
+  try {
+    state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+  } catch (e) {
+    console.error('Error: Could not read state.json');
+    return { added: 0, skipped: 0 };
+  }
+
+  // Ensure subtasks array exists
+  if (!state.subtasks) {
+    state.subtasks = [];
+  }
+
+  // Get existing targets for deduplication
+  const existingTargets = new Set(
+    state.subtasks
+      .filter(st => st.target)
+      .map(st => st.target)
+  );
+
+  let added = 0;
+  let skipped = 0;
+
+  for (const subtask of subtasks) {
+    // Check if subtask with same target already exists
+    if (subtask.target && existingTargets.has(subtask.target)) {
+      skipped++;
+      continue;
+    }
+
+    // Add featureId from active feature or first active feature
+    const featureId = activeFeatureId ||
+      (state.flow && state.flow.activeFeatures && state.flow.activeFeatures[0]) ||
+      'unknown';
+
+    state.subtasks.push({
+      ...subtask,
+      featureId
+    });
+    added++;
+
+    // Track for deduplication
+    if (subtask.target) {
+      existingTargets.add(subtask.target);
+    }
+  }
+
+  // Update metadata
+  state.lastUpdated = toBeijingISOString();
+  if (state.metadata) {
+    state.metadata.stateFileVersion = (state.metadata.stateFileVersion || 0) + 1;
+  }
+
+  // Write back to state.json
+  fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2), 'utf8');
+
+  return { added, skipped };
+}
+
 // Format output in standard format
 function formatOutput(changedFile, directImpacts, indirectImpacts, subtasks) {
   const lines = [];
@@ -476,21 +542,60 @@ function formatOutput(changedFile, directImpacts, indirectImpacts, subtasks) {
   return lines.join('\n');
 }
 
+// Parse command line options
+function parseOptions(args) {
+  const options = {
+    write: false,
+    depth: 2,
+    json: false,
+    file: null
+  };
+
+  for (const arg of args) {
+    if (arg === '--write') {
+      options.write = true;
+    } else if (arg === '--json') {
+      options.json = true;
+    } else if (arg.startsWith('--depth=')) {
+      const depthVal = parseInt(arg.split('=')[1], 10);
+      if (!isNaN(depthVal) && depthVal > 0) {
+        options.depth = depthVal;
+      }
+    } else if (!arg.startsWith('--')) {
+      options.file = arg;
+    }
+  }
+
+  return options;
+}
+
 // Main
 function main() {
   const args = process.argv.slice(2);
 
   if (args.length === 0) {
-    console.log('Usage: node scripts/analyze-impact.js <changed-file>[#anchor]');
+    console.log('Usage: node scripts/analyze-impact.js <changed-file> [options]');
+    console.log('');
+    console.log('Options:');
+    console.log('  --write       Write subtasks to state.json');
+    console.log('  --depth=N     Set max analysis depth (default: 2)');
+    console.log('  --json        Output subtasks as JSON');
     console.log('');
     console.log('Examples:');
     console.log('  node scripts/analyze-impact.js docs/specs/spec-requirements.md');
-    console.log('  node scripts/analyze-impact.js docs/templates/backend/feature.spec.md');
-    console.log('  node scripts/analyze-impact.js "docs/prd.md#feat_ref_change_impact_tracking"');
+    console.log('  node scripts/analyze-impact.js docs/specs/spec-requirements.md --write');
+    console.log('  node scripts/analyze-impact.js docs/specs/spec-requirements.md --depth=3');
     process.exit(0);
   }
 
-  const changedFile = args[0];
+  const options = parseOptions(args);
+
+  if (!options.file) {
+    console.error('Error: No file specified');
+    process.exit(1);
+  }
+
+  const changedFile = options.file;
   let changedPath = changedFile;
   let changedAnchor = null;
 
@@ -517,14 +622,21 @@ function main() {
   // If anchor is specified, use the anchor path for analysis
   const analysisTarget = changedAnchor ? `${changedPath}#${changedAnchor}` : changedPath;
 
-  const { directImpacts, indirectImpacts } = findImpactedDocuments(graph, analysisTarget);
+  const { directImpacts, indirectImpacts } = findImpactedDocuments(graph, analysisTarget, options.depth);
   const subtasks = generateSubtasks(directImpacts, indirectImpacts, changedFile);
 
   console.log('=== Analysis Result ===\n');
   console.log(formatOutput(changedFile, directImpacts, indirectImpacts, subtasks));
 
+  // Write subtasks to state.json if --write is specified
+  if (options.write && subtasks.length > 0) {
+    console.log('\n=== Writing Subtasks ===\n');
+    const result = writeSubtasksToState(subtasks);
+    console.log(`Added ${result.added} subtask(s), skipped ${result.skipped} duplicate(s)`);
+  }
+
   // Output subtasks as JSON for programmatic use
-  if (args.includes('--json')) {
+  if (options.json) {
     console.log('\n=== Subtasks JSON ===\n');
     console.log(JSON.stringify(subtasks, null, 2));
   }

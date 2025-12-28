@@ -18,12 +18,6 @@
 
 **所有人类输入按此流程处理**：@.solodevflow/flows/workflows.md
 
-## 规范引用
-
-编写文档时加载对应规范：
-- 需求文档：@docs/specs/spec-requirements.md
-- 设计文档：@docs/specs/spec-design.md
-- 测试规范：@docs/specs/spec-test.md
 
 ## 元规则 (Meta Rules)
 

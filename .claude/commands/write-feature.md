@@ -1,107 +1,60 @@
-# 编写 Feature Spec
+---
+description: 编写或更新 Feature Spec 文档
+argument-hint: <name> [domain]
+---
 
-编写或更新功能规格文档。支持两种调用方式：
-
-- `/write-feature {name}` - 独立 Feature（Bottom-Up 模式）
-- `/write-feature {domain} {name}` - Domain 内 Feature
+编写或更新功能规格文档（Feature Spec）。Feature 是纵向业务功能切片，面向用户价值，可独立交付验收。
 
 ## 参数
 
-**单参数调用**（独立 Feature）：
-- `name`：功能名称（必填）
-
-**双参数调用**（Domain 内 Feature）：
-- `domain`：所属领域名称（必填）
-- `name`：功能名称（必填）
-
-## 输出位置
-
-| 调用方式 | 输出位置 |
-|----------|----------|
-| `/write-feature {name}` | `docs/requirements/_features/{feature}.spec.md` |
-| `/write-feature {domain} {name}` | `docs/requirements/{domain}/{feature}.spec.md` |
-
-## 加载文件
-
-### 步骤0: 获取规范路径
-
-1. 读取 `.flow/state.json` 获取:
-   - `project.type`（项目类型：`backend` | `web-app` | `mobile-app`）
-   - `solodevflow.sourcePath`（SoloDevFlow 源路径）
-
-### 步骤1: 加载规范和模板
-
-1. 规范文档：`{sourcePath}/docs/requirements/specs/requirements-doc.spec.md`
-2. Feature 模板：`docs/requirements/templates/{projectType}/feature.spec.md`
-3. 现有 Feature Spec：目标路径文件（如存在）
-
-**注意**: 规范文档来自 SoloDevFlow 源目录，为只读文件。
+- `$1`：功能名称（必填），如 `login`、`state-management`
+- `$2`：所属 Domain（可选），如 `auth`、`process`
 
 ## 执行步骤
 
-### 2. 参数解析
+1. 检查参数：如 `$1` 缺失，提示用户提供功能名称后终止
+2. 加载规范文档：@docs/specs/spec-requirements.md（§4 Feature Spec Structure）
+3. 确定输出路径：`docs/requirements/features/fea-{$1}.md`
+4. 检查目标文件是否存在
+   - 不存在 → 新建模式
+   - 存在 → 更新模式（保留未变更章节）
+5. 如提供 `$2`（domain），填入 frontmatter 的 domain 字段
+6. 根据用户输入编写/更新文档
+7. 输出文件
 
-1. 判断参数数量，确定调用模式和输出路径
-2. 检测目标文件是否存在
-3. 读取规范文档，了解 Feature Spec 结构要求（Section 5）
+## 输出要求
 
-### 3. 文档编写
+**Frontmatter**：
 
-**如果不存在（新建模式）**：
-4. 读取 Feature 模板，作为文档骨架
-5. 根据用户提供的功能信息，填充模板内容
-6. 按模板中的锚点要求添加锚点（替换 `{name}` 为实际功能名）
-7. 输出到对应位置
-
-**如果存在（更新模式）**：
-4. 读取现有 Feature Spec 内容
-5. 根据用户输入的需求，自动判断需要更新哪些章节
-6. 保留未变更的章节，只修改相关部分
-7. 确保锚点和结构完整
-8. 输出更新后的文件
-
-**最后**：
-- 运行校验：`npm run validate:docs {输出文件路径}`，确保符合规范
-
-## Feature 类型与 Artifacts
-
-### Feature 类型判断
-
-在编写前确认 Feature 类型：
-
-| 类型 | 判断标准 | Artifacts 章节 |
-|------|----------|----------------|
-| `code` | 产出为代码 + 测试 | **必选** |
-| `document` | 产出为 Markdown 文档 | 可选 |
-
-### Artifacts 章节（code 类型必选）
-
-```markdown
-## Artifacts <!-- feat_{name}_artifacts -->
-
-| Type | Path | Required | Description |
-|------|------|----------|-------------|
-| Design | docs/designs/{domain}/{name}.design.md | required 时必填 | 设计文档 |
-| Code | src/{module}/ | Yes | 代码目录 |
-| E2E Test | tests/e2e/{name}.test.ts | Yes | E2E 测试 |
-
-**Design Depth**: none | required
+```yaml
+---
+type: feature
+id: {$1}
+workMode: {code|document}
+status: not_started
+priority: {P0|P1|P2}
+domain: {$2}  # 如提供
+version: "1.0"
+---
 ```
 
-### Design Depth 初步评估
+**必选章节**：
 
-在编写 Feature Spec 时，根据功能复杂度初步评估 Design Depth：
+| Section | Anchor | Description |
+|---------|--------|-------------|
+| Intent | `feat_{name}_intent` | 解决什么问题（Why） |
+| Core Functions | `feat_{name}_functions` | 提供什么功能（What） |
+| Acceptance Criteria | `feat_{name}_acceptance` | 可验证的完成条件 |
 
-| 级别 | 条件 |
-|------|------|
-| none | 简单、边界清晰、无架构决策，无需设计文档 |
-| required | 需要架构决策、涉及多模块，需要设计文档 |
+**条件必选**：
+- `Artifacts`：workMode=code 时必填
+
+**可选章节**：User Stories、Boundaries、Dependencies、Non-Functional Requirements
+
+**锚点格式**：`feat_{name}_{section}`（`{name}` = `$1`）
 
 ## 注意事项
 
-- 必须包含：Intent、Core Capabilities、Acceptance Criteria
-- **code 类型必须包含 Artifacts 章节**
-- User Stories 为可选章节，需要详细描述用户场景时添加
-- 参考 Appendix E 了解 User Story 与 User Scenario 的区别
-- 独立 Feature 后续可迁移到 Domain 目录（当 Domain 确定时）
-- 更新时保留文档版本历史（末尾的 Version/Changes 信息）
+- 确认 Feature 类型：code（代码产出）或 document（文档产出）
+- code 类型必须包含 Artifacts 章节，记录 Design Depth
+- 更新时保留文档版本历史

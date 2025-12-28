@@ -17,8 +17,7 @@
   "pendingDocs": [],
   "solodevflow": {
     "version": "{{version}}",
-    "installedAt": "{{installedAt}}",
-    "sourcePath": "{{sourcePath}}"
+    "installedAt": "{{installedAt}}"
   },
   "metadata": {
     "stateFileVersion": 1,

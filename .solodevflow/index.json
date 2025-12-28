@@ -1,19 +1,17 @@
 {
-  "generated": "2025-12-28T20:45:12.086+08:00",
+  "generated": "2025-12-28T23:10:57.442+08:00",
   "summary": {
-    "total": 19,
-    "done": 8,
-    "in_progress": 3,
-    "not_started": 8
+    "total": 17,
+    "done": 15,
+    "in_progress": 0,
+    "not_started": 2
   },
-  "activeFeatures": [
-    "project-init"
-  ],
+  "activeFeatures": [],
   "documents": [
     {
       "id": "design-hooks-integration",
       "type": "design",
-      "title": "Hooks Integration Design v1.3",
+      "title": "Hooks Integration Design v1.4",
       "workMode": null,
       "status": "done",
       "phase": null,
@@ -47,31 +45,6 @@
       "path": "docs/designs/des-system-architecture.md"
     },
     {
-      "id": "design-project-init",
-      "type": "design",
-      "title": "Feature Design: project-init",
-      "workMode": null,
-      "status": "in_progress",
-      "phase": null,
-      "priority": null,
-      "domain": null,
-      "path": "docs/designs/tooling/project-init.design.md",
-      "dependencies": [
-        {
-          "id": "state-management",
-          "type": "hard"
-        },
-        {
-          "id": "write-commands",
-          "type": "soft"
-        },
-        {
-          "id": "readline",
-          "type": "soft"
-        }
-      ]
-    },
-    {
       "id": "document-validation",
       "type": "capability",
       "title": "Document Validation",
@@ -86,9 +59,9 @@
       "id": "change-impact-tracking",
       "type": "feature",
       "title": "Change Impact Tracking",
-      "workMode": "document",
-      "status": "not_started",
-      "phase": null,
+      "workMode": "code",
+      "status": "done",
+      "phase": "done",
       "priority": "P0",
       "domain": "process",
       "path": "docs/requirements/features/fea-change-impact-tracking.md",
@@ -98,7 +71,7 @@
           "type": "hard"
         },
         {
-          "id": "cap-document-validation",
+          "id": "hooks-integration",
           "type": "hard"
         },
         {
@@ -113,7 +86,7 @@
       "title": "Hooks Integration",
       "workMode": "code",
       "status": "done",
-      "phase": null,
+      "phase": "done",
       "priority": "P0",
       "domain": "ai-config",
       "path": "docs/requirements/features/fea-hooks-integration.md",
@@ -137,7 +110,7 @@
       "type": "feature",
       "title": "Input Capture",
       "workMode": "document",
-      "status": "not_started",
+      "status": "done",
       "phase": null,
       "priority": "P0",
       "domain": "process",
@@ -145,10 +118,6 @@
       "dependencies": [
         {
           "id": "state-management",
-          "type": "hard"
-        },
-        {
-          "id": "hooks-integration",
           "type": "soft"
         }
       ]
@@ -158,8 +127,8 @@
       "type": "feature",
       "title": "Project Init",
       "workMode": "code",
-      "status": "in_progress",
-      "phase": null,
+      "status": "done",
+      "phase": "done",
       "priority": "P0",
       "domain": "tooling",
       "path": "docs/requirements/features/fea-project-init.md",
@@ -174,35 +143,6 @@
         },
         {
           "id": "meta-spec",
-          "type": "soft"
-        }
-      ]
-    },
-    {
-      "id": "project-refactor",
-      "type": "feature",
-      "title": "Project Refactor",
-      "workMode": "document",
-      "status": "not_started",
-      "phase": null,
-      "priority": "P1",
-      "domain": "process",
-      "path": "docs/requirements/features/fea-project-refactor.md",
-      "dependencies": [
-        {
-          "id": "project-init",
-          "type": "hard"
-        },
-        {
-          "id": "state-management",
-          "type": "hard"
-        },
-        {
-          "id": "flow-refactoring",
-          "type": "hard"
-        },
-        {
-          "id": "hooks-integration",
           "type": "soft"
         }
       ]
@@ -279,7 +219,7 @@
       "type": "flow",
       "title": "Design",
       "workMode": "document",
-      "status": "not_started",
+      "status": "done",
       "phase": null,
       "priority": "P0",
       "domain": "process",
@@ -300,7 +240,7 @@
       "type": "flow",
       "title": "Implementation",
       "workMode": "document",
-      "status": "not_started",
+      "status": "done",
       "phase": null,
       "priority": "P0",
       "domain": "process",
@@ -337,14 +277,28 @@
       "phase": null,
       "priority": "P1",
       "domain": "process",
-      "path": "docs/requirements/flows/flow-refactoring.md"
+      "path": "docs/requirements/flows/flow-refactoring.md",
+      "dependencies": [
+        {
+          "id": "project-init",
+          "type": "hard"
+        },
+        {
+          "id": "state-management",
+          "type": "hard"
+        },
+        {
+          "id": "hooks-integration",
+          "type": "soft"
+        }
+      ]
     },
     {
       "id": "requirements-flow",
       "type": "flow",
       "title": "Requirements Processing",
       "workMode": "document",
-      "status": "in_progress",
+      "status": "done",
       "phase": null,
       "priority": "P0",
       "domain": "process",
@@ -373,7 +327,7 @@
       "type": "flow",
       "title": "Testing",
       "workMode": "document",
-      "status": "not_started",
+      "status": "done",
       "phase": null,
       "priority": "P0",
       "domain": "process",
@@ -439,7 +393,7 @@
       {
         "id": "design-hooks-integration",
         "type": "design",
-        "title": "Hooks Integration Design v1.3",
+        "title": "Hooks Integration Design v1.4",
         "workMode": null,
         "status": "done",
         "phase": null,
@@ -471,31 +425,6 @@
         "priority": null,
         "domain": null,
         "path": "docs/designs/des-system-architecture.md"
-      },
-      {
-        "id": "design-project-init",
-        "type": "design",
-        "title": "Feature Design: project-init",
-        "workMode": null,
-        "status": "in_progress",
-        "phase": null,
-        "priority": null,
-        "domain": null,
-        "path": "docs/designs/tooling/project-init.design.md",
-        "dependencies": [
-          {
-            "id": "state-management",
-            "type": "hard"
-          },
-          {
-            "id": "write-commands",
-            "type": "soft"
-          },
-          {
-            "id": "readline",
-            "type": "soft"
-          }
-        ]
       }
     ],
     "capability": [
@@ -516,9 +445,9 @@
         "id": "change-impact-tracking",
         "type": "feature",
         "title": "Change Impact Tracking",
-        "workMode": "document",
-        "status": "not_started",
-        "phase": null,
+        "workMode": "code",
+        "status": "done",
+        "phase": "done",
         "priority": "P0",
         "domain": "process",
         "path": "docs/requirements/features/fea-change-impact-tracking.md",
@@ -528,7 +457,7 @@
             "type": "hard"
           },
           {
-            "id": "cap-document-validation",
+            "id": "hooks-integration",
             "type": "hard"
           },
           {
@@ -543,7 +472,7 @@
         "title": "Hooks Integration",
         "workMode": "code",
         "status": "done",
-        "phase": null,
+        "phase": "done",
         "priority": "P0",
         "domain": "ai-config",
         "path": "docs/requirements/features/fea-hooks-integration.md",
@@ -567,7 +496,7 @@
         "type": "feature",
         "title": "Input Capture",
         "workMode": "document",
-        "status": "not_started",
+        "status": "done",
         "phase": null,
         "priority": "P0",
         "domain": "process",
@@ -575,10 +504,6 @@
         "dependencies": [
           {
             "id": "state-management",
-            "type": "hard"
-          },
-          {
-            "id": "hooks-integration",
             "type": "soft"
           }
         ]
@@ -588,8 +513,8 @@
         "type": "feature",
         "title": "Project Init",
         "workMode": "code",
-        "status": "in_progress",
-        "phase": null,
+        "status": "done",
+        "phase": "done",
         "priority": "P0",
         "domain": "tooling",
         "path": "docs/requirements/features/fea-project-init.md",
@@ -604,35 +529,6 @@
           },
           {
             "id": "meta-spec",
-            "type": "soft"
-          }
-        ]
-      },
-      {
-        "id": "project-refactor",
-        "type": "feature",
-        "title": "Project Refactor",
-        "workMode": "document",
-        "status": "not_started",
-        "phase": null,
-        "priority": "P1",
-        "domain": "process",
-        "path": "docs/requirements/features/fea-project-refactor.md",
-        "dependencies": [
-          {
-            "id": "project-init",
-            "type": "hard"
-          },
-          {
-            "id": "state-management",
-            "type": "hard"
-          },
-          {
-            "id": "flow-refactoring",
-            "type": "hard"
-          },
-          {
-            "id": "hooks-integration",
             "type": "soft"
           }
         ]
@@ -711,7 +607,7 @@
         "type": "flow",
         "title": "Design",
         "workMode": "document",
-        "status": "not_started",
+        "status": "done",
         "phase": null,
         "priority": "P0",
         "domain": "process",
@@ -732,7 +628,7 @@
         "type": "flow",
         "title": "Implementation",
         "workMode": "document",
-        "status": "not_started",
+        "status": "done",
         "phase": null,
         "priority": "P0",
         "domain": "process",
@@ -769,14 +665,28 @@
         "phase": null,
         "priority": "P1",
         "domain": "process",
-        "path": "docs/requirements/flows/flow-refactoring.md"
+        "path": "docs/requirements/flows/flow-refactoring.md",
+        "dependencies": [
+          {
+            "id": "project-init",
+            "type": "hard"
+          },
+          {
+            "id": "state-management",
+            "type": "hard"
+          },
+          {
+            "id": "hooks-integration",
+            "type": "soft"
+          }
+        ]
       },
       {
         "id": "requirements-flow",
         "type": "flow",
         "title": "Requirements Processing",
         "workMode": "document",
-        "status": "in_progress",
+        "status": "done",
         "phase": null,
         "priority": "P0",
         "domain": "process",
@@ -805,7 +715,7 @@
         "type": "flow",
         "title": "Testing",
         "workMode": "document",
-        "status": "not_started",
+        "status": "done",
         "phase": null,
         "priority": "P0",
         "domain": "process",

@@ -94,73 +94,6 @@ function renderTemplate(templatePath, variables) {
   return content;
 }
 
-/**
- * 从 flow-workflows.md 提取第6章 Execution Spec
- * 生成独立的 workflows.md 文件
- */
-function extractExecutionSpec() {
-  const flowDocPath = path.join(SOLODEVFLOW_ROOT, 'docs/requirements/flows/flow-workflows.md');
-
-  if (!fs.existsSync(flowDocPath)) {
-    throw new Error('flow-workflows.md 不存在，无法提取 Execution Spec');
-  }
-
-  const content = fs.readFileSync(flowDocPath, 'utf-8');
-  const lines = content.split('\n');
-
-  // 找到第6章的起始位置
-  let startIndex = -1;
-  let endIndex = lines.length;
-
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].trim() === '## 6. Execution Spec <!-- id: flow_workflows_execution_spec -->') {
-      startIndex = i;
-    }
-    // 找到 version 信息的位置（作为结束标记）
-    if (startIndex !== -1 && lines[i].trim().startsWith('*Version:')) {
-      endIndex = i;
-      break;
-    }
-  }
-
-  if (startIndex === -1) {
-    throw new Error('在 flow-workflows.md 中未找到第6章 Execution Spec');
-  }
-
-  // 提取第6章内容（跳过章节标题本身）
-  let execSpecLines = lines.slice(startIndex + 1, endIndex);
-
-  // 调整章节号：6.1 → 1, 6.2 → 2, 6.2.1 → 2.1 等
-  execSpecLines = execSpecLines.map(line => {
-    // 替换标题中的章节号
-    if (line.match(/^#{2,4}\s+6\./)) {
-      return line.replace(/^(#{2,4}\s+)6\./, '$1');
-    }
-    // 替换表格和文本中的引用（如：6.2.2 → 2.2）
-    return line.replace(/（6\./g, '（').replace(/\(6\./g, '(');
-  });
-
-  // 构建最终文件内容
-  const header = `# Workflows - Execution Spec
-
-> AI 执行规范：定义 AI 如何响应用户输入并维护状态
-
-**需求文档**：[工作流需求文档](docs/requirements/flows/flow-workflows.md)
-
----
-`;
-
-  const footer = `
----
-
-*Version: v1.0*
-*Created: 2024-12-22*
-*Source: Extracted from flow-workflows.md v3.0*
-`;
-
-  return header + execSpecLines.join('\n') + footer;
-}
-
 async function question(rl, prompt) {
   return new Promise(resolve => {
     rl.question(prompt, resolve);
@@ -324,8 +257,7 @@ async function copyFiles(config) {
     projectType: config.projectType,
     version: VERSION,
     createdAt: now,
-    installedAt: now,
-    sourcePath: SOLODEVFLOW_ROOT
+    installedAt: now
   };
 
   // Generate .solodevflow files from templates
@@ -369,8 +301,7 @@ async function upgradeFiles(config) {
   state.solodevflow = {
     version: VERSION,
     installedAt: state.solodevflow?.installedAt || now,
-    upgradedAt: now,
-    sourcePath: SOLODEVFLOW_ROOT
+    upgradedAt: now
   };
   state.lastUpdated = now;
 
@@ -393,9 +324,15 @@ async function upgradeFiles(config) {
 
 /**
  * 自举模式：更新工具文件，保留项目数据
+ *
+ * 自举模式特点：
+ * - 只同步 template/ → 运行态目录
+ * - 不复制 scripts/（使用源码）
+ * - 不复制 docs/specs/（源码已存在）
+ * - 不生成 CLAUDE.md（保留项目配置）
  */
 async function bootstrapFiles(config) {
-  log('自举模式：更新工具文件...');
+  log('自举模式：同步模板到运行态...');
 
   const targetPath = config.targetPath;
   const now = toBeijingISOString();
@@ -413,68 +350,20 @@ async function bootstrapFiles(config) {
     state.solodevflow.upgradedAt = now;
     state.lastUpdated = now;
 
-    // ❌ 保留用户数据：domains, pendingDocs, metadata
+    // ❌ 保留项目数据：domains, pendingDocs, metadata, subtasks 等
 
     fs.writeFileSync(stateFile, JSON.stringify(state, null, 2));
-    log('    版本信息已更新', 'success');
+    log('    版本信息已更新，项目数据已保留', 'success');
   }
 
-  // 2. 覆盖模板文件
-  log('  更新 .solodevflow/ 模板文件...');
-  const templates = [
-    { template: 'input-log.md.template', dest: '.solodevflow/input-log.md' },
-    { template: 'pending-docs.md.template', dest: '.solodevflow/pending-docs.md' }
-  ];
-
-  const projectName = path.basename(targetPath);
-  const templateVars = {
-    projectName,
-    projectType: 'backend',
-    version: VERSION,
-    createdAt: now.split('T')[0],
-    installedAt: now,
-    sourcePath: SOLODEVFLOW_ROOT
-  };
-
-  for (const { template, dest } of templates) {
-    const templatePath = path.join(SOLODEVFLOW_ROOT, 'scripts/templates', template);
-    const destPath = path.join(targetPath, dest);
-    if (fs.existsSync(templatePath)) {
-      const content = renderTemplate(templatePath, templateVars);
-      fs.writeFileSync(destPath, content);
-      log(`    ${dest}`, 'success');
-    }
-  }
-
-  // 3. 覆盖工作流文件（从 template/flows/ 复制）
-  log('  更新 .solodevflow/flows/...');
-  const flowsSrc = path.join(SOLODEVFLOW_ROOT, 'template/flows');
-  const flowsDest = path.join(targetPath, '.solodevflow/flows');
-  if (fs.existsSync(flowsSrc)) {
-    copyDir(flowsSrc, flowsDest);
-    log('    .solodevflow/flows/', 'success');
-  }
-
-  // 4. 覆盖 .claude/commands/ 和 .claude/skills/ (从 template/ 复制)
-  log('  更新 .claude/commands/ 和 .claude/skills/...');
-  const commandsSrc = path.join(SOLODEVFLOW_ROOT, 'template/commands');
-  const commandsDest = path.join(targetPath, '.claude/commands');
-  if (fs.existsSync(commandsSrc)) {
-    copyDir(commandsSrc, commandsDest);
-    log('    .claude/commands/', 'success');
-  }
-
-  const skillsSrc = path.join(SOLODEVFLOW_ROOT, 'template/skills');
-  const skillsDest = path.join(targetPath, '.claude/skills');
-  if (fs.existsSync(skillsSrc)) {
-    copyDir(skillsSrc, skillsDest);
-    log('    .claude/skills/', 'success');
-  }
-
-  // 5. 复制工具文件（commands, skills, templates, scripts, hooks）
+  // 2. 复制工具文件（flows, commands, skills）
+  // copyToolFiles 会自动跳过 scripts 和 specs（因为 config.bootstrap = true）
   await copyToolFiles(config);
 
-  log('自举模式更新完成', 'success');
+  // 3. 复制 hooks（src/hooks/ → .claude/hooks/）
+  // 这已在 copyToolFiles 中处理
+
+  log('自举模式同步完成', 'success');
 }
 
 /**
@@ -483,18 +372,15 @@ async function bootstrapFiles(config) {
 async function copyToolFiles(config) {
   const targetPath = config.targetPath;
 
-  // 1. Generate .solodevflow/flows/workflows.md (extract from flow-workflows.md)
-  log('  生成 .solodevflow/flows/workflows.md...');
+  // 1. Copy .solodevflow/flows/ (from template/flows/)
+  log('  复制 .solodevflow/flows/...');
+  const flowsSrc = path.join(SOLODEVFLOW_ROOT, 'template/flows');
   const flowsDest = path.join(targetPath, '.solodevflow/flows');
-  ensureDir(flowsDest);
-
-  try {
-    const workflowsContent = extractExecutionSpec();
-    fs.writeFileSync(path.join(flowsDest, 'workflows.md'), workflowsContent);
-    log('    .solodevflow/flows/workflows.md（从 flow-workflows.md 提取）', 'success');
-  } catch (error) {
-    log(`    生成 workflows.md 失败: ${error.message}`, 'error');
-    throw error;
+  if (fs.existsSync(flowsSrc)) {
+    copyDir(flowsSrc, flowsDest);
+    log('    .solodevflow/flows/', 'success');
+  } else {
+    log('    template/flows/ 不存在，跳过', 'warn');
   }
 
   // 2. Copy .claude/commands/ (from template/commands/)
@@ -506,16 +392,7 @@ async function copyToolFiles(config) {
     log('    .claude/commands/', 'success');
   }
 
-  // 3. Copy .claude/skills/ (from template/skills/)
-  log('  复制 .claude/skills/...');
-  const skillsSrc = path.join(SOLODEVFLOW_ROOT, 'template/skills');
-  const skillsDest = path.join(targetPath, '.claude/skills');
-  if (fs.existsSync(skillsSrc)) {
-    copyDir(skillsSrc, skillsDest);
-    log('    .claude/skills/', 'success');
-  }
-
-  // 4. Copy docs/specs/ (non-bootstrap mode only)
+  // 3. Copy docs/specs/ (non-bootstrap mode only)
   if (!config.bootstrap) {
     log('  复制 docs/specs/（规范文档）...');
     const specsSrc = path.join(SOLODEVFLOW_ROOT, 'docs/specs');
@@ -546,10 +423,11 @@ async function copyToolFiles(config) {
   // AI commands now generate documents directly from spec-requirements.md
   // Project type differences are handled via Condition column in spec
 
-  // 5. Copy scripts to .solodevflow/scripts/ (if not skipped)
-  if (!config.skipScripts) {
+  // 4. Copy scripts to .solodevflow/scripts/ (non-bootstrap mode only)
+  // Bootstrap mode uses source scripts/ directly
+  if (!config.bootstrap && !config.skipScripts) {
     log('  复制 .solodevflow/scripts/...');
-    const scriptsToCopy = ['status.js', 'validate-state.js', 'state.js', 'validate-docs.js', 'analyze-impact.js'];
+    const scriptsToCopy = ['status.js', 'validate-state.js', 'state.js', 'validate-docs.js', 'analyze-impact.js', 'index.js'];
     ensureDir(path.join(targetPath, '.solodevflow/scripts'));
 
     for (const script of scriptsToCopy) {
@@ -560,15 +438,30 @@ async function copyToolFiles(config) {
         log(`    .solodevflow/scripts/${script}`, 'success');
       }
     }
+
+    // Copy scripts/lib/ directory
+    const libSrc = path.join(SOLODEVFLOW_ROOT, 'scripts/lib');
+    const libDest = path.join(targetPath, '.solodevflow/scripts/lib');
+    if (fs.existsSync(libSrc)) {
+      copyDir(libSrc, libDest);
+      log('    .solodevflow/scripts/lib/', 'success');
+    }
+  } else if (config.bootstrap) {
+    log('  跳过 .solodevflow/scripts/（自举模式使用源码）', 'info');
   }
 
-  // 6. Copy src/hooks/ to .claude/hooks/
-  log('  复制 .claude/hooks/...');
-  const hooksSrc = path.join(SOLODEVFLOW_ROOT, 'src', 'hooks');
-  const hooksDest = path.join(targetPath, '.claude', 'hooks');
-  if (fs.existsSync(hooksSrc)) {
-    copyDir(hooksSrc, hooksDest);
-    log('    .claude/hooks/', 'success');
+  // 5. Copy src/hooks/ to .claude/hooks/ (non-bootstrap mode only)
+  // Bootstrap mode uses src/hooks/ source directly
+  if (!config.bootstrap) {
+    log('  复制 .claude/hooks/...');
+    const hooksSrc = path.join(SOLODEVFLOW_ROOT, 'src', 'hooks');
+    const hooksDest = path.join(targetPath, '.claude', 'hooks');
+    if (fs.existsSync(hooksSrc)) {
+      copyDir(hooksSrc, hooksDest);
+      log('    .claude/hooks/', 'success');
+    }
+  } else {
+    log('  跳过 .claude/hooks/（自举模式使用源码）', 'info');
   }
 }
 
@@ -588,8 +481,7 @@ async function generateConfig(config) {
     projectType: config.projectType,
     version: VERSION,
     createdAt: now,
-    installedAt: config.existingInfo?.installedAt || now,
-    sourcePath: SOLODEVFLOW_ROOT
+    installedAt: config.existingInfo?.installedAt || now
   };
 
   // 1. Generate CLAUDE.md
@@ -651,20 +543,21 @@ function finalize(config) {
   if (config.bootstrap) {
     console.log(`
 项目: ${projectName}
-模式: 自举更新
+模式: 自举更新（Bootstrap）
 路径: ${config.targetPath}
 
-已更新:
-  - .solodevflow/flows/（工作流文件）
-  - .claude/commands/（命令文件）
-  - .claude/skills/（技能文件）
-  - .claude/hooks/（Hook 脚本）
+已同步:
+  ✅ .solodevflow/flows/    ← template/flows/
+  ✅ .claude/commands/      ← template/commands/
+
+已跳过（使用源码）:
+  ⏭️  .solodevflow/scripts/ （使用 scripts/ 源码）
+  ⏭️  .claude/hooks/        （使用 src/hooks/ 源码）
+  ⏭️  docs/specs/           （源码已存在）
+  ⏭️  CLAUDE.md             （保留项目配置）
 
 已保留:
-  - .solodevflow/state.json（项目状态数据）
-  - docs/specs/（规范文档源码）
-  - template/（模板源码）
-  - scripts/（脚本源码）
+  📦 .solodevflow/state.json（项目状态数据）
 
 版本已更新至: ${VERSION}
 `);
@@ -678,7 +571,6 @@ function finalize(config) {
   - .solodevflow/flows/（工作流文件）
   - .solodevflow/scripts/（运行时脚本）
   - .claude/commands/（命令文件）
-  - .claude/skills/（技能文件）
   - .claude/hooks/（Hook 脚本）
   - docs/specs/（规范文档）
   - CLAUDE.md（流程控制器）
