@@ -1,8 +1,11 @@
 ---
 type: feature
-version: "1.0"
+id: agent-architecture
+workMode: document
+status: not_started
 priority: P2
 domain: ai-config
+version: "1.1"
 ---
 
 # Feature: Agent Architecture <!-- id: feat_agent_architecture -->

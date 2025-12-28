@@ -1,4 +1,4 @@
-# Meta-Spec v2.3 <!-- 元规范 -->
+# Meta-Spec v2.7 <!-- 元规范 -->
 
 > 定义文档系统的基础规则，是验证系统的"宪法层"
 
@@ -9,7 +9,6 @@
 - 此文档是验证系统的"根"，**不被程序验证**
 - 变更此文档需同步更新 `scripts/validate-docs.js`
 - 变更历史通过 Git 追踪
-- **版本 v2.3**：新增知识库解析支持（链接解析规则、defines 关系提取、关键词权重定义）
 
 ---
 
@@ -46,19 +45,14 @@
 
 ### 2.1 Requirements Documents （需求文档）
 
-| Type | 说明 | 独立性 | 验证规则来源 |
-|------|------|--------|--------------|
-| `prd` | 产品需求文档（Product Requirements Document） | 必须独立 | spec-requirements.md |
-| `feature` | 功能文档（可独立验收的功能） | 视复杂度 | spec-requirements.md |
-| `capability` | 横向能力文档（非业务需求，基础能力） | 视复杂度 | spec-requirements.md |
-| `flow` | 跨域流程（跨 Domain/Feature 的业务流程） | 视复杂度 | spec-requirements.md |
+| Type | 验证规则来源 |
+|------|--------------|
+| `prd` | spec-requirements.md |
+| `feature` | spec-requirements.md |
+| `capability` | spec-requirements.md |
+| `flow` | spec-requirements.md |
 
-**独立性说明**：
-- **简单场景**：Feature/Capability/Flow 仅在 PRD 中描述（作为章节）
-- **复杂场景**：需要详细 Design 文档时，独立成文档
-- **判断标准**：是否需要详细设计文档、是否跨产品复用、章节内容是否超过500行
-
-
+> **详细定义**：Feature/Capability/Flow 的定义、对比、独立性判断见 [spec-requirements.md §1.0 Core Concepts](docs/specs/spec-requirements.md#spec_req_concepts)
 
 ### 2.2 Design Documents （设计文档）
 
@@ -124,8 +118,10 @@
 ---
 type: {doc_type}
 version: {version}
-# 可选字段
-inputs: [path/to/doc.md#anchor]  # Design 文档必填
+# 可选字段（用于文档索引）
+id: {unique_id}                   # 文档唯一标识
+status: {status}                  # 文档状态
+inputs: [path/to/doc.md#anchor]   # Design 文档必填
 ---
 ```
 
@@ -133,6 +129,8 @@ inputs: [path/to/doc.md#anchor]  # Design 文档必填
 |------|------|----------|------|
 | `type` | 是 | 所有文档 | 文档类型标识 |
 | `version` | 是 | 所有文档 | 文档版本号 |
+| `id` | 推荐 | 需求/设计文档 | 文档唯一标识，用于 index.json 索引 |
+| `status` | 推荐 | 需求/设计文档 | 文档状态：`not_started` / `in_progress` / `done` |
 | `inputs` | 设计文档必填 | design-doc | 输入来源（需求文档引用） |
 
 ### 3.2 Document Reference Syntax
@@ -178,9 +176,9 @@ inputs: [path/to/doc.md#anchor]  # Design 文档必填
 [工作流执行规范](.solodevflow/flows/workflows.md)
 ```
 
-#### 3.2.4 Reference Parsing Rules (for Knowledge Base)
+#### 3.2.4 Reference Parsing Rules (for Document Index)
 
-知识库解析 Markdown 链接时使用以下规则：
+文档索引（index.js）解析 Markdown 链接时使用以下规则：
 
 **链接格式**：
 ```
@@ -256,9 +254,9 @@ Flow（跨域流程）可以：
 | `docs/tests/` | 测试文档（E2E、性能、破坏性） | 测试、研发 |
 | `docs/specs/` | 规范文档（meta-spec, *-spec.md） | AI + 人类 |
 | `src/` | 源代码 + 单元测试 + 集成测试 | 研发 |
-| `scripts/` | 本项目的自动化脚本 | 开发者 / CI |
+| `scripts/` | 本项目的自动化脚本（含 index.js 索引生成器） | 开发者 / CI |
 | `template/` | 可分发的静态模板（flows, commands, requirements, skills） | AI + 开发者 |
-| `.solodevflow/` | 运行时目录（state, logs, flows实例） | AI 执行 |
+| `.solodevflow/` | 运行时目录（state.json, index.json, flows实例） | AI 执行 |
 | `.claude/` | Claude CLI 配置（从 template/ 同步） | Claude CLI |
 
 ### 5.2 Requirements Directory
@@ -278,47 +276,19 @@ docs/requirements/
 
 ### 5.3 Design Directory
 
-**设计文档组织原则**：
-- **按技术架构组织**，而不是镜像需求文档结构
-- **通过 `inputs` 字段关联需求**，而不是通过目录结构
-- **命名反映设计内容**，而不是需求名称
-- **粒度由技术需要决定**，可以是系统级、模块级、组件级
-- **架构文档是可选的**，可以是系统级、模块级
-**组织方式示例**：
+> 设计原则和需求-设计关系见 [spec-design.md §1](docs/specs/spec-design.md#spec_design_scope)
 
 ```
 docs/designs/
 ├── des-system-architecture.md    # 系统级架构设计
-│                                  # inputs: [prd.md#prod_architecture]
-│
 ├── user-module/                   # 按模块组织
-│   ├── des-architecture.md        # 用户模块架构
-│   │                              # inputs: [fea-login.md, fea-register.md]
-│   ├── des-api.md                 # 用户模块 API
-│   └── des-data-model.md          # 用户数据模型
-│
-├── payment-module/                # 按模块组织
-│   ├── des-architecture.md        # 支付模块架构
-│   │                              # inputs: [fea-checkout.md, fea-refund.md]
-│   └── des-payment-gateway.md     # 支付网关设计
-│
-├── des-auth-capability.md         # 横向能力设计
-│                                  # inputs: [cap-auth.md]
-│
-└── des-order-fulfillment-flow.md  # 流程设计
-                                   # inputs: [flow-order-fulfillment.md]
+│   ├── des-architecture.md
+│   ├── des-api.md
+│   └── des-data-model.md
+├── payment-module/
+│   └── des-payment-gateway.md
+└── des-auth-capability.md         # 横向能力设计
 ```
-
-
-**多对多关系**：
-- **一个 Feature → 多个 Design**：大型 Feature 可能需要架构、API、数据模型等多个设计文档
-- **多个 Feature → 一个 Design**：相关的小 Feature 可能共享一个模块设计文档
-- **一个 Design → 多个 Feature**：一个设计文档可能服务于多个需求
-
-**命名规范**：
-- 系统级：`des-{descriptive-name}.md`（如 `des-system-architecture.md`）
-- 模块级：`{module}/des-{aspect}.md`（如 `user-module/des-api.md`）
-- 自由命名：反映设计的实际内容，不必与需求文档名称对应
 
 ### 5.4 Test Directory
 
@@ -494,7 +464,7 @@ docs/specs/
 - `spec-test.md#spec_test_e2e` → defines → `test-e2e`
 
 **用途**：
-- 知识库可查询"哪个规范定义了某类文档"
+- 文档索引可查询"哪个规范定义了某类文档"
 - 验证器可定位结构定义位置
 
 ---
@@ -564,6 +534,11 @@ docs/specs/
 | v2.0 | 2025-12-22 | 重构：增加设计、开发、测试文档；明确文档流转关系 |
 | v2.1 | 2025-12-23 | 精简：删除冗余章节，统一规范文件名引用 |
 | v2.2 | 2025-12-23 | 补充：新增 test-security 测试文档类型 |
+| v2.3 | 2025-12-24 | 新增知识库解析支持（链接解析规则、defines 关系提取） |
+| v2.4 | 2025-12-24 | 补充 impacts/defines 特殊关系类型说明 |
+| v2.5 | 2025-12-27 | 适配 v12.0.0：frontmatter 增加 id/status，知识库→文档索引，Appendix A 重写 |
+| v2.6 | 2025-12-27 | 消除与 spec-requirements 的冗余，§2.1 简化为类型→规范映射 |
+| v2.7 | 2025-12-27 | 消除与 spec-design 的冗余，§5.3 精简设计目录，设计原则引用 spec-design |
 
 ---
 
@@ -580,61 +555,72 @@ docs/specs/
 
 ---
 
-## Appendix A: Keyword Extraction <!-- id: meta_keyword_extraction -->
+## Appendix A: Document Index Schema <!-- id: meta_index_schema -->
 
-知识库关键词索引的提取规则。
+文档索引（`.solodevflow/index.json`）由 `scripts/index.js` 自动生成。
 
-### A.1 Keyword Sources and Weights
+### A.1 Index Structure
 
-| 来源 | 权重 | 说明 |
-|------|------|------|
-| 文档标题（H1） | 1.0 | 最高权重，核心标识 |
-| 一级章节标题（H2） | 0.8 | 主要章节名称 |
-| 二级章节标题（H3） | 0.7 | 次要章节名称 |
-| 表格标题列 | 0.5 | 结构化数据的标识 |
-| 正文首段 | 0.3 | 描述性内容 |
-| 其他正文 | 0.1 | 背景信息 |
-
-### A.2 Extraction Rules
-
-**分词规则**：
-- 中文：按字符切分 + 常用词组识别
-- 英文：按空格/标点切分 + 驼峰拆分
-- 代码标识符：按下划线/驼峰拆分
-
-**过滤规则**：
-- 过滤停用词（的、是、在、the、is、a 等）
-- 过滤单字符
-- 过滤纯数字
-
-**权重计算**：
-- 同一关键词多次出现取最高权重
-- 锚点 ID 中的词使用 0.9 权重
-
-**示例**：
-
-对于文档：
-```markdown
-# Feature: State Management <!-- id: feat_state_management -->
-
-> 项目状态的唯一真实来源
-
-## 1. Intent
+```json
+{
+  "generated": "ISO-8601 timestamp",
+  "summary": {
+    "total": 11,
+    "done": 3,
+    "in_progress": 3,
+    "not_started": 5
+  },
+  "activeFeatures": ["feature-id-1", "feature-id-2"],
+  "documents": [
+    {
+      "id": "unique-doc-id",
+      "type": "feature | capability | flow | design | prd",
+      "title": "Document Title",
+      "status": "not_started | in_progress | done",
+      "phase": "design | implementation | testing | null",
+      "priority": "P0 | P1 | P2 | null",
+      "domain": "domain-name | null",
+      "path": "docs/requirements/features/fea-xxx.md"
+    }
+  ],
+  "byType": { ... }
+}
 ```
 
-提取结果：
+### A.2 Frontmatter Extraction
 
-| 关键词 | 权重 | 来源 |
-|--------|------|------|
-| state | 1.0 | 标题 |
-| management | 1.0 | 标题 |
-| feat_state_management | 0.9 | 锚点 |
-| 状态 | 0.3 | 描述 |
-| intent | 0.8 | 章节标题 |
+index.js 从文档 frontmatter 提取以下字段：
+
+| Frontmatter 字段 | Index 字段 | 必填 |
+|------------------|------------|------|
+| `id` | `id` | 推荐 |
+| `type` | `type` | 是 |
+| `status` | `status` | 推荐 |
+| `phase` | `phase` | 否 |
+| `priority` | `priority` | 否 |
+| `domain` | `domain` | 否 |
+
+**标题提取规则**：
+- 从文档首行 `# Title` 提取
+- 若无 H1，使用文件名
+
+### A.3 Usage
+
+```bash
+# 生成/更新索引
+node scripts/index.js
+
+# 验证 index.json
+npm run validate:state
+```
+
+**自动触发**：
+- Claude CLI Hook 在对话开始时读取 index.json
+- 手动运行 `node scripts/index.js` 可强制刷新
 
 ---
 
-*Version: v2.4*
+*Version: v2.7*
 *Created: 2024-12-21 (v1.0)*
-*Updated: 2025-12-24 (v2.4)*
-*Changes: v2.4 补充 impacts/defines 特殊关系类型说明；v2.3 新增知识库解析支持（链接解析规则、defines 关系提取、关键词权重定义）*
+*Updated: 2025-12-27 (v2.7)*
+*Changes: v2.7 消除与 spec-design 的冗余，§5.3 精简；v2.6 消除与 spec-requirements 的冗余*

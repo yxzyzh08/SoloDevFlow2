@@ -7,7 +7,6 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(node scripts/validate-state.js:*)",
-      "Skill(requirements-expert)",
       "Bash(node scripts/analyze-impact.js:*)",
       "Bash(findstr:*)",
       "Bash(dir:*)",
@@ -27,7 +26,8 @@
       "Bash(node -e:*)",
       "Bash(npm run test:kb:*)",
       "WebFetch(domain:github.com)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(ls:*)"
     ]
   },
   "hooks": {
@@ -64,7 +64,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Write|Edit",
+        "matcher": "Write|Edit|TodoWrite",
         "hooks": [
           {
             "type": "command",

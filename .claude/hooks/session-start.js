@@ -16,7 +16,7 @@
  *   2 - Block session start, stderr shown
  */
 
-const { readState, getActiveFeature, getProject, getPendingSparksCount, getSession } = require('./lib/state-reader');
+const { readState, getActiveFeature, getProject, getSubtasks, getPendingDocs } = require('./lib/state-reader');
 const { formatWorkflowContext } = require('./lib/output');
 
 function main() {
@@ -56,15 +56,15 @@ function main() {
       const state = result.data;
       const project = getProject(state);
       const activeFeature = getActiveFeature(state);
-      const pendingSparks = getPendingSparksCount(state);
-      const session = getSession(state);
+      const subtasks = getSubtasks(state);
+      const pendingDocs = getPendingDocs(state);
 
       // Generate context
       const context = formatWorkflowContext({
         projectName: project.name,
         activeFeature,
-        pendingSparks,
-        session
+        subtasks,
+        pendingDocs
       });
 
       console.log(context);

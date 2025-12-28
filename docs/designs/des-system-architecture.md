@@ -1,5 +1,7 @@
 ---
 type: design
+id: design-system-architecture
+status: done
 version: "1.0"
 inputs:
   - docs/requirements/prd.md#prod_solodevflow

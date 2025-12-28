@@ -12,7 +12,8 @@
 
 1. 读取 `.solodevflow/state.json` 和 `.solodevflow/index.json`
 2. 汇报状态：项目名 / 当前 Feature / 阶段 / 进度
-3. 等待用户指示
+3. 设置 session.mode = `idle`
+4. 等待用户指示
 
 ---
 
@@ -29,8 +30,6 @@
     ├─ 新增需求 → 需求流程 (§5)
     ├─ 需求变更 → 需求流程 (§5) + 影响评估
     ├─ 规范变更 → 影响分析流程 (§6)
-    ├─ 审核批准 → 审核流程 (§7)
-    ├─ 审核协助 → 独立流程 (§10)
     └─ 无关想法 → 直接拒绝，建议创建新项目
 ```
 
@@ -43,8 +42,6 @@
 | **新增需求** | 描述新功能、想做什么 | "我想加一个导出功能" |
 | **需求变更** | 修改已有功能行为 | "把登录改成手机号验证" |
 | **规范变更** | 修改 docs/specs/* 或模板 | "更新需求文档规范" |
-| **审核批准** | 批准/通过/同意 + review 阶段 | "批准"、"通过"、"可以进入设计了" |
-| **审核协助** | 请求帮助审核文档 | "帮我审核这个需求"、"review requirement" |
 | **无关想法** | 与本产品完全无关 | "帮我写个爬虫" |
 
 ### 2.2 边界判断
@@ -55,15 +52,23 @@
 
 ---
 
-## 3. Context Management
+## 3. Session State
+
+**三种模式**：
+
+| 模式 | 说明 | 进入条件 | 退出条件 |
+|------|------|----------|----------|
+| `idle` | 空闲等待 | 对话开始 / 任务完成 | 接收到输入 |
+| `consulting` | 咨询中 | 产品咨询输入 | 隐式/显式结束 |
+| `delivering` | 需求交付中 | 需求输入 / 处理暂存需求 | 交付完成 |
 
 ### 3.1 混合输入处理
 
 当咨询中检测到需求成分：
 
-1. **识别需求** → 判断是否包含功能需求
-2. **立即澄清** → 直接向用户确认："您提到想要 X 功能，要现在走需求流程吗？"
-3. **用户选择** → 根据用户回答决定继续咨询还是切换到需求流程
+1. **提取需求** → 存入 `state.session.context.pendingRequirements`
+2. **继续咨询** → 先回答咨询问题
+3. **咨询结束后** → 提示："有 N 条暂存需求待处理，是否现在处理？"
 
 **需求识别信号**：
 - 意愿词："想要"、"需要"、"希望"、"能不能"
@@ -82,7 +87,7 @@
 ```
 [用户咨询]
     ↓
-[检查是否包含需求成分] ─是→ [立即向用户确认是否走需求流程]
+[检查是否包含需求成分] ─是→ [提取需求] → [存入 pendingRequirements]
     ↓
 [搜索 index.json 定位相关文档]
     ↓
@@ -90,7 +95,9 @@
     ↓
 [生成回答]
     ↓
-[等待下一输入]
+[检查 pendingRequirements]
+    ├─ 有 → 附加提示："有暂存需求待处理"
+    └─ 无 → 等待下一输入
 ```
 
 **关联查询机制**：
@@ -190,8 +197,6 @@
 ```
 
 **处理顺序**：specs → requirements → designs → code → tests
-
-**附带行为**：index.js 执行时自动清理 `completed` 和 `skipped` 状态的 subtasks
 
 ---
 
@@ -312,18 +317,9 @@
 |------|------|
 | `node scripts/state.js summary` | 显示状态摘要 |
 | `node scripts/state.js activate-feature <id>` | 激活 Feature |
-| `node scripts/state.js set-phase <id> <phase>` | 设置 Feature 阶段（更新 frontmatter） |
+| `node scripts/state.js session-mode <mode>` | 设置会话模式 |
 | `node scripts/validate-state.js` | 校验 state.json |
 | `node scripts/analyze-impact.js <file>` | 影响分析 |
-
-**Phase 生命周期**：
-```
-pending → feature_requirements → feature_review → feature_design → feature_implementation → done
-```
-
-**关键规则**：
-- AI 完成需求文档后 → `set-phase <id> feature_review`
-- 人类批准后 → `set-phase <id> feature_design`
 
 ### 11.3 Subagents（独立 Agent）
 
@@ -333,7 +329,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 ---
 
-*Version: v8.0*
-*Aligned with: flow-workflows.md v7.0*
+*Version: v7.2*
+*Aligned with: flow-workflows.md v6.0*
 *Updated: 2025-12-28*
-*Changes: v8.0 移除 session 结构，使用立即澄清代替 pendingRequirements*
+*Changes: v7.2 新增 §10 Independent Flows，支持审核协助 Subagent；v7.1 新增 §7 Review Flow*

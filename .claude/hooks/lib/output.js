@@ -9,16 +9,16 @@
  * @param {object} options
  * @param {string} options.projectName - 项目名称
  * @param {object} options.activeFeature - 当前活跃 Feature
- * @param {number} options.pendingSparks - 待处理 Sparks 数量
- * @param {object} options.session - Session 状态
+ * @param {Array} options.subtasks - 子任务列表
+ * @param {Array} options.pendingDocs - 文档债务列表
  * @returns {string}
  */
 function formatWorkflowContext(options) {
   const {
     projectName = 'Unknown',
     activeFeature,
-    pendingSparks = 0,
-    session
+    subtasks = [],
+    pendingDocs = []
   } = options;
 
   const lines = [
@@ -32,14 +32,24 @@ function formatWorkflowContext(options) {
     lines.push('Active Feature: (none)');
   }
 
-  lines.push(`Pending Sparks: ${pendingSparks}`);
-
-  if (session) {
-    lines.push(`Session Mode: ${session.mode || 'idle'}`);
-    const pendingCount = session.pendingRequirements?.length || 0;
-    if (pendingCount > 0) {
-      lines.push(`Pending Requirements: ${pendingCount}`);
+  // 注入 in_progress 任务（当前正在进行的工作）
+  const inProgressTasks = subtasks.filter(s => s.status === 'in_progress');
+  if (inProgressTasks.length > 0) {
+    lines.push(`In-Progress Tasks: ${inProgressTasks.length}`);
+    for (const task of inProgressTasks.slice(0, 3)) {
+      lines.push(`  - [${task.featureId}] ${task.description.substring(0, 50)}${task.description.length > 50 ? '...' : ''}`);
     }
+  }
+
+  // 注入 pending subtasks 数量
+  const pendingSubtasks = subtasks.filter(s => s.status === 'pending');
+  if (pendingSubtasks.length > 0) {
+    lines.push(`Pending Subtasks: ${pendingSubtasks.length}`);
+  }
+
+  // 注入 pendingDocs 数量
+  if (pendingDocs.length > 0) {
+    lines.push(`Pending Docs: ${pendingDocs.length}`);
   }
 
   lines.push('</workflow-context>');
@@ -53,7 +63,8 @@ function formatWorkflowContext(options) {
  * @param {string} options.productName - 产品名称
  * @param {object} options.activeFeature - 当前活跃 Feature
  * @param {Array} options.relevantDocs - 相关文档列表
- * @param {object} options.session - Session 状态
+ * @param {Array} options.subtasks - 子任务列表
+ * @param {Array} options.pendingDocs - 文档债务列表
  * @returns {string}
  */
 function formatUserPromptContext(options) {
@@ -61,7 +72,8 @@ function formatUserPromptContext(options) {
     productName = 'Unknown',
     activeFeature,
     relevantDocs = [],
-    session
+    subtasks = [],
+    pendingDocs = []
   } = options;
 
   const lines = [
@@ -74,8 +86,21 @@ function formatUserPromptContext(options) {
     lines.push(`Current Feature: ${activeFeature.id} (${activeFeature.phase || 'unknown'})`);
   }
 
-  if (session) {
-    lines.push(`Session: ${session.mode || 'idle'}`);
+  // 注入 in_progress 任务
+  const inProgressTasks = subtasks.filter(s => s.status === 'in_progress');
+  if (inProgressTasks.length > 0) {
+    lines.push(`In-Progress Tasks: ${inProgressTasks.length}`);
+  }
+
+  // 注入 pending subtasks 数量
+  const pendingSubtasks = subtasks.filter(s => s.status === 'pending');
+  if (pendingSubtasks.length > 0) {
+    lines.push(`Pending Subtasks: ${pendingSubtasks.length}`);
+  }
+
+  // 注入 pendingDocs 数量
+  if (pendingDocs.length > 0) {
+    lines.push(`Pending Docs: ${pendingDocs.length}`);
   }
 
   if (relevantDocs.length > 0) {

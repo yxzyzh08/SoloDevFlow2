@@ -4,6 +4,7 @@
  * UserPromptSubmit Hook - 用户提交输入时注入上下文
  *
  * Based on design: des-hooks-integration.md §4.2
+ * v6.8: 新增需求变更检测，提醒 AI 走正确流程
  *
  * Input (stdin JSON):
  *   { session_id, cwd, hook_event_name: 'UserPromptSubmit', prompt }
@@ -11,71 +12,89 @@
  * Output (stdout JSON):
  *   { hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: string } }
  *
- * Context Fields (~200 tokens):
+ * Context Fields:
  *   - productName: state.json.project.name
  *   - activeFeature: state.json.flow.activeFeatures[0]
- *   - relevantDocs: knowledge-base search results
- *   - sessionMode: state.json.session.mode
- *   - pendingCount: state.json.session.pendingRequirements.length
  */
 
-const { readState, getActiveFeature, getProject, getSession } = require('./lib/state-reader');
-const { searchByKeywords } = require('./lib/kb-client');
+const { readState, getActiveFeature, getProject, getSubtasks, getPendingDocs } = require('./lib/state-reader');
 const { formatUserPromptContext } = require('./lib/output');
 
 // =============================================================================
-// Keyword Extraction (MVP: simple space tokenization)
+// Requirement Change Detection (v6.8)
 // =============================================================================
 
 /**
- * 停用词表（中英文常见词）
+ * 需求变更信号词
  */
-const STOP_WORDS = new Set([
-  // 中文
-  '的', '是', '在', '了', '和', '与', '或', '不', '也', '就', '都', '而', '及',
-  '着', '把', '被', '让', '给', '对', '向', '从', '到', '为', '以', '用', '于',
-  '这', '那', '它', '他', '她', '我', '你', '我们', '你们', '他们', '什么', '怎么',
-  '如何', '哪个', '哪些', '为什么', '请', '帮', '帮我', '帮忙', '需要', '想', '要',
-  '可以', '能', '能否', '是否', '有没有', '一个', '一下', '一些',
-  // 英文
-  'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
-  'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should',
-  'may', 'might', 'must', 'shall', 'can', 'need', 'dare', 'ought', 'used',
-  'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from', 'as', 'into',
-  'through', 'during', 'before', 'after', 'above', 'below', 'between', 'under',
-  'and', 'but', 'or', 'nor', 'so', 'yet', 'both', 'either', 'neither',
-  'not', 'only', 'own', 'same', 'than', 'too', 'very', 'just', 'also',
-  'this', 'that', 'these', 'those', 'it', 'its', 'i', 'me', 'my', 'we', 'our',
-  'you', 'your', 'he', 'him', 'his', 'she', 'her', 'they', 'them', 'their',
-  'what', 'which', 'who', 'whom', 'how', 'when', 'where', 'why',
-  'please', 'help', 'want', 'like', 'let', 'make'
-]);
+const REQUIREMENT_CHANGE_SIGNALS = {
+  // 新增需求信号
+  newFeature: ['新增', '添加', '实现', '开发', '做一个', '加一个', '想要', '需要', '希望'],
+  // 变更信号
+  change: ['修改', '改成', '调整', '优化', '重构', '更新', '变更', '改为'],
+  // 功能词
+  feature: ['功能', '特性', 'feature', '需求', '能力']
+};
 
 /**
- * 从用户输入提取关键词
- * @param {string} prompt - 用户输入
- * @returns {string[]} 关键词数组（最多5个）
+ * 检测用户输入是否可能是需求变更
  */
-function extractKeywords(prompt) {
-  if (!prompt || typeof prompt !== 'string') {
-    return [];
+function detectRequirementChange(prompt) {
+  if (!prompt) return null;
+
+  const lowerPrompt = prompt.toLowerCase();
+
+  // 检测新增需求
+  const hasNewSignal = REQUIREMENT_CHANGE_SIGNALS.newFeature.some(s => prompt.includes(s));
+  const hasChangeSignal = REQUIREMENT_CHANGE_SIGNALS.change.some(s => prompt.includes(s));
+  const hasFeatureWord = REQUIREMENT_CHANGE_SIGNALS.feature.some(s => lowerPrompt.includes(s));
+
+  if (hasNewSignal && hasFeatureWord) {
+    return 'new_requirement';
+  }
+  if (hasChangeSignal) {
+    return 'requirement_change';
   }
 
-  // 1. 分词：按空格、标点符号分割
-  //    对于中文，也按常见虚词分割
-  const tokens = prompt
-    .split(/[\s,，.。!！?？:：;；\n\r\t的是在了和与或不也就都而及着把被让给对向从到为以用于这那它他她我你]+/)
-    .map(t => t.trim().toLowerCase())
-    .filter(t => t.length >= 2);
+  return null;
+}
 
-  // 2. 过滤停用词
-  const keywords = tokens.filter(t => !STOP_WORDS.has(t));
+/**
+ * 生成需求变更提醒
+ */
+function generateRequirementReminder(type, activeFeature) {
+  const featureId = activeFeature?.id || '<feature-id>';
+  const phase = activeFeature?.phase || 'unknown';
 
-  // 3. 去重
-  const unique = [...new Set(keywords)];
+  // 如果已经在 requirements 阶段，不需要提醒
+  if (phase === 'feature_requirements') {
+    return null;
+  }
 
-  // 4. 返回前5个
-  return unique.slice(0, 5);
+  if (type === 'new_requirement') {
+    return `
+[Input Analysis Reminder]
+检测到可能的【新增需求】请求。
+请先执行 Input Analysis (参考 .solodevflow/flows/workflows.md §2)：
+1. 确认是否为新增需求
+2. 如是，走需求流程：GATHER → CLARIFY → IMPACT → GENERATE
+3. 生成需求文档后：set-phase ${featureId} feature_review
+4. 等待人类审核批准`;
+  }
+
+  if (type === 'requirement_change') {
+    return `
+[Input Analysis Reminder]
+检测到可能的【需求变更】请求。
+请先执行 Input Analysis (参考 .solodevflow/flows/workflows.md §2)：
+1. 确认是否为需求变更（修改现有功能）
+2. 如是，先设置阶段：set-phase ${featureId} feature_requirements
+3. 更新需求文档
+4. 完成后：set-phase ${featureId} feature_review
+5. 等待人类审核批准后才能写代码`;
+  }
+
+  return null;
 }
 
 // =============================================================================
@@ -102,21 +121,30 @@ function main() {
 
       const project = getProject(state);
       const activeFeature = getActiveFeature(state);
-      const session = getSession(state);
+      const subtasks = getSubtasks(state);
+      const pendingDocs = getPendingDocs(state);
 
-      // 2. Extract keywords and search knowledge base
-      const keywords = extractKeywords(prompt);
-      const relevantDocs = keywords.length > 0 ? searchByKeywords(keywords) : [];
+      // 2. Detect requirement change (v6.8)
+      const requirementType = detectRequirementChange(prompt);
+      const requirementReminder = requirementType
+        ? generateRequirementReminder(requirementType, activeFeature)
+        : null;
 
       // 3. Format context
-      const context = formatUserPromptContext({
+      let context = formatUserPromptContext({
         productName: project.name,
         activeFeature,
-        relevantDocs: relevantDocs.slice(0, 3), // 最多3个相关文档
-        session
+        relevantDocs: [],
+        subtasks,
+        pendingDocs
       });
 
-      // 4. Output in required format
+      // 4. Append requirement reminder if detected
+      if (requirementReminder) {
+        context += '\n' + requirementReminder;
+      }
+
+      // 5. Output in required format
       const output = {
         hookSpecificOutput: {
           hookEventName: 'UserPromptSubmit',

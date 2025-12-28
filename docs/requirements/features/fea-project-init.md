@@ -1,8 +1,11 @@
 ---
 type: feature
-version: "1.2"
+id: project-init
+workMode: code
+status: in_progress
 priority: P0
 domain: tooling
+version: "1.3"
 ---
 
 # Feature: Project Init <!-- id: feat_project_init -->
@@ -28,7 +31,7 @@ domain: tooling
 2. **场景B：自举模式（自身升级）**
    - 开发者在 SoloDevFlow 项目本身开发新功能（如新命令、新规范）
    - 开发完成后，需要将 `template/` 源码同步到运行态目录（`.solodevflow/`, `.claude/`）
-   - 必须保留项目自身的状态数据（state.json 中的 features, sparks 等）
+   - 必须保留项目自身的状态数据（state.json 中的 domains, pendingDocs 等）
 
 **核心挑战**：
 - **源码与运行时分离**：`template/` 是源码（可分发），`.solodevflow/` 是运行时实例
@@ -54,11 +57,11 @@ domain: tooling
 
 ---
 
-## 2. Core Capabilities <!-- id: feat_project_init_capabilities -->
+## 2. Core Functions <!-- id: feat_project_init_functions -->
 
-### 2.1 Capability List
+### 2.1 Function List
 
-| ID | Capability | 描述 |
+| ID | Function | 描述 |
 |----|------------|------|
 | C1 | 自身项目检测 | 检测目标项目是否为 SoloDevFlow 自身 |
 | C2 | 目录初始化 | 创建 `.solodevflow/` 目录和状态文件 |
@@ -70,7 +73,7 @@ domain: tooling
 
 > **已消除**：模板复制能力（v2.4）。AI 命令现在直接从 `spec-requirements.md` 生成文档。
 
-### 2.2 Capability Details
+### 2.2 Function Details
 
 #### C1: 自身项目检测
 
@@ -96,7 +99,6 @@ target-project/
 ├── .solodevflow/
 │   ├── state.json        # 初始状态（空 Feature 列表 + sourcePath）
 │   ├── input-log.md      # 空的输入日志
-│   ├── spark-box.md      # 空的灵光收集箱
 │   └── pending-docs.md   # 空的待处理文档
 ```
 
@@ -125,36 +127,29 @@ target-project/
 - 直接复制，覆盖已存在的文件
 - 工作流文件是运行时实例，可被升级更新
 
-#### C4: 命令和技能安装
+#### C4: 命令安装
 
-从 `template/` 复制命令和技能到 `.claude/` 目录。
+从 `template/commands/` 复制写入命令到 `.claude/commands/` 目录。
 
 **输出**：
 ```
 target-project/
 └── .claude/
-    ├── commands/
-    │   ├── write-prd.md
-    │   ├── write-feature.md
-    │   ├── write-capability.md
-    │   ├── write-flow.md
-    │   ├── write-design.md
-    │   ├── write-design-spec.md
-    │   └── write-req-spec.md
-    └── skills/
-        └── requirements-expert/
-            ├── SKILL.md
-            └── reference/
-                ├── clarification-checklist.md
-                └── ears-format-reference.md
+    └── commands/
+        ├── write-prd.md
+        ├── write-feature.md
+        ├── write-capability.md
+        ├── write-flow.md
+        ├── write-design.md
+        ├── write-design-spec.md
+        └── write-req-spec.md
 ```
 
 **源路径**：
 - `SoloDevFlow/template/commands/` → 目标项目 `.claude/commands/`
-- `SoloDevFlow/template/skills/` → 目标项目 `.claude/skills/`
 
 **规则**：
-- 完整复制所有命令和技能文件
+- 完整复制所有命令文件
 - 覆盖已存在的文件（升级场景）
 
 #### C5: 规范复制（非自举模式）
@@ -261,7 +256,6 @@ target-project/
 | `.solodevflow/flows/` | **创建** | 从 `template/flows/` 复制 |
 | `.solodevflow/scripts/` | **创建** | 从 `scripts/` 复制运行时脚本（5个） |
 | `.claude/commands/` | **创建** | 从 `template/commands/` 复制 |
-| `.claude/skills/` | **创建** | 从 `template/skills/` 复制 |
 | `docs/specs/` | **创建** | 从 `docs/specs/` 复制（完整规范文档） |
 | `CLAUDE.md` | **创建** | 从模板生成 |
 
@@ -273,7 +267,6 @@ target-project/
 | `.solodevflow/flows/` | **覆盖** | 从 `template/flows/` 更新 |
 | `.solodevflow/scripts/` | **覆盖** | 从 `scripts/` 更新运行时脚本 |
 | `.claude/commands/` | **覆盖** | 从 `template/commands/` 更新 |
-| `.claude/skills/` | **覆盖** | 从 `template/skills/` 更新 |
 | `docs/specs/` | **覆盖** | 从 `docs/specs/` 更新（规范可能有变化） |
 | `CLAUDE.md` | **覆盖** | 从模板重新生成 |
 
@@ -286,20 +279,19 @@ state.solodevflow.sourcePath = SOLODEVFLOW_ROOT;  // 可能变化
 state.lastUpdated = new Date().toISOString();
 
 // ❌ 保留不变（用户数据）
-// state.features, state.domains, state.sparks, state.pendingDocs
+// state.domains, state.pendingDocs
 // state.project（项目配置）
 ```
 
 ##### 场景3：自举模式（`solodevflow init . / upgrade .` 在 SoloDevFlow 自身）
 
-**使用场景**：AI 开发完成新的产物（commands、skills、template、flows 等）后，人类审核通过，手动执行命令应用变更到运行态。
+**使用场景**：AI 开发完成新的产物（commands、template、flows 等）后，人类审核通过，手动执行命令应用变更到运行态。
 
 | 文件/目录 | 操作 | 说明 |
 |----------|------|------|
 | `.solodevflow/state.json` | **部分更新** | 只更新版本信息，**保留项目数据** |
 | `.solodevflow/flows/` | **覆盖** | 从 `template/flows/` 同步 |
 | `.claude/commands/` | **覆盖** | 从 `template/commands/` 同步 |
-| `.claude/skills/` | **覆盖** | 从 `template/skills/` 同步 |
 | `docs/specs/` | **跳过** | 源码已存在，不复制给自己 |
 | `scripts/` | **跳过** | 源码已存在，不覆盖 |
 | `CLAUDE.md` | **跳过** | 保留项目自身的配置 |
@@ -332,7 +324,6 @@ solodevflow upgrade .   # 同样识别为自举模式（操作相同）
 | 工作流安装 | 检查目标项目 | `.solodevflow/flows/workflows.md` 存在 |
 | 脚本安装 | 检查目标项目 | `.solodevflow/scripts/` 包含 5 个运行时脚本 |
 | 命令安装 | 检查目标项目 | `.claude/commands/` 包含 7 个 write-*.md |
-| 技能安装 | 检查目标项目 | `.claude/skills/requirements-expert/` 存在 |
 | 规范复制 | 检查目标项目 | `docs/specs/` 包含规范文件 |
 | CLAUDE.md | 检查目标项目 | 文件存在且包含项目信息 |
 | package.json | 检查目标项目 | scripts 字段包含状态管理命令（指向 .solodevflow/scripts/） |
@@ -347,11 +338,10 @@ solodevflow upgrade .   # 同样识别为自举模式（操作相同）
 | 自身检测 | 运行 `solodevflow init .` | 识别为自举模式 |
 | 工作流更新 | 检查 `.solodevflow/flows/` | 从 `template/flows/` 同步 |
 | 命令更新 | 检查 `.claude/commands/` | 从 `template/commands/` 同步 |
-| 技能更新 | 检查 `.claude/skills/` | 从 `template/skills/` 同步 |
 | 规范不复制 | 检查 `docs/specs/` | 保持不变（源码不复制给自己） |
 | 脚本不复制 | 检查根目录 `scripts/` | 保持不变（源码不覆盖） |
 | 运行时脚本不复制 | 检查 `.solodevflow/scripts/` | 保持不变（使用根目录源码） |
-| 状态保留 | 检查 state.json | `features`, `domains`, `sparks` 保持不变 |
+| 状态保留 | 检查 state.json | `domains`, `pendingDocs` 保持不变 |
 | 版本更新 | 检查 state.json | `solodevflow.version` 已更新 |
 | 幂等性 | 重复运行自举 | 可多次执行，不破坏项目数据 |
 

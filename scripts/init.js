@@ -19,6 +19,7 @@
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
+const { toBeijingISOString } = require('./lib/datetime');
 
 // ============================================================================
 // Constants
@@ -315,7 +316,7 @@ async function copyFiles(config) {
   log('  创建 .solodevflow/ 目录...');
   ensureDir(path.join(targetPath, '.solodevflow'));
 
-  const now = new Date().toISOString().split('T')[0];
+  const now = toBeijingISOString().split('T')[0];
   const projectName = path.basename(targetPath);
 
   const templateVars = {
@@ -331,7 +332,6 @@ async function copyFiles(config) {
   const flowTemplates = [
     { template: 'state.json.template', dest: '.solodevflow/state.json' },
     { template: 'input-log.md.template', dest: '.solodevflow/input-log.md' },
-    { template: 'spark-box.md.template', dest: '.solodevflow/spark-box.md' },
     { template: 'pending-docs.md.template', dest: '.solodevflow/pending-docs.md' }
   ];
 
@@ -358,7 +358,7 @@ async function upgradeFiles(config) {
   log('升级文件...');
 
   const targetPath = config.targetPath;
-  const now = new Date().toISOString().split('T')[0];
+  const now = toBeijingISOString().split('T')[0];
 
   // 1. Update state.json version info (preserve user data)
   log('  更新 state.json 版本信息...');
@@ -398,7 +398,7 @@ async function bootstrapFiles(config) {
   log('自举模式：更新工具文件...');
 
   const targetPath = config.targetPath;
-  const now = new Date().toISOString();
+  const now = toBeijingISOString();
 
   // 1. 部分更新 state.json（只更新版本信息）
   log('  更新 .solodevflow/state.json 版本信息...');
@@ -413,7 +413,7 @@ async function bootstrapFiles(config) {
     state.solodevflow.upgradedAt = now;
     state.lastUpdated = now;
 
-    // ❌ 保留用户数据：features, domains, sparks, pendingDocs, metadata
+    // ❌ 保留用户数据：domains, pendingDocs, metadata
 
     fs.writeFileSync(stateFile, JSON.stringify(state, null, 2));
     log('    版本信息已更新', 'success');
@@ -423,7 +423,6 @@ async function bootstrapFiles(config) {
   log('  更新 .solodevflow/ 模板文件...');
   const templates = [
     { template: 'input-log.md.template', dest: '.solodevflow/input-log.md' },
-    { template: 'spark-box.md.template', dest: '.solodevflow/spark-box.md' },
     { template: 'pending-docs.md.template', dest: '.solodevflow/pending-docs.md' }
   ];
 
@@ -582,7 +581,7 @@ async function generateConfig(config) {
 
   const targetPath = config.targetPath;
   const projectName = config.existingInfo?.projectName || path.basename(targetPath);
-  const now = new Date().toISOString().split('T')[0];
+  const now = toBeijingISOString().split('T')[0];
 
   const templateVars = {
     projectName,
@@ -687,7 +686,6 @@ function finalize(config) {
 已保留:
   - .solodevflow/state.json（项目状态）
   - .solodevflow/input-log.md（输入记录）
-  - .solodevflow/spark-box.md（灵光收集箱）
   - .solodevflow/pending-docs.md（文档债务）
   - docs/requirements/（用户需求文档）
 

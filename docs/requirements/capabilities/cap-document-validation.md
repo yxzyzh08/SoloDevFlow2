@@ -1,8 +1,11 @@
 ---
 type: capability
-version: "1.0"
+id: document-validation
+workMode: code
+status: done
 priority: P0
 domain: process
+version: "1.1"
 ---
 
 # Capability: Document Validation <!-- id: cap_document_validation -->

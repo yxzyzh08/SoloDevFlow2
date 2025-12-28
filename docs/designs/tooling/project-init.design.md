@@ -1,5 +1,7 @@
 ---
 type: design
+id: design-project-init
+status: in_progress
 version: "1.1"
 inputs:
   - docs/requirements/features/fea-project-init.md#feat_project_init
@@ -125,7 +127,6 @@ const InstallManifest = {
   files: {
     '.flow/state.json': 'template',      // 从模板生成
     '.flow/input-log.md': 'template',
-    '.flow/spark-box.md': 'template',
     '.flow/pending-docs.md': 'template',
     'CLAUDE.md': 'template',              // 从模板生成
     '.claude/commands/*': 'copy',         // 直接复制
@@ -225,7 +226,6 @@ const CLAUDE_RULES = {
   },
   "features": {},
   "domains": {},
-  "sparks": [],
   "pendingDocs": [],
   "solodevflow": {
     "version": "{{version}}",

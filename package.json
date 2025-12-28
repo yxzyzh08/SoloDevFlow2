@@ -11,9 +11,8 @@
     "validate:state": "node scripts/validate-state.js",
     "validate:docs": "node scripts/validate-docs.js",
     "init": "node scripts/init.js",
-    "kb": "node src/cli/knowledge-base.js",
-    "test": "node --test tests/",
-    "test:kb": "node --test tests/knowledge-base.test.js"
+    "index": "node scripts/index.js",
+    "test": "node --test tests/"
   },
   "keywords": [
     "ai",
@@ -23,7 +22,5 @@
   ],
   "author": "",
   "license": "MIT",
-  "dependencies": {
-    "sql.js": "^1.11.0"
-  }
+  "dependencies": {}
 }

@@ -1,8 +1,11 @@
 ---
 type: feature
-version: "1.4"
+id: change-impact-tracking
+workMode: document
+status: not_started
 priority: P0
 domain: process
+version: "1.5"
 ---
 
 # Feature: Change Impact Tracking <!-- id: feat_change_impact_tracking -->
@@ -52,9 +55,9 @@ domain: process
 
 ---
 
-## 3. Core Capabilities <!-- id: feat_change_impact_tracking_capabilities -->
+## 3. Core Functions <!-- id: feat_change_impact_tracking_functions -->
 
-| ID | Capability | 描述 |
+| ID | Function | 描述 |
 |----|------------|------|
 | C1 | 依赖图构建 | 扫描文档构建节点和边，支持多种依赖来源 |
 | C3 | 影响分析 | 基于依赖图计算变更影响范围 |

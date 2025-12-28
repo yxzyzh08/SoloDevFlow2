@@ -59,6 +59,8 @@ function matchesAny(patterns, filePath) {
 
 /**
  * 阶段守卫规则 (§4.3.1)
+ * v12.3: 新增 feature_review 阶段
+ * v6.8: 扩展 feature_requirements 阻止 scripts/*.js
  */
 const PHASE_GUARD_RULES = {
   pending: {
@@ -68,12 +70,28 @@ const PHASE_GUARD_RULES = {
   },
   feature_requirements: {
     blockedTools: ['Write', 'Edit'],
-    blockedPatterns: ['src/**/*.js', 'src/**/*.ts', 'tests/**/*'],
-    reason: 'Cannot write code/tests during requirements phase. Complete design first.'
+    blockedPatterns: [
+      'src/**/*.js', 'src/**/*.ts',  // 源代码
+      'scripts/**/*.js',              // 脚本（v6.8 新增）
+      '.claude/hooks/**/*.js',        // Hook 脚本（v6.8 新增）
+      'tests/**/*'                    // 测试
+    ],
+    reason: 'Cannot write code/scripts during requirements phase. Update requirements doc first, then set phase to feature_review.'
+  },
+  feature_review: {
+    blockedTools: ['Write', 'Edit'],
+    blockedPatterns: [
+      'docs/designs/**/*.md',   // Cannot enter design phase
+      'src/**/*.js', 'src/**/*.ts', 'src/**/*',  // Cannot enter implementation
+      'scripts/**/*.js',        // Cannot modify scripts
+      '.claude/hooks/**/*.js',  // Cannot modify hooks
+      'tests/**/*'              // Cannot write tests
+    ],
+    reason: 'Awaiting human review. Get requirements approved before proceeding to design.'
   },
   feature_design: {
     blockedTools: ['Write', 'Edit'],
-    blockedPatterns: ['src/**/*.js', 'src/**/*.ts', 'tests/**/*'],
+    blockedPatterns: ['src/**/*.js', 'src/**/*.ts', 'scripts/**/*.js', 'tests/**/*'],
     reason: 'Cannot write code/tests during design phase. Get design approved first.'
   }
 };

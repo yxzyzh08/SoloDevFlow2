@@ -1,6 +1,6 @@
 ---
 type: prd
-version: "3.5"
+version: "3.9"
 ---
 
 # SoloDevFlow 2.0 <!-- id: prod_solodevflow -->
@@ -155,9 +155,9 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 | Domain | 说明 | Feature 数量 |
 |--------|------|--------------|
 | **specification** | 规范文档（元规范/需求/设计/开发/测试） | 5 |
-| **process** | 协作流程（核心流程/状态管理/输入捕获/影响追踪/知识库/文档验证） | 6 |
+| **process** | 协作流程（核心流程/状态管理/输入捕获/影响追踪/文档验证/项目重构） | 6 |
 | **tooling** | 独立工具（项目初始化） | 1 |
-| **ai-config** | AI 协作配置（CLAUDE.md/命令/技能/架构演进） | 4 |
+| **ai-config** | AI 协作配置（Hooks/CLAUDE.md/命令/技能/架构演进） | 5 |
 
 ---
 
@@ -252,25 +252,33 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature**: [input-log.md](../../.solodevflow/input-log.md)
+- **Feature**: [fea-input-capture.md](features/fea-input-capture.md)
 
-#### knowledge-base <!-- id: feat_ref_knowledge_base -->
+#### ~~knowledge-base~~ (已废弃) <!-- id: feat_ref_knowledge_base -->
 
-产品知识库，提供文档索引、关系查询、上下文加载能力。解决 AI 无法快速定位相关文档、文档间关系无法查询、意图识别缺乏上下文的问题。基于现有规范解析文档，使用 SQLite 存储，支持关键词搜索和关系查询。
-
-**元信息**：
-- **Priority**: P0
-- **Type**: code
-- **Feature**: [fea-knowledge-base.md](features/fea-knowledge-base.md)
+> **v12.0.0 废弃**：知识库功能已被 Claude CLI 原生能力 + 文档索引（index.js）取代。
+>
+> 原设计使用 SQLite 存储文档索引，但发现 Claude CLI 已具备强大的文件搜索能力。
+> 现改为轻量级 index.json 扫描脚本，利用 Claude 原生 Glob/Grep 能力。
 
 #### document-validation <!-- id: cap_ref_document_validation -->
 
-文档格式验证能力，确保需求/设计/测试文档符合规范定义的结构。验证 Frontmatter、必选章节、锚点格式、引用有效性。被 change-impact-tracking 和 knowledge-base 消费。
+文档格式验证能力，确保需求/设计/测试文档符合规范定义的结构。验证 Frontmatter、必选章节、锚点格式、引用有效性。被 change-impact-tracking 消费。
 
 **元信息**：
 - **Priority**: P0
 - **Type**: code
 - **Capability**: [cap-document-validation.md](capabilities/cap-document-validation.md)
+
+#### project-refactor <!-- id: feat_ref_project_refactor -->
+
+项目重构能力，为现有项目提供文档架构重构流程。通过逆向理解代码和现有文档，自顶向下重建符合 SoloDevFlow 规范的文档体系（PRD → Feature → Capability → Flow）。完成后自动切换到正常工作流。
+
+**元信息**：
+- **Priority**: P1
+- **Type**: process
+- **Feature**: [fea-project-refactor.md](features/fea-project-refactor.md)
+- **Flow**: [flow-refactoring.md](flows/flow-refactoring.md)
 
 ### 4.3 Domain: tooling <!-- id: domain_tooling -->
 
@@ -289,7 +297,17 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 
 ### 4.4 Domain: ai-config <!-- id: domain_ai_config -->
 
-AI 协作配置系统，定义 Claude 的行为规范、命令和技能。
+AI 协作配置系统，定义 Claude 的行为规范、命令、技能和 Hooks 集成。
+
+#### hooks-integration <!-- id: feat_ref_hooks_integration -->
+
+Claude Code Hooks 集成，解决 AI 对话缺乏项目上下文的问题。通过 SessionStart/UserPromptSubmit/PreToolUse Hooks 实现工作流自动化：自动注入项目状态、阶段守卫、文件保护。
+
+**元信息**：
+- **Priority**: P0
+- **Type**: code
+- **Feature**: [fea-hooks-integration.md](features/fea-hooks-integration.md)
+- **Artifact**: [.claude/hooks/](../../.claude/hooks/)
 
 #### claude-md <!-- id: feat_ref_claude_md -->
 
@@ -307,7 +325,8 @@ AI 行为入口，解决 AI 对话启动时缺乏上下文和导航的问题。�
 **元信息**：
 - **Priority**: P0
 - **Type**: document
-- **Feature**: [.claude/commands/](../../.claude/commands/)
+- **Feature**: [fea-write-commands.md](features/fea-write-commands.md)
+- **Artifact**: [.claude/commands/](../../.claude/commands/)
 
 #### requirements-expert <!-- id: feat_ref_requirements_expert -->
 
@@ -320,7 +339,16 @@ AI 行为入口，解决 AI 对话启动时缺乏上下文和导航的问题。�
 - **Priority**: P0
 - **Type**: document
 - **Feature**: [fea-requirements-expert.md](features/fea-requirements-expert.md)
-- **Artifact**: [.claude/skills/requirements-expert/](../../.claude/skills/requirements-expert/)
+- **Flow**: [flow-requirements.md](flows/flow-requirements.md)
+
+#### review-assistant <!-- id: feat_ref_review_assistant -->
+
+需求审核助手 Subagent，协助人类审核需求文档。自动加载 PRD 和需求文档上下文，搜索行业最佳实践，生成结构化审核报告。作为独立流程，人类可随时发起。
+
+**元信息**：
+- **Priority**: P0
+- **Type**: code
+- **Feature**: [fea-review-assistant.md](features/fea-review-assistant.md)
 
 #### agent-architecture <!-- id: feat_ref_agent_architecture -->
 
@@ -379,7 +407,7 @@ Agent 架构演进，从单 Agent 演进到专业化 Subagent 架构。支持多
 
 ---
 
-*Version: v3.5*
+*Version: v3.9*
 *Created: 2024-12-16*
-*Updated: 2025-12-25*
-*Changes: v3.5 新增 §1.5 Design Principles（核心原则：集成而非重造），明确 SoloDevFlow 与 Claude CLI 的能力分层；v3.4 扩展 requirements-expert 职责（新增需求+需求变更+规范变更+影响分析）；v3.3 修复引用路径错误；v3.2 新增 document-validation Capability（文档验证能力）；v3.1 新增 knowledge-base Feature；v3.0 删除 spark-box，改为临时需求机制*
+*Updated: 2025-12-28*
+*Changes: v3.9 新增 review-assistant Feature（ai-config domain，P0），需求审核助手 Subagent；v3.8 新增 project-refactor Feature（process domain，P1）；v3.7 新增 hooks-integration Feature*

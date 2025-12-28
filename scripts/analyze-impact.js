@@ -10,10 +10,11 @@
 
 const fs = require('fs');
 const path = require('path');
+const { toBeijingISOString } = require('./lib/datetime');
 
 const REQUIREMENTS_DIR = path.join(__dirname, '..', 'docs', 'requirements');
 const DESIGNS_DIR = path.join(__dirname, '..', 'docs', 'designs');
-const STATE_FILE = path.join(__dirname, '..', '.flow', 'state.json');
+const STATE_FILE = path.join(__dirname, '..', '.solodevflow', 'state.json');
 
 // Document type detection
 function getDocType(filePath) {
@@ -389,7 +390,7 @@ function generateSubtasks(directImpacts, indirectImpacts, changedFile) {
       description: `检查 ${path.basename(impact.path)} 是否需要更新`,
       target: impact.path,
       status: 'pending',
-      createdAt: new Date().toISOString(),
+      createdAt: toBeijingISOString(),
       source: 'impact-analysis'
     });
   });
@@ -401,7 +402,7 @@ function generateSubtasks(directImpacts, indirectImpacts, changedFile) {
       description: `检查 ${path.basename(impact.path)} 是否受间接影响`,
       target: impact.path,
       status: 'pending',
-      createdAt: new Date().toISOString(),
+      createdAt: toBeijingISOString(),
       source: 'impact-analysis'
     });
   });

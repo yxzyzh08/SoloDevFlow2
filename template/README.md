@@ -16,13 +16,11 @@ template/
 │   ├── write-design.md         # 编写 Design
 │   ├── write-design-spec.md    # 编写设计规范
 │   └── write-req-spec.md       # 编写需求规范
-├── requirements/                # 需求文档模板
-│   ├── backend/                # 后端项目模板
-│   ├── web-app/                # Web应用模板
-│   ├── mobile-app/             # 移动应用模板
-│   └── shared/                 # 跨项目类型共享模板
-└── skills/                      # AI技能模板
-    └── requirements-expert/    # 需求专家技能
+└── requirements/                # 需求文档模板
+    ├── backend/                # 后端项目模板
+    ├── web-app/                # Web应用模板
+    ├── mobile-app/             # 移动应用模板
+    └── shared/                 # 跨项目类型共享模板
 
 ## 用途
 
@@ -36,8 +34,7 @@ template/
 
 1. `template/flows/` → 复制到目标项目的 `.solodevflow/flows/`
 2. `template/commands/` → 复制到目标项目的 `.claude/commands/`
-3. `template/skills/` → 复制到目标项目的 `.claude/skills/`
-4. `template/requirements/` → 保留在 SoloDevFlow 源目录，通过 `sourcePath` 引用
+3. `template/requirements/` → 保留在 SoloDevFlow 源目录，通过 `sourcePath` 引用
 
 ## 升级流程
 
@@ -45,7 +42,6 @@ template/
 
 - 更新目标项目的 `.solodevflow/flows/`
 - 更新目标项目的 `.claude/commands/`
-- 更新目标项目的 `.claude/skills/`
 - 保留目标项目的运行时状态（state.json, input-log.md 等）
 
 ## 维护指南

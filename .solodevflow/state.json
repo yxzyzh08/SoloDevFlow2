@@ -1,239 +1,42 @@
 {
-  "schemaVersion": "11.0.0",
+  "schemaVersion": "13.0.0",
   "project": {
     "name": "SoloDevFlow 2.0",
     "description": "为超级个体打造的自进化人机协作开发系统",
     "type": "backend",
     "createdAt": "2024-12-16",
-    "updatedAt": "2025-12-25"
+    "updatedAt": "2025-12-27"
   },
   "flow": {
     "researchMethod": "bottom-up",
     "activeFeatures": [
-      "state-management"
+      "workflows"
     ]
-  },
-  "session": {
-    "mode": "idle",
-    "context": {
-      "topic": null,
-      "relatedFeatures": [],
-      "pendingRequirements": []
-    }
-  },
-  "features": {
-    "meta": {
-      "type": "document",
-      "description": "文档系统元规范（文档身份/锚点/目录结构/规范映射）",
-      "domain": "specification",
-      "docPath": "docs/specs/spec-meta.md",
-      "scripts": [
-        "scripts/validate-docs.js"
-      ],
-      "phase": "done",
-      "status": "completed"
-    },
-    "requirements": {
-      "type": "document",
-      "description": "需求文档规范（PRD/Feature/Capability/Flow 结构）",
-      "domain": "specification",
-      "docPath": "docs/specs/spec-requirements.md",
-      "phase": "done",
-      "status": "completed"
-    },
-    "design": {
-      "type": "document",
-      "description": "设计文档规范（架构/接口/数据模型）",
-      "domain": "specification",
-      "docPath": "docs/specs/spec-design.md",
-      "phase": "done",
-      "status": "completed"
-    },
-    "development": {
-      "type": "document",
-      "description": "开发规范（后端/前端代码标准）",
-      "domain": "specification",
-      "docPath": "docs/specs/spec-backend-dev.md",
-      "phase": "done",
-      "status": "completed"
-    },
-    "testing": {
-      "type": "document",
-      "description": "测试规范（E2E/性能/破坏性/安全测试）",
-      "domain": "specification",
-      "docPath": "docs/specs/spec-test.md",
-      "phase": "done",
-      "status": "completed"
-    },
-    "workflows": {
-      "type": "document",
-      "description": "标准工作流（意图路由/阶段流转/交付流程）",
-      "domain": "process",
-      "docPath": "docs/requirements/flows/flow-workflows.md",
-      "execPath": ".solodevflow/flows/workflows.md",
-      "dependencies": [
-        "knowledge-base",
-        "state-management"
-      ],
-      "phase": "pending",
-      "status": "not_started"
-    },
-    "state-management": {
-      "type": "code",
-      "description": "状态管理系统（Schema + CLI 工具）",
-      "domain": "process",
-      "docPath": "docs/requirements/features/fea-state-management.md",
-      "designDepth": "none",
-      "artifacts": {
-        "design": null,
-        "code": [
-          "scripts/validate-state.js",
-          "scripts/state.js",
-          "scripts/status.js"
-        ],
-        "tests": []
-      },
-      "phase": "feature_implementation",
-      "status": "in_progress"
-    },
-    "change-impact-tracking": {
-      "type": "document",
-      "description": "变更影响追踪机制",
-      "domain": "process",
-      "docPath": "docs/requirements/features/fea-change-impact-tracking.md",
-      "scripts": [
-        "scripts/analyze-impact.js",
-        "scripts/validate-docs.js"
-      ],
-      "phase": "pending",
-      "status": "not_started"
-    },
-    "document-validation": {
-      "type": "code",
-      "description": "文档格式验证能力（Frontmatter/章节/锚点/引用）",
-      "domain": "process",
-      "docPath": "docs/requirements/capabilities/cap-document-validation.md",
-      "designDepth": "none",
-      "artifacts": {
-        "design": null,
-        "code": [
-          "scripts/validate-docs.js"
-        ],
-        "tests": []
-      },
-      "phase": "done",
-      "status": "completed"
-    },
-    "knowledge-base": {
-      "type": "code",
-      "description": "产品知识库（文档索引/关系查询/上下文加载）",
-      "domain": "process",
-      "docPath": "docs/requirements/features/fea-knowledge-base.md",
-      "designDepth": "Required",
-      "artifacts": {
-        "design": "docs/designs/des-knowledge-base.md",
-        "code": [
-          "src/cli/knowledge-base.js",
-          "src/lib/kb-parser.js",
-          "src/lib/kb-store.js"
-        ],
-        "tests": [
-          "tests/knowledge-base.test.js"
-        ],
-        "data": ".solodevflow/knowledge.db"
-      },
-      "dependencies": [
-        "document-validation"
-      ],
-      "phase": "done",
-      "status": "completed"
-    },
-    "input-capture": {
-      "type": "document",
-      "description": "输入捕获机制（记录关键人类输入）",
-      "domain": "process",
-      "docPath": ".solodevflow/input-log.md",
-      "phase": "pending",
-      "status": "not_started"
-    },
-    "project-init": {
-      "type": "code",
-      "domain": "tooling",
-      "description": "项目初始化工具（将 SoloDevFlow 安装到其他项目）",
-      "docPath": "docs/requirements/features/fea-project-init.md",
-      "designDepth": "none",
-      "artifacts": {
-        "design": null,
-        "code": [
-          "scripts/init.js"
-        ],
-        "tests": [
-          "tests/e2e/project-init.test.js"
-        ]
-      },
-      "phase": "pending",
-      "status": "in_progress"
-    },
-    "claude-md": {
-      "type": "document",
-      "description": "AI 行为入口配置",
-      "domain": "ai-config",
-      "docPath": "CLAUDE.md",
-      "phase": "pending",
-      "status": "not_started"
-    },
-    "write-commands": {
-      "type": "document",
-      "description": "文档编写命令集",
-      "domain": "ai-config",
-      "docPath": ".claude/commands/",
-      "phase": "pending",
-      "status": "not_started"
-    },
-    "requirements-expert": {
-      "type": "document",
-      "description": "需求专家技能（澄清需求/判断文档类型）",
-      "domain": "ai-config",
-      "docPath": ".claude/skills/requirements-expert/",
-      "phase": "pending",
-      "status": "not_started"
-    },
-    "design-expert": {
-      "type": "document",
-      "description": "设计专家技能（根据产品远景提供合适设计，避免过度设计）",
-      "domain": "ai-config",
-      "docPath": ".claude/skills/design-expert/",
-      "phase": "pending",
-      "status": "not_started"
-    },
-    "agent-architecture": {
-      "type": "document",
-      "description": "Agent 架构演进（从单 Agent 到专业化 Subagent）",
-      "domain": "ai-config",
-      "docPath": "docs/requirements/features/fea-agent-architecture.md",
-      "dependencies": [
-        "workflows",
-        "knowledge-base",
-        "state-management"
-      ],
-      "phase": "pending",
-      "status": "not_started"
-    }
   },
   "domains": {
     "specification": "规范文档（元规范/需求/设计/开发/测试）",
-    "process": "协作流程（状态/输入/灵光/影响追踪）",
+    "process": "协作流程（状态/输入/影响追踪）",
     "tooling": "独立工具（项目初始化/分发安装）",
     "ai-config": "AI 协作配置（CLAUDE.md/命令/技能）"
   },
-  "sparks": [],
   "pendingDocs": [],
   "metadata": {
     "lastGitCommit": "",
     "lastGitCommitMessage": "",
     "lastGitCommitAt": "",
-    "stateFileVersion": 19,
-    "totalStateChanges": 19
+    "stateFileVersion": 72,
+    "totalStateChanges": 22
   },
-  "lastUpdated": "2025-12-25T15:35:32.063Z"
+  "lastUpdated": "2025-12-28T14:31:01.763+08:00",
+  "subtasks": [
+    {
+      "id": "st_1766903410353_001",
+      "featureId": "workflows",
+      "description": "Fix setPhase to sync status with phase",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-28T14:30:10.354+08:00",
+      "completedAt": "2025-12-28T14:31:01.763+08:00"
+    }
+  ]
 }

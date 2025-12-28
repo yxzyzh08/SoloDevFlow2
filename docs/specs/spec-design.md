@@ -1,4 +1,4 @@
-# Design Document Specification v2.5 <!-- id: spec_design -->
+# Design Document Specification v2.6 <!-- id: spec_design -->
 
 > 定义设计文档的结构、内容要素、编写标准
 
@@ -9,7 +9,7 @@
 - 此规范定义设计文档的**具体章节结构**
 - 元规范 `spec-meta.md` 定义文档类型和验证规则
 - 需求文档规范见 `spec-requirements.md`
-- **版本 v2.5**：新增 Dependencies 章节格式（支持知识库关系提取）
+- **版本 v2.6**：消除与 spec-meta 的冗余，明确职责边界
 
 ---
 
@@ -53,30 +53,9 @@ des-system-architecture.md
   ← cap-logging.md
 ```
 
-### 1.4 Directory Structure
+### 1.4 Directory & Naming
 
-```
-docs/designs/
-├── des-system-architecture.md    # 系统级架构设计
-│
-├── user-module/                   # 按模块组织
-│   ├── des-architecture.md        # 用户模块架构
-│   ├── des-api.md                 # 用户模块 API
-│   └── des-data-model.md          # 用户数据模型
-│
-├── payment-module/                # 按模块组织
-│   ├── des-architecture.md        # 支付模块架构
-│   └── des-payment-gateway.md     # 支付网关设计
-│
-├── des-auth-capability.md         # 横向能力设计
-│
-└── des-order-fulfillment-flow.md  # 流程设计
-```
-
-**命名规范**：
-- 系统级：`des-{descriptive-name}.md`
-- 模块级：`{module}/des-{aspect}.md`
-- 自由命名：反映设计的实际内容，不必与需求文档名称对应
+> 目录结构和命名规范见 [spec-meta.md §5](docs/specs/spec-meta.md#meta_directory)
 
 ---
 
@@ -384,20 +363,11 @@ Dependencies 章节声明设计的前置依赖，支持知识库关系提取：
 
 ## Appendix: Quick Reference <!-- id: spec_design_appendix -->
 
-### A. Naming Convention
+### A. Naming & Anchor
 
-| 场景 | 格式 | 示例 |
-|------|------|------|
-| 系统级 | `des-{name}.md` | `des-system-architecture.md` |
-| 模块级 | `{module}/des-{aspect}.md` | `user-module/des-api.md` |
+> 命名规范和锚点前缀见 [spec-meta.md §5-6](docs/specs/spec-meta.md#meta_directory)
 
-### B. Anchor Prefix
-
-| Prefix | Example |
-|--------|---------|
-| `design_` | `design_overview`, `design_api` |
-
-### C. Frontmatter Template
+### B. Frontmatter Template
 
 ```yaml
 ---
@@ -410,7 +380,7 @@ inputs:
 
 ---
 
-*Version: v2.5*
+*Version: v2.6*
 *Created: 2024-12-20 (v1.0)*
-*Updated: 2025-12-24 (v2.5)*
-*Changes: v2.2 新增 Decision Record（ADR）、扩展 Interface Design 和 Risks; v2.3 简化 Design Depth 为二元判断; v2.4 Decision Record 改为可选（减少过度设计）; v2.5 新增 Dependencies 章节格式（支持知识库关系提取）*
+*Updated: 2025-12-27 (v2.6)*
+*Changes: v2.6 消除与 spec-meta 的冗余，目录/命名/锚点引用 spec-meta；v2.5 新增 Dependencies 章节格式*

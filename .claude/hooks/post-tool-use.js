@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * PostToolUse Hook - 工具执行成功后的文档验证
+ * PostToolUse Hook - 工具执行成功后的文档验证 + TodoWrite 同步
  *
  * Based on design: des-hooks-integration.md §4.4
  *
@@ -16,10 +16,20 @@
  *   1 - Hook error (use default behavior)
  *
  * Note: Validation failures are logged to stderr but don't block the tool execution
+ *
+ * TodoWrite Sync (v6.6):
+ *   When AI uses TodoWrite, automatically sync to state.json subtasks
+ *   - Direction: TodoWrite → subtasks (one-way)
+ *   - Conflict: Append only, never delete existing subtasks
  */
 
 const { execSync } = require('child_process');
+const fs = require('fs');
 const path = require('path');
+const { toBeijingISOString } = require('./lib/datetime');
+
+const STATE_FILE = path.join(process.cwd(), '.solodevflow', 'state.json');
+const INDEX_FILE = path.join(process.cwd(), '.solodevflow', 'index.json');
 
 // =============================================================================
 // Validation Rules (§4.4.1)
@@ -121,6 +131,106 @@ function runValidation(rule, filePath) {
 }
 
 // =============================================================================
+// TodoWrite Sync Logic (v6.6)
+// =============================================================================
+
+/**
+ * 获取当前活跃的 Feature ID
+ */
+function getActiveFeatureId() {
+  try {
+    if (!fs.existsSync(STATE_FILE)) return 'unknown';
+    const state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8'));
+    return state?.flow?.activeFeatures?.[0] || 'unknown';
+  } catch (e) {
+    return 'unknown';
+  }
+}
+
+/**
+ * 同步 TodoWrite 到 subtasks
+ * - 只追加，不删除
+ * - 通过 description 匹配判断是否已存在
+ */
+function syncTodoWriteToSubtasks(todos) {
+  if (!fs.existsSync(STATE_FILE)) {
+    console.error('[TodoSync] state.json not found, skipping sync');
+    return { synced: 0 };
+  }
+
+  try {
+    const state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8'));
+    if (!state.subtasks) state.subtasks = [];
+
+    const featureId = getActiveFeatureId();
+    let addedCount = 0;
+    let updatedCount = 0;
+
+    for (const todo of todos) {
+      const description = todo.content || todo.description || '';
+      if (!description) continue;
+
+      // 查找是否已存在（通过 description 匹配）
+      const existing = state.subtasks.find(s =>
+        s.description === description && s.source === 'ai'
+      );
+
+      if (existing) {
+        // 更新 status（如果变化）
+        const newStatus = mapTodoStatus(todo.status);
+        if (existing.status !== newStatus && newStatus !== 'completed') {
+          existing.status = newStatus;
+          existing.updatedAt = toBeijingISOString();
+          updatedCount++;
+        }
+        // 如果 todo 是 completed，标记 subtask 为 completed
+        if (todo.status === 'completed' && existing.status !== 'completed') {
+          existing.status = 'completed';
+          existing.completedAt = toBeijingISOString();
+          updatedCount++;
+        }
+      } else {
+        // 添加新 subtask
+        const id = `st_${Date.now()}_${String(state.subtasks.length + 1).padStart(3, '0')}`;
+        state.subtasks.push({
+          id,
+          featureId,
+          description,
+          status: mapTodoStatus(todo.status),
+          source: 'ai',
+          createdAt: toBeijingISOString()
+        });
+        addedCount++;
+      }
+    }
+
+    // 保存 state
+    if (addedCount > 0 || updatedCount > 0) {
+      state.lastUpdated = toBeijingISOString();
+      state.metadata.stateFileVersion = (state.metadata.stateFileVersion || 0) + 1;
+      fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+    }
+
+    return { added: addedCount, updated: updatedCount };
+  } catch (e) {
+    console.error(`[TodoSync] Error: ${e.message}`);
+    return { error: e.message };
+  }
+}
+
+/**
+ * 映射 TodoWrite status 到 subtask status
+ */
+function mapTodoStatus(todoStatus) {
+  const mapping = {
+    'pending': 'pending',
+    'in_progress': 'in_progress',
+    'completed': 'completed'
+  };
+  return mapping[todoStatus] || 'pending';
+}
+
+// =============================================================================
 // Main
 // =============================================================================
 
@@ -137,6 +247,18 @@ function main() {
     try {
       const event = JSON.parse(input);
       const { tool_name, tool_input, tool_response } = event;
+
+      // 处理 TodoWrite 同步
+      if (tool_name === 'TodoWrite') {
+        const todos = tool_input?.todos || [];
+        if (todos.length > 0) {
+          const result = syncTodoWriteToSubtasks(todos);
+          if (result.added > 0 || result.updated > 0) {
+            console.log(`[TodoSync] Synced: ${result.added} added, ${result.updated} updated`);
+          }
+        }
+        process.exit(0);
+      }
 
       // 只处理成功的 Write/Edit 操作
       if (!tool_response?.success) {

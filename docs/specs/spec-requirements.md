@@ -1,4 +1,4 @@
-# Requirements Document Specification v2.5 <!-- id: spec_requirements -->
+# Requirements Document Specification v2.11 <!-- id: spec_requirements -->
 
 > 定义需求文档（PRD、Feature、Capability、Flow）的结构和编写标准
 
@@ -9,23 +9,67 @@
 - 此规范定义需求文档的**具体章节结构**
 - 元规范 `spec-meta.md` 定义文档类型和验证规则
 - 设计文档规范见 `spec-design.md`
-- **版本 v2.5**：新增知识库解析支持（Summary 提取、Dependencies/Consumers 格式、可选 frontmatter）
+- **版本 v2.11**：Feature 章节 Core Capabilities → Core Functions，避免与 Capability Spec 混淆
 - **模板已消除**：AI 直接从本规范生成文档，不再使用 `template/requirements/` 模板
 
 ---
 
 ## 1. Scope <!-- id: spec_req_scope -->
 
+### 1.0 Core Concepts <!-- id: spec_req_concepts -->
+
+#### 1.0.1 Terminology
+
+| 术语 | 定义 | 核心特征 |
+|------|------|----------|
+| **Feature** | 纵向业务功能切片 | 面向用户价值、端到端可交付、可独立验收 |
+| **Capability** | 横向技术能力 | 被多个 Feature 复用、基础设施性质 |
+| **Flow** | 跨域协作流程 | 编排多个 Feature/系统、有时序和状态转换 |
+
+#### 1.0.2 Feature vs Capability vs Flow
+
+| 维度 | Feature | Capability | Flow |
+|------|---------|------------|------|
+| **方向** | 纵向（业务切片） | 横向（技术复用） | 跨域（协作编排） |
+| **服务对象** | 用户/业务目标 | 其他 Feature | 多个参与方 |
+| **独立性** | 可独立交付验收 | 被依赖调用 | 编排协调多方 |
+| **生命周期** | 有明确开始和结束 | 持续存在 | 事件驱动 |
+| **示例** | 用户登录、商品搜索、订单创建 | 认证、缓存、日志、通知 | 订单履行、支付流程、注册激活 |
+
+#### 1.0.3 Document Type Decision Tree
+
+```
+这个需求...
+
+├─ 直接服务于用户/业务目标？
+│  ├─ Yes → 是否需要详细设计？
+│  │         ├─ Yes → 独立 Feature Spec
+│  │         └─ No  → PRD 章节即可
+│  └─ No ↓
+│
+├─ 被 2+ Feature 复用的基础能力？
+│  ├─ Yes → 是否需要独立描述？
+│  │         ├─ Yes → 独立 Capability Spec
+│  │         └─ No  → PRD 章节即可
+│  └─ No ↓
+│
+└─ 跨 Feature/系统的协作流程？
+   ├─ Yes → 流程是否复杂？
+   │         ├─ Yes → 独立 Flow Spec
+   │         └─ No  → PRD Core Flow 章节
+   └─ No  → 重新分析需求边界
+```
+
 ### 1.1 Document Types
 
 本规范定义以下需求文档类型的结构：
 
-| Type | 说明 | 文件命名 | 目录 |
+| Type | 定义 | 文件命名 | 目录 |
 |------|------|----------|------|
-| `prd` | 产品需求文档 | `prd.md`（固定） | `docs/requirements/` |
-| `feature` | 功能文档 | `fea-{name}.md` | `docs/requirements/features/` |
-| `capability` | 横向能力文档 | `cap-{name}.md` | `docs/requirements/capabilities/` |
-| `flow` | 跨域流程文档 | `flow-{name}.md` | `docs/requirements/flows/` |
+| `prd` | 产品需求文档（产品愿景、整体规划） | `prd.md`（固定） | `docs/requirements/` |
+| `feature` | 纵向业务功能（面向用户价值、可独立交付） | `fea-{name}.md` | `docs/requirements/features/` |
+| `capability` | 横向技术能力（被多 Feature 复用） | `cap-{name}.md` | `docs/requirements/capabilities/` |
+| `flow` | 跨域协作流程（编排多方协作） | `flow-{name}.md` | `docs/requirements/flows/` |
 
 ### 1.2 Document Hierarchy
 
@@ -41,20 +85,9 @@ PRD (1个，必须)
 - **复杂场景**：需要详细设计文档时，独立成文档
 - **判断标准**：是否需要详细设计、是否跨产品复用、章节内容是否超过 500 行
 
-### 1.3 Directory Structure
+### 1.3 Directory & Naming
 
-```
-docs/requirements/
-├── prd.md                    # 产品需求文档（必须，固定名称）
-├── features/                 # 独立 Feature（复杂场景）
-│   ├── fea-user-login.md
-│   └── fea-payment-gateway.md
-├── capabilities/             # 横向能力（复杂场景）
-│   ├── cap-auth.md
-│   └── cap-logging.md
-└── flows/                    # 跨域流程（复杂场景）
-    └── flow-order-fulfillment.md
-```
+> 目录结构和命名规范见 [spec-meta.md §5](docs/specs/spec-meta.md#meta_directory)
 
 ### 1.4 Requirements Research Methods
 
@@ -67,7 +100,7 @@ docs/requirements/
 
 ### 1.5 Summary Extraction Rule
 
-知识库从以下位置提取文档摘要（Summary）：
+文档索引（index.js）从以下位置提取文档摘要（Summary）：
 
 | 文档类型 | 摘要来源 | 提取规则 |
 |----------|----------|----------|
@@ -111,26 +144,30 @@ version: {version}
 
 ### 2.1 Optional Frontmatter Fields
 
-以下字段为可选，用于增强知识库索引和查询：
+以下字段为可选，用于增强文档索引（index.json）：
 
 ```yaml
 ---
 type: feature
 version: "1.0"
-priority: P0         # 可选：优先级
-domain: process      # 可选：所属 Domain
+id: state-management   # 推荐：文档唯一标识
+status: in_progress    # 推荐：文档状态
+priority: P0           # 可选：优先级
+domain: process        # 可选：所属 Domain
 ---
 ```
 
 | 字段 | 必填 | 说明 |
 |------|------|------|
+| `id` | 推荐 | 文档唯一标识，用于 index.json 和 state.json 关联 |
+| `status` | 推荐 | 文档状态：`not_started` / `in_progress` / `done` |
 | `priority` | 否 | 优先级：`P0` / `P1` / `P2` |
 | `domain` | 否 | 所属 Domain 名称（与 PRD 中的 Domain 对应） |
 
 **说明**：
-- 这些字段在元信息章节中通常已有体现
-- frontmatter 中声明可加速知识库索引
-- 知识库解析器应容错处理缺失情况
+- `id` 和 `status` 是 v12.0.0 架构的核心字段，强烈推荐填写
+- 这些字段由 `scripts/index.js` 解析并生成 `.solodevflow/index.json`
+- 解析器应容错处理缺失情况
 
 ---
 
@@ -252,7 +289,7 @@ Feature Roadmap 按 Domain 组织，每个 Feature 以子章节形式呈现：
 | Section | Required | Anchor | Description | Condition |
 |---------|----------|--------|-------------|-----------|
 | Intent | Yes | `feat_{name}_intent` | 解决什么问题（Why） | - |
-| Core Capabilities | Yes | `feat_{name}_capabilities` | 提供什么能力（What） | - |
+| Core Functions | Yes | `feat_{name}_functions` | 提供什么功能（What） | - |
 | Acceptance Criteria | Yes | `feat_{name}_acceptance` | 可验证的完成条件 | - |
 | Artifacts | code 类型必填 | `feat_{name}_artifacts` | 产物记录（设计/代码/测试路径） | - |
 | UI Components | Yes | `feat_{name}_ui_components` | 涉及的 UI 组件（复用/新建） | projectType: web-app |
@@ -359,7 +396,7 @@ PageComponent
 
 ### 4.6 Dependencies Section Format
 
-Dependencies 章节声明 Feature 的前置依赖，支持知识库关系提取：
+Dependencies 章节声明 Feature 的前置依赖，支持文档索引关系提取：
 
 ```markdown
 ## Dependencies <!-- id: feat_{name}_dependencies -->
@@ -409,7 +446,7 @@ Dependencies 章节声明 Feature 的前置依赖，支持知识库关系提取�
 
 ### 5.2 Consumers Section Format
 
-Consumers 章节声明哪些 Feature/Domain 使用该 Capability，支持知识库关系提取：
+Consumers 章节声明哪些 Feature/Domain 使用该 Capability，支持文档索引关系提取：
 
 ```markdown
 ## Consumers <!-- id: cap_{name}_consumers -->
@@ -535,28 +572,13 @@ minor: 内容更新（修改描述）
 | 跨功能的公共能力需求？ | Capability Spec |
 | 跨域的业务流程？ | Flow Spec |
 
-### B. Anchor Prefix
+### B. Anchor & Naming
 
-| Prefix | Type | Example |
-|--------|------|---------|
-| `prod_` | PRD | `prod_vision`, `prod_roadmap` |
-| `domain_` | Domain | `domain_user_management` |
-| `feat_` | Feature | `feat_login_intent` |
-| `cap_` | Capability | `cap_auth_intent` |
-| `flow_` | Flow | `flow_checkout_steps` |
-
-### C. Naming Convention
-
-| Type | Prefix | Example |
-|------|--------|---------|
-| PRD | 无 | `prd.md` |
-| Feature | `fea-` | `fea-user-login.md` |
-| Capability | `cap-` | `cap-auth.md` |
-| Flow | `flow-` | `flow-order-fulfillment.md` |
+> 锚点前缀和命名规范见 [spec-meta.md §5-6](docs/specs/spec-meta.md#meta_directory)
 
 ---
 
-*Version: v2.7*
+*Version: v2.11*
 *Created: 2024-12-20 (v1.0)*
-*Updated: 2025-12-24 (v2.7)*
-*Changes: v2.7 Capability 结构新增可选 Artifacts 章节；v2.6 统一元信息标签为 Feature；v2.5 新增知识库解析支持*
+*Updated: 2025-12-27 (v2.11)*
+*Changes: v2.11 Feature 章节 Core Capabilities → Core Functions；v2.10 消除冗余；v2.9 新增 Core Concepts*

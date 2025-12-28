@@ -4,12 +4,15 @@
  * Document Contract Validation Script
  * Validates documents against their specification definitions
  *
- * Version: 1.2
+ * Version: 1.4
  * Implements: cap-document-validation v1.1
- * Based on: spec-meta.md v2.3, spec-requirements.md v2.5, spec-test.md v1.2
+ * Based on: spec-meta.md v2.7, spec-requirements.md v2.10, spec-design.md v2.6, spec-test.md v1.2
  *
  * Features:
  *   - Frontmatter validation (type, version, inputs with array support)
+ *   - id/status field validation for requirements/design docs (v12.0.0)
+ *   - workMode validation for feature/capability/flow (v12.1.0)
+ *   - phase validation including feature_review (v12.3.0)
  *   - Required section validation
  *   - Anchor format and uniqueness validation
  *   - Reference validation (markdown links to files and anchors)
@@ -25,26 +28,44 @@ const fs = require('fs');
 const path = require('path');
 
 // ═══════════════════════════════════════════════════════════════════════════
-// META-SPEC v2.1 (硬编码，不从文档读取)
+// META-SPEC v2.7 (硬编码，不从文档读取)
 // ═══════════════════════════════════════════════════════════════════════════
 
 const META_SPEC = {
-  version: '2.1',
+  version: '2.7',
 
   // 1. Document Identity (Section 3.1)
   frontmatter: {
     required: true,
     requiredFields: ['type', 'version'],
-    optionalFields: ['inputs']  // Design 文档必填
+    recommendedFields: ['id', 'status'],  // v12.0.0: 推荐字段
+    optionalFields: ['inputs', 'priority', 'domain', 'phase']  // Design 文档 inputs 必填
   },
 
-  // 2. Anchor Format (Section 6)
+  // 2. Status values (v12.0.0)
+  validStatus: ['not_started', 'in_progress', 'done'],
+
+  // 2.5 Phase values (v12.3.0, workMode: code only)
+  validPhases: [
+    'pending',
+    'feature_requirements',
+    'feature_review',      // v12.3: 新增审核阶段
+    'feature_design',
+    'feature_implementation',
+    'feature_verification',
+    'done'
+  ],
+
+  // 2.6 workMode values (v12.1.0)
+  validWorkModes: ['code', 'document'],
+
+  // 3. Anchor Format (Section 6)
   anchor: {
     pattern: /<!--\s*id:\s*([a-z][a-z0-9_]*)\s*-->/g,
     identifierPattern: /^[a-z][a-z0-9_]*$/
   },
 
-  // 3. Document Type Registry (Section 2)
+  // 4. Document Type Registry (Section 2)
   // 基于元规范第2章定义的文档类型
   typeRegistry: {
     // Requirements Documents
@@ -63,7 +84,7 @@ const META_SPEC = {
     'meta-spec': { prefix: 'spec-', dir: 'docs/specs/', specFile: null, inputRequired: false },
   },
 
-  // 4. Specification Mapping (Section 7)
+  // 5. Specification Mapping (Section 7)
   specMapping: {
     declarationPattern: /<!--\s*defines:\s*(\S+)\s*-->/,
     // 项目类型（用于推断文档类型）
@@ -515,6 +536,47 @@ function validateDocument(filePath, specDefinitions) {
   const frontmatterType = frontmatter.type;
   if (!frontmatterType) {
     return results;
+  }
+
+  // 1.5 Check recommended fields (id, status) for requirements/design docs
+  // Note: PRD is excluded as it's a unique document that doesn't need status tracking
+  const needsIdStatus = ['feature', 'capability', 'flow', 'design'].includes(frontmatterType) ||
+    (filePath.includes('/requirements/') && !filePath.endsWith('prd.md')) ||
+    filePath.includes('/designs/');
+
+  if (needsIdStatus) {
+    for (const field of META_SPEC.frontmatter.recommendedFields) {
+      if (!frontmatter[field]) {
+        results.warnings.push(`Missing recommended frontmatter field: ${field} (v12.0.0)`);
+      }
+    }
+
+    // Validate status value if present
+    if (frontmatter.status && !META_SPEC.validStatus.includes(frontmatter.status)) {
+      results.errors.push(`Invalid status value: "${frontmatter.status}". Expected: ${META_SPEC.validStatus.join(', ')}`);
+    }
+
+    // Validate workMode for feature/capability/flow (v12.1.0)
+    const needsWorkMode = ['feature', 'capability', 'flow'].includes(frontmatterType);
+    if (needsWorkMode) {
+      if (!frontmatter.workMode) {
+        results.warnings.push(`Missing required workMode field for type: ${frontmatterType} (v12.1.0)`);
+      } else if (!META_SPEC.validWorkModes.includes(frontmatter.workMode)) {
+        results.errors.push(`Invalid workMode value: "${frontmatter.workMode}". Expected: ${META_SPEC.validWorkModes.join(', ')}`);
+      }
+
+      // Validate phase for workMode: code (v12.3.0)
+      if (frontmatter.workMode === 'code' && frontmatter.phase) {
+        if (!META_SPEC.validPhases.includes(frontmatter.phase)) {
+          results.errors.push(`Invalid phase value: "${frontmatter.phase}". Expected: ${META_SPEC.validPhases.join(', ')}`);
+        }
+      }
+
+      // Phase should not exist for workMode: document
+      if (frontmatter.workMode === 'document' && frontmatter.phase) {
+        results.warnings.push(`phase field should not be used with workMode: document`);
+      }
+    }
   }
 
   // 2. Infer actual document type

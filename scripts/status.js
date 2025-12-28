@@ -2,7 +2,9 @@
 
 /**
  * Project Status Script
- * Shows current state summary with domain tree view
+ * Shows current state summary with document tree view
+ *
+ * v12.0.0: Uses index.json for document status
  *
  * Usage: npm run status
  */
@@ -11,26 +13,40 @@ const fs = require('fs');
 const path = require('path');
 
 const STATE_FILE = path.join(__dirname, '..', '.solodevflow', 'state.json');
+const INDEX_FILE = path.join(__dirname, '..', '.solodevflow', 'index.json');
 
 /**
- * Build domain tree from features (v8.0 派生逻辑)
+ * Read JSON file safely
  */
-function buildDomainTree(state) {
+function readJSON(filePath) {
+  if (!fs.existsSync(filePath)) {
+    return null;
+  }
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Build document tree from index.json
+ */
+function buildDocumentTree(index) {
   const tree = {};
 
-  for (const [name, feature] of Object.entries(state.features)) {
-    const domain = feature.domain;
-    if (!tree[domain]) {
-      tree[domain] = {
-        description: state.domains[domain] || '',
-        features: {}
-      };
+  for (const doc of index.documents) {
+    // 从路径提取类型
+    let type = 'other';
+    if (doc.path.includes('/features/')) type = 'feature';
+    else if (doc.path.includes('/capabilities/')) type = 'capability';
+    else if (doc.path.includes('/flows/')) type = 'flow';
+    else if (doc.path.includes('/designs/')) type = 'design';
+
+    if (!tree[type]) {
+      tree[type] = [];
     }
-    tree[domain].features[name] = {
-      type: feature.type,
-      phase: feature.phase,
-      status: feature.status
-    };
+    tree[type].push(doc);
   }
 
   return tree;
@@ -41,10 +57,10 @@ function buildDomainTree(state) {
  */
 function getStatusEmoji(status) {
   switch (status) {
-    case 'completed': return '✓';
+    case 'done': return '✓';
     case 'in_progress': return '◐';
-    case 'blocked': return '✗';
     case 'not_started': return '○';
+    case 'deprecated': return '✗';
     default: return '?';
   }
 }
@@ -53,19 +69,17 @@ function getStatusEmoji(status) {
  * Main function
  */
 function main() {
-  // Check if state file exists
-  if (!fs.existsSync(STATE_FILE)) {
-    console.error('Error: .solodevflow/state.json not found');
+  // Read state
+  const state = readJSON(STATE_FILE);
+  if (!state) {
+    console.error('Error: .solodevflow/state.json not found or invalid');
     process.exit(1);
   }
 
-  // Read state
-  let state;
-  try {
-    const content = fs.readFileSync(STATE_FILE, 'utf8');
-    state = JSON.parse(content);
-  } catch (e) {
-    console.error('Error: Failed to parse state.json:', e.message);
+  // Read index
+  const index = readJSON(INDEX_FILE);
+  if (!index) {
+    console.error('Error: .solodevflow/index.json not found. Run: npm run index');
     process.exit(1);
   }
 
@@ -81,44 +95,48 @@ function main() {
   if (state.flow.activeFeatures.length === 0) {
     console.log('  (none)');
   } else {
-    state.flow.activeFeatures.forEach((name, index) => {
-      const feature = state.features[name];
-      if (feature) {
-        console.log(`  ${index + 1}. ${name}`);
-        console.log(`     Phase: ${feature.phase} | Status: ${feature.status}`);
-        console.log(`     Domain: ${feature.domain}`);
+    state.flow.activeFeatures.forEach((id, i) => {
+      const doc = index.documents.find(d => d.id === id);
+      if (doc) {
+        console.log(`  ${i + 1}. ${id}`);
+        console.log(`     Status: ${doc.status} | Path: ${doc.path}`);
+      } else {
+        console.log(`  ${i + 1}. ${id} (not in index)`);
       }
     });
   }
   console.log('');
 
-  // Domain tree (派生自 features)
-  console.log('=== Domain Tree (derived) ===\n');
-  const domainTree = buildDomainTree(state);
+  // Document tree
+  console.log('=== Document Tree ===\n');
+  const docTree = buildDocumentTree(index);
+  const typeLabels = {
+    feature: 'Features',
+    capability: 'Capabilities',
+    flow: 'Flows',
+    design: 'Designs',
+    other: 'Other'
+  };
 
-  for (const [domainName, domain] of Object.entries(domainTree)) {
-    const featureCount = Object.keys(domain.features).length;
-    const completedCount = Object.values(domain.features).filter(f => f.status === 'completed').length;
+  for (const [type, docs] of Object.entries(docTree)) {
+    const completedCount = docs.filter(d => d.status === 'done').length;
+    console.log(`📁 ${typeLabels[type] || type} (${completedCount}/${docs.length})`);
 
-    console.log(`📁 ${domainName} (${completedCount}/${featureCount})`);
-    console.log(`   ${domain.description}`);
-
-    for (const [featureName, feature] of Object.entries(domain.features)) {
-      const emoji = getStatusEmoji(feature.status);
-      console.log(`   ${emoji} ${featureName} [${feature.phase}]`);
+    for (const doc of docs) {
+      const emoji = getStatusEmoji(doc.status);
+      console.log(`   ${emoji} ${doc.id}`);
     }
     console.log('');
   }
 
   // Summary
-  const totalFeatures = Object.keys(state.features).length;
-  const completedFeatures = Object.values(state.features).filter(f => f.status === 'completed').length;
-  const inProgressFeatures = Object.values(state.features).filter(f => f.status === 'in_progress').length;
+  const totalDocs = index.documents.length;
+  const completedDocs = index.documents.filter(d => d.status === 'done').length;
+  const inProgressDocs = index.documents.filter(d => d.status === 'in_progress').length;
 
   console.log('=== Summary ===\n');
-  console.log(`Features: ${completedFeatures}/${totalFeatures} completed, ${inProgressFeatures} in progress`);
+  console.log(`Documents: ${completedDocs}/${totalDocs} completed, ${inProgressDocs} in progress`);
   console.log(`Domains: ${Object.keys(state.domains).length}`);
-  console.log(`Sparks: ${state.sparks.length}`);
   console.log(`Pending Docs: ${state.pendingDocs.length}`);
 }
 
