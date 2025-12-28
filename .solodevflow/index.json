@@ -1,5 +1,5 @@
 {
-  "generated": "2025-12-28T23:10:57.442+08:00",
+  "generated": "2025-12-28T23:19:49.517+08:00",
   "summary": {
     "total": 17,
     "done": 15,
@@ -288,7 +288,15 @@
           "type": "hard"
         },
         {
+          "id": "write-commands",
+          "type": "hard"
+        },
+        {
           "id": "hooks-integration",
+          "type": "soft"
+        },
+        {
+          "id": "cap-document-validation",
           "type": "soft"
         }
       ]
@@ -676,7 +684,15 @@
             "type": "hard"
           },
           {
+            "id": "write-commands",
+            "type": "hard"
+          },
+          {
             "id": "hooks-integration",
+            "type": "soft"
+          },
+          {
+            "id": "cap-document-validation",
             "type": "soft"
           }
         ]

@@ -271,8 +271,9 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 **元信息**：
 - **Priority**: P1
 - **Type**: process
-- **Feature**: [fea-project-refactor.md](features/fea-project-refactor.md)
 - **Flow**: [flow-refactoring.md](flows/flow-refactoring.md)
+
+> Note: Feature 需求已合并到 Flow 文档中
 
 ### 4.3 Domain: tooling <!-- id: domain_tooling -->
 
