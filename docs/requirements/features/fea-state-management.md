@@ -6,7 +6,7 @@ status: done
 phase: done
 priority: P0
 domain: process
-version: "13.0"
+version: "14.0"
 ---
 
 # Feature: State Management <!-- id: feat_state_management -->
@@ -30,7 +30,7 @@ version: "13.0"
 - **阶段可追溯**：每个 Feature 的需求/设计/实现阶段状态清晰
 - **自动化校验**：validate-state.js 脚本保证数据一致性
 - **无冗余设计**：frontmatter 为唯一数据源，index.json 由程序派生
-- **多任务并行**：activeFeatures 支持同时跟踪多个活跃任务
+- **多任务并行**：activeWorkItems 支持同时跟踪多个活跃 Work Item
 
 ---
 
@@ -60,7 +60,7 @@ version: "13.0"
 | C3 | Work Mode | 支持 code（完整开发周期）和 document（简化周期）两种工作模式 |
 | C4 | 版本管理 | semver 版本号，支持 Schema 演进和 Migration |
 | C5 | 自动校验 | validate-state.js 脚本校验结构、枚举、引用完整性 |
-| C6 | 多任务并行 | activeFeatures 数组支持同时跟踪多个活跃任务 |
+| C6 | 多任务并行 | activeWorkItems 数组支持同时跟踪多个活跃 Work Item |
 | C7 | 并发控制 | 文件锁机制防止多 Session 同时写入导致数据损坏 |
 
 ---
@@ -73,7 +73,7 @@ version: "13.0"
 | 校验脚本 | `npm run validate:state` | 输出 "state.json is valid!" |
 | 版本一致 | 对比 | 文档版本 = state.json schemaVersion |
 | Work Mode | 检查 frontmatter | feature/capability/flow 有 workMode 字段 |
-| 多任务支持 | 检查 state.json | activeFeatures 为数组，支持多个 Feature |
+| 多任务支持 | 检查 state.json | activeWorkItems 为数组，支持多个 Work Item |
 | 并发控制 | 检查 state.js | 写操作使用 acquireLock/releaseLock |
 
 ---
@@ -90,12 +90,19 @@ version: "13.0"
 
 ### 5.1 Schema Version
 
-当前版本：`13.0.0`
+当前版本：`14.0.0`
 
 版本命名规则（semver）：
 - MAJOR：结构性变更（字段增删、嵌套层级变化）
 - MINOR：字段增加（向后兼容）
 - PATCH：说明修正
+
+**v14.0 术语统一变更**：
+- `activeFeatures` 重命名为 `activeWorkItems`（更准确反映其可包含 Feature/Capability/Flow）
+- `subtasks.{}.featureId` 重命名为 `subtasks.{}.workitemId`
+- "Work Item" 作为 Feature/Capability/Flow 的统一术语
+- CLI 命令更新：`activate-feature` → `activate`，`deactivate-feature` → `deactivate`
+- 运行 `node scripts/state.js migrate-v14` 自动迁移
 
 **v12.0 重大架构变更**：
 - `features` 对象从 state.json 中**完全移除**
@@ -152,7 +159,7 @@ version: "13.0"
 
 ```json
 {
-  "schemaVersion": "13.0.0",
+  "schemaVersion": "14.0.0",
   "project": { ... },
   "flow": { ... },
   "domains": { ... },
@@ -163,7 +170,7 @@ version: "13.0"
 }
 ```
 
-**v13.0 架构设计**：
+**v14.0 架构设计**：
 - `features` 已移除（v12.0），状态存储在文档 frontmatter 中
 - `subtasks`：集中管理的子任务列表
 - `domains`：只存储 domain 描述
@@ -204,18 +211,34 @@ version: "13.0"
 | Field | Type | Description |
 |-------|------|-------------|
 | `researchMethod` | enum | 需求调研方法（`top-down` / `bottom-up`） |
-| `activeFeatures` | string[] | 当前活跃的 Feature 列表（支持并行任务） |
+| `activeWorkItems` | string[] | 当前活跃的 Work Item 列表（支持并行任务） |
+
+**v14.0 术语说明**：
+- "Work Item" 是 Feature/Capability/Flow 的统一术语
+- `activeWorkItems` 替代了 `activeFeatures`（v14.0 重命名）
+- CLI 命令：`node scripts/state.js activate <id>` / `deactivate <id>`
 
 **设计说明**：
-- `activeFeatures` 支持多任务并行跟踪
-- 数组顺序表示优先级（第一个是主要关注的 Feature）
-- 每个 Feature 的阶段从 `features.{}.phase` 获取，无需全局 `currentPhase`
-- 每个 Feature 的 Domain 从 `features.{}.domain` 获取，无需全局 `currentDomain`
+- 支持多任务并行跟踪（可同时激活多个 Work Item）
+- 数组顺序表示优先级（第一个是主要关注的 Work Item）
+- 每个 Work Item 的阶段从其 frontmatter 的 `phase` 字段获取
+- 每个 Work Item 的 Domain 从其 frontmatter 的 `domain` 字段获取
 
-**v5.0 移除的字段**（冗余）：
-- ~~`currentPhase`~~：每个 Feature 已有 `phase` 字段
-- ~~`currentFeature`~~：改为 `activeFeatures` 数组
-- ~~`currentDomain`~~：可从 `features[name].domain` 派生
+**使用示例**：
+```json
+{
+  "activeWorkItems": [
+    "state-management",        // type: feature
+    "document-validation",     // type: capability
+    "refactoring"              // type: flow
+  ]
+}
+```
+
+**历史字段演进**：
+- v5.0：`currentFeature` → `activeFeatures`（支持多任务）
+- v14.0：`activeFeatures` → `activeWorkItems`（术语统一）
+- ~~`currentPhase`~~、~~`currentDomain`~~：v5.0 移除（冗余）
 
 #### Document Metadata（存储在文档 frontmatter）
 
@@ -259,7 +282,7 @@ version: "12.1"        # 文档版本
 {
   "generated": "2025-12-27T00:00:00Z",
   "summary": { "total": 16, "done": 5, "in_progress": 3, "not_started": 8 },
-  "activeFeatures": ["state-management"],
+  "activeWorkItems": ["state-management"],
   "documents": [
     { "id": "state-management", "type": "feature", "status": "in_progress", "phase": "implementation", ... }
   ]
@@ -277,7 +300,7 @@ version: "12.1"        # 文档版本
   "subtasks": [
     {
       "id": "st_1703145600000_001",
-      "featureId": "workflows",
+      "workitemId": "workflows",
       "description": "完善 flow-workflows.md §11 State Update Protocol",
       "status": "in_progress",
       "source": "ai",
@@ -285,7 +308,7 @@ version: "12.1"        # 文档版本
     },
     {
       "id": "st_1703145600000_002",
-      "featureId": "change-impact-tracking",
+      "workitemId": "change-impact-tracking",
       "description": "检查 feature.spec.md 模板是否需要更新",
       "target": "docs/templates/backend/feature.spec.md",
       "status": "pending",
@@ -301,7 +324,7 @@ version: "12.1"        # 文档版本
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | `id` | string | 是 | 唯一标识，格式 `st_{timestamp}_{index}` |
-| `featureId` | string | 是 | 关联的 Feature ID |
+| `workitemId` | string | 是 | 关联的 Work Item ID (v14.0 从 featureId 重命名) |
 | `description` | string | 是 | 任务描述（应包含足够上下文便于恢复） |
 | `target` | string | 否 | 目标文件路径或锚点 |
 | `status` | enum | 是 | 任务状态（见下表） |
@@ -337,8 +360,8 @@ version: "12.1"        # 文档版本
 
 **并发支持**：
 - 多个 subtasks 可以同时处于 `in_progress` 状态
-- 支持多 Session 并行处理不同 Feature 的任务
-- 每个 subtask 通过 `featureId` 区分所属 Feature
+- 支持多 Session 并行处理不同 Work Item 的任务
+- 每个 subtask 通过 `workitemId` 区分所属 Work Item
 
 **设计说明**：
 - subtasks 集中存储在 state.json 顶层，便于跨 Feature 查看和操作
@@ -432,17 +455,17 @@ function buildDomainTree(state, index) {
 
 **Required Fields（state.json）**：
 - `schemaVersion`、`project.name`、`project.type`、`project.createdAt`
-- `flow.researchMethod`、`flow.activeFeatures`
+- `flow.researchMethod`、`flow.activeWorkItems`
 - `domains`、`subtasks`、`pendingDocs`
 - `metadata.stateFileVersion`、`lastUpdated`
 
 **Reference Integrity**：
-- `flow.activeFeatures` 中的每个 Feature ID 必须在 index.json 中存在
-- `subtasks.{}.featureId` 必须在 index.json 中存在
+- `flow.activeWorkItems` 中的每个 Work Item ID 必须在 index.json 中存在
+- `subtasks.{}.workitemId` 必须在 index.json 中存在
 
 **Subtasks Validation**：
 - `subtasks` 必须是数组
-- 每个 subtask 必须有 `id`、`featureId`、`description`、`status`、`source`、`createdAt` 字段
+- 每个 subtask 必须有 `id`、`workitemId`、`description`、`status`、`source`、`createdAt` 字段
 - `subtasks.{}.status` 必须是 `pending` / `in_progress` / `completed` / `skipped` 之一
 
 **Frontmatter Validation（文档）**：
@@ -530,9 +553,12 @@ Session A 写入:
 | v12.1 | 新增 `workMode` 字段（code/document），明确需求文档的工作模式 |
 | v12.2 | 新增 `pendingDocs` CLI 命令；补充并发控制（文件锁）文档 |
 | v12.3 | 新增 `feature_review` 阶段，需求完成后必须人类审核才能进入设计 |
-| v13.0 | **移除 session 结构**：session.mode/context/pendingRequirements 设计过于理想化，实际从未使用。咨询/交付模式切换无法自动执行，暂存需求从未被填充。简化架构，减少维护负担 |
+| v13.0 | **移除 session 结构**：session.mode/context/pendingRequirements 设计过于理想化，实际从未使用 |
+| v14.0 | **术语统一**：`activeFeatures` → `activeWorkItems`，`featureId` → `workitemId`。"Work Item" 作为 Feature/Capability/Flow 的统一术语。CLI 命令简化：`activate-feature` → `activate`，`deactivate-feature` → `deactivate` |
 
-**Schema 升级**：由 AI 直接编辑 state.json 执行，无需迁移脚本。
+**Schema 升级**：
+- v14.0: 运行 `node scripts/state.js migrate-v14` 自动迁移
+- 其他版本：由 AI 直接编辑 state.json 执行
 
 **v12.0.0 架构变更**：
 - `features` 对象从 state.json 中完全移除
@@ -562,21 +588,22 @@ Session A 写入:
 
 ### 6.2 Usage
 
-**v12.0 CLI 命令**：
+**v14.0 CLI 命令**：
 
 ```bash
 # === 查询操作 ===
 node scripts/state.js summary              # 状态摘要（JSON 格式）
-node scripts/state.js list-active          # 列出活跃 Features
+node scripts/state.js list-active          # 列出活跃 Work Items
 
-# === Feature 激活操作 ===
-node scripts/state.js activate-feature <id>    # 激活 Feature（添加到 activeFeatures）
-node scripts/state.js deactivate-feature <id>  # 停用 Feature（从 activeFeatures 移除）
+# === Work Item 激活操作 (v14.0 更新) ===
+node scripts/state.js activate <id>        # 激活 Work Item（添加到 activeWorkItems）
+node scripts/state.js deactivate <id>      # 停用 Work Item（从 activeWorkItems 移除）
+node scripts/state.js set-phase <id> <phase>  # 设置 Work Item 阶段
 
-# === Subtask 操作 ===
-node scripts/state.js add-subtask --feature=<id> --desc="描述" --source=ai
-node scripts/state.js list-subtasks            # 列出所有子任务
-node scripts/state.js list-subtasks --feature=<id>  # 列出指定 Feature 的子任务
+# === Subtask 操作 (v14.0 使用 workitem 代替 feature) ===
+node scripts/state.js add-subtask --workitem=<id> --desc="描述" --source=ai
+node scripts/state.js list-subtasks             # 列出所有子任务
+node scripts/state.js list-subtasks --workitem=<id>  # 列出指定 Work Item 的子任务
 node scripts/state.js complete-subtask <subtaskId>
 node scripts/state.js skip-subtask <subtaskId>
 
@@ -585,8 +612,9 @@ node scripts/state.js add-pending-doc --type=<design|feature|prd> --target="path
 node scripts/state.js list-pending-docs        # 列出文档债务
 node scripts/state.js clear-pending-docs       # 清空文档债务（处理完成后）
 
-# === 索引操作 ===
+# === 索引 & 迁移操作 ===
 node scripts/index.js                      # 重新生成 index.json
+node scripts/state.js migrate-v14          # 从 v13 迁移到 v14
 ```
 
 **Feature 状态更新**：
@@ -614,11 +642,11 @@ npm run validate:docs    # 校验文档格式
 
 ## Appendix: Complete Example <!-- id: feat_state_management_example -->
 
-### state.json (v13.0)
+### state.json (v14.0)
 
 ```json
 {
-  "schemaVersion": "13.0.0",
+  "schemaVersion": "14.0.0",
   "project": {
     "name": "SoloDevFlow 2.0",
     "description": "为超级个体打造的自进化人机协作开发系统",
@@ -628,7 +656,7 @@ npm run validate:docs    # 校验文档格式
   },
   "flow": {
     "researchMethod": "bottom-up",
-    "activeFeatures": ["state-management"]
+    "activeWorkItems": ["state-management"]
   },
   "domains": {
     "specification": "规范文档（元规范/需求/设计/开发/测试）",
@@ -639,7 +667,7 @@ npm run validate:docs    # 校验文档格式
   "subtasks": [
     {
       "id": "st_1703145600000_001",
-      "featureId": "change-impact-tracking",
+      "workitemId": "change-impact-tracking",
       "description": "检查 feature.spec.md 模板是否需要更新",
       "target": "docs/templates/backend/feature.spec.md",
       "status": "pending",
@@ -683,7 +711,7 @@ version: "12.1"
 {
   "generated": "2025-12-27T00:00:00Z",
   "summary": { "total": 16, "done": 5, "in_progress": 3, "not_started": 8 },
-  "activeFeatures": ["state-management"],
+  "activeWorkItems": ["state-management"],
   "documents": [
     {
       "id": "state-management",
@@ -702,7 +730,7 @@ version: "12.1"
 
 ---
 
-*Version: v13.0*
+*Version: v14.0*
 *Created: 2024-12-20*
 *Updated: 2025-12-28*
 *Changes: v13.0 移除 session 结构（mode/context/pendingRequirements）- 设计过于理想化，实际从未使用*

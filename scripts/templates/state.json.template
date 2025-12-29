@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "9.0.0",
+  "schemaVersion": "14.0.0",
   "project": {
     "name": "{{projectName}}",
     "description": "",
@@ -9,11 +9,10 @@
   },
   "flow": {
     "researchMethod": "bottom-up",
-    "activeFeatures": []
+    "activeWorkItems": []
   },
-  "features": {},
   "domains": {},
-  "sparks": [],
+  "subtasks": [],
   "pendingDocs": [],
   "solodevflow": {
     "version": "{{version}}",

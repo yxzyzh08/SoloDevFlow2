@@ -5,6 +5,8 @@
  *
  * Based on design: des-hooks-integration.md §4.2
  * v6.8: 新增需求变更检测，提醒 AI 走正确流程
+ * v14.0: Updated to use activeWorkItems terminology
+ * v14.1: H8 意图检测 - 检测结构性变更意图，提示走需求流程
  *
  * Input (stdin JSON):
  *   { session_id, cwd, hook_event_name: 'UserPromptSubmit', prompt }
@@ -14,7 +16,7 @@
  *
  * Context Fields:
  *   - productName: state.json.project.name
- *   - activeFeature: state.json.flow.activeFeatures[0]
+ *   - activeWorkItem: state.json.flow.activeWorkItems[0] (Feature/Capability/Flow)
  */
 
 const { readState, getActiveFeature, getProject, getSubtasks, getPendingDocs } = require('./lib/state-reader');
@@ -98,6 +100,90 @@ function generateRequirementReminder(type, activeFeature) {
 }
 
 // =============================================================================
+// H8: Structural Change Intent Detection (v14.1)
+// Based on: fea-hooks-integration.md §3.7
+// =============================================================================
+
+/**
+ * 结构性变更意图关键词
+ * 检测用户输入中是否包含结构性变更意图
+ */
+const STRUCTURAL_CHANGE_INTENTS = [
+  {
+    keywords: ['删除', '移除', 'remove', 'delete'],
+    type: '删除功能',
+    examples: '删除 byType、移除这个字段'
+  },
+  {
+    keywords: ['添加', '新增', 'add', 'create'],
+    type: '新增功能',
+    examples: '添加新命令、新增验证规则'
+  },
+  {
+    keywords: ['修改接口', '改 API', '改API', 'change interface', '变更接口'],
+    type: '接口变更',
+    examples: '修改返回格式、变更 API 参数'
+  },
+  {
+    keywords: ['重构', 'refactor'],
+    type: '结构重构',
+    examples: '重构状态管理、重构架构'
+  }
+];
+
+/**
+ * 检测结构性变更意图
+ * @param {string} prompt - 用户输入
+ * @returns {{ detected: boolean, type?: string, examples?: string }}
+ */
+function detectStructuralChangeIntent(prompt) {
+  if (!prompt) return { detected: false };
+
+  const lowerPrompt = prompt.toLowerCase();
+
+  for (const intent of STRUCTURAL_CHANGE_INTENTS) {
+    for (const keyword of intent.keywords) {
+      if (prompt.includes(keyword) || lowerPrompt.includes(keyword.toLowerCase())) {
+        return {
+          detected: true,
+          type: intent.type,
+          examples: intent.examples
+        };
+      }
+    }
+  }
+
+  return { detected: false };
+}
+
+/**
+ * 生成结构性变更提醒 (H8)
+ * 只在非需求阶段触发
+ */
+function generateStructuralChangeReminder(intent, activeFeature) {
+  if (!intent.detected) return null;
+
+  const phase = activeFeature?.phase;
+  const status = activeFeature?.status;
+  const featureId = activeFeature?.id || '<work-item-id>';
+
+  // 如果已在需求阶段或审核阶段，不提示（已在流程中）
+  if (phase === 'feature_requirements' || phase === 'feature_review') {
+    return null;
+  }
+
+  return `
+[Input Analysis Reminder]
+检测到可能的【${intent.type}】请求。
+请先执行 Input Analysis (参考 .solodevflow/flows/workflows.md §2)：
+1. 确认是否为需求变更（修改现有功能）
+2. 如是，先设置阶段：set-phase ${featureId} feature_requirements
+3. 更新需求文档
+4. 完成后：set-phase ${featureId} feature_review
+5. 等待人类审核批准后才能写代码`;
+}
+
+// =============================================================================
 // Main
 // =============================================================================
 
@@ -130,7 +216,11 @@ function main() {
         ? generateRequirementReminder(requirementType, activeFeature)
         : null;
 
-      // 3. Format context
+      // 3. Detect structural change intent (H8 v14.1)
+      const structuralIntent = detectStructuralChangeIntent(prompt);
+      const structuralReminder = generateStructuralChangeReminder(structuralIntent, activeFeature);
+
+      // 4. Format context
       let context = formatUserPromptContext({
         productName: project.name,
         activeFeature,
@@ -139,12 +229,14 @@ function main() {
         pendingDocs
       });
 
-      // 4. Append requirement reminder if detected
-      if (requirementReminder) {
+      // 5. Append reminders if detected (H8 takes priority over v6.8)
+      if (structuralReminder) {
+        context += '\n' + structuralReminder;
+      } else if (requirementReminder) {
         context += '\n' + requirementReminder;
       }
 
-      // 5. Output in required format
+      // 6. Output in required format
       const output = {
         hookSpecificOutput: {
           hookEventName: 'UserPromptSubmit',

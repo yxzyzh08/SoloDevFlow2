@@ -447,14 +447,14 @@ function writeSubtasksToState(subtasks, activeFeatureId) {
       continue;
     }
 
-    // Add featureId from active feature or first active feature
-    const featureId = activeFeatureId ||
-      (state.flow && state.flow.activeFeatures && state.flow.activeFeatures[0]) ||
+    // Add workitemId from active work item or first active work item
+    const workitemId = activeFeatureId ||
+      (state.flow && state.flow.activeWorkItems && state.flow.activeWorkItems[0]) ||
       'unknown';
 
     state.subtasks.push({
       ...subtask,
-      featureId
+      workitemId
     });
     added++;
 

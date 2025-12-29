@@ -3,9 +3,10 @@ type: flow
 id: workflows
 workMode: document
 status: done
+phase: done
 priority: P0
 domain: process
-version: "8.0"
+version: "8.3"
 ---
 
 # Flow: Workflows <!-- id: flow_workflows -->
@@ -98,15 +99,30 @@ version: "8.0"
 
 ### 3.3 Phase-Based Routing
 
-根据当前 Feature 的 phase 自动路由：
+根据当前 Work Item 的 phase 自动路由：
 
 | 当前 Phase | 默认路由 |
 |------------|----------|
-| `feature_requirements` | flow-requirements.md |
+| `feature_requirements` | flow-requirements.md 或 §13 Flow Type Handling |
 | `feature_review` | §5 Review Approval |
 | `feature_design` | flow-design.md |
 | `feature_implementation` | flow-implementation.md |
 | `feature_testing` | flow-testing.md |
+
+### 3.4 Work Item Type Routing
+
+根据 Work Item 类型（type 字段）执行不同流程：
+
+| Type | workMode=document | workMode=code |
+|------|-------------------|---------------|
+| **feature** | 标准流程 | 标准流程 |
+| **capability** | 标准流程 | 标准流程 |
+| **flow** | 标准流程 | **特殊流程** → §13 Flow Type Handling |
+
+**Flow 特殊性**：
+- Flow 是跨模块协作流程，依赖多个 Feature/Capability
+- `workMode=code` 时，需先完成 Module Impact Specifications
+- 每个依赖模块的修改点必须明确定义并单独审批
 
 ---
 
@@ -329,10 +345,127 @@ pending → feature_requirements → feature_review → feature_design → featu
 | 审核流程 | 提交文档后 | 进入 review 阶段 |
 | 批准语法 | 说"批准" | phase 正确转换 |
 | 按需加载 | 进入子流程 | 只加载对应文档 |
+| Flow 类型识别 | type=flow + workMode=code | 进入 §13 特殊流程 |
 
 ---
 
-*Version: v8.2*
+## 13. Flow Type Handling (workMode=code) <!-- id: flow_type_handling -->
+
+> Flow 类型 workMode=code 时的特殊处理流程
+
+### 13.1 Why Flow is Different
+
+| 维度 | Feature | Flow (workMode=code) |
+|------|---------|----------------------|
+| **边界** | 自包含，独立交付 | 跨模块，协调多方 |
+| **依赖影响** | 主要消费依赖 | 主动修改依赖模块 |
+| **需求粒度** | 单一功能需求 | 分解为多个模块需求 |
+| **审批范围** | 单一文档审批 | 多个模块影响需分别审批 |
+
+### 13.2 Flow Workflow Stages
+
+```
+[REQUIREMENTS] → [REVIEW] → [MODULE IMPACT] → [DESIGN] → [IMPLEMENTATION] → [TESTING] → [DONE]
+                              ↑
+                         Flow 专属阶段
+```
+
+**MODULE IMPACT 阶段**（Flow 专属）：
+1. 基于 Flow 需求文档，分析每个依赖模块
+2. 为每个模块编写 Module Impact Specification
+3. 每个 Module Impact 单独审批
+4. 全部审批后才能进入 DESIGN 阶段
+
+### 13.3 Module Impact Specification Process
+
+```
+[Flow 需求通过审批]
+    ↓
+[读取 dependencies 列表]
+    ↓
+[为每个 dependency 创建子任务]
+    ↓
+┌─────────────────────────────────────────┐
+│  For each dependency:                    │
+│    1. 分析该模块需要的变更               │
+│    2. 在 Flow 文档中添加 Module Impact   │
+│    3. 创建子任务追踪                      │
+│    4. 人类审批该模块的 Impact Spec       │
+└─────────────────────────────────────────┘
+    ↓
+[所有 Module Impact 审批通过]
+    ↓
+[进入 DESIGN 阶段]
+```
+
+### 13.4 子任务命名规范
+
+```bash
+# 创建 Module Impact 分析子任务
+node scripts/state.js add-subtask \
+  --workitem=<flow-id> \
+  --desc="[Module: <module-id>] 编写 Module Impact Specification" \
+  --source=impact-analysis
+
+# 示例
+node scripts/state.js add-subtask \
+  --workitem=refactoring \
+  --desc="[Module: state-management] 添加 validateSubtask 函数" \
+  --source=impact-analysis
+```
+
+### 13.5 Phase Transition Rules (Flow)
+
+| 转换 | 条件 | 说明 |
+|------|------|------|
+| requirements → review | Flow 需求文档完成 | 标准转换 |
+| review → design | **所有 Module Impact 审批通过** | Flow 专属条件 |
+| design → implementation | 设计文档完成 | 标准转换 |
+
+### 13.6 Module Impact Specification Template
+
+在 Flow 文档中，Section 6 (或适当位置) 添加：
+
+```markdown
+## Module Impact Specifications
+
+### [Module: state-management]
+
+**变更概述**：添加子任务状态验证功能
+
+**接口变更**：
+| 变更类型 | 描述 |
+|----------|------|
+| 新增函数 | `validateSubtaskTransition(from, to): boolean` |
+
+**实现要点**：
+1. 状态机定义：pending → in_progress → completed/skipped
+2. 无效转换抛出 ValidationError
+
+**验收标准**：
+- [ ] 有效转换返回 true
+- [ ] 无效转换抛出错误并包含状态信息
+
+**审批状态**：🔲 待审批 / ✅ 已审批
+```
+
+### 13.7 Execution Checklist
+
+**进入 MODULE IMPACT 阶段时**：
+- [ ] 确认 Flow 类型且 workMode=code
+- [ ] 读取 Flow 文档的 dependencies 列表
+- [ ] 为每个 hard 依赖创建 Module Impact 子任务
+- [ ] 按优先级依次处理各模块
+
+**完成 MODULE IMPACT 阶段时**：
+- [ ] 所有 Module Impact Specification 已编写
+- [ ] 所有 Module Impact 已获人类审批（✅）
+- [ ] 所有相关子任务已完成
+- [ ] 准备进入 DESIGN 阶段
+
+---
+
+*Version: v8.3*
 *Created: 2024-12-20*
-*Updated: 2025-12-28*
-*Changes: v8.2 添加 §5.4 Review Assistance，集成 review-assistant 作为人类可选审核辅助工具*
+*Updated: 2025-12-29*
+*Changes: v8.3 添加 §3.4 Work Item Type Routing, §13 Flow Type Handling（Module Impact Specifications 流程）；v8.2 添加 Review Assistance*

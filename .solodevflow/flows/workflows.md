@@ -54,7 +54,32 @@
 - "修复登录问题" → ❌ 不是直接执行（问题不明确）
 - "修复 login.js 第42行空指针" → ✅ 直接执行
 
-### 2.2 Phase-Based Routing
+### 2.2 Must Follow Process Criteria
+
+以下情况**必须**走需求变更流程，即使用户明确授权：
+
+| 变更类型 | 示例 | 流程 |
+|----------|------|------|
+| 数据结构变更 | 修改 state.json/index.json schema | 需求 → 审核 → 实现 |
+| API/命令接口变更 | 添加/删除/修改命令行参数 | 需求 → 审核 → 实现 |
+| 删除现有功能 | 删除 byType、删除命令别名 | 需求 → 审核 → 实现 |
+| 添加新功能 | 新增 Hook、新增验证规则 | 需求 → 审核 → 实现 |
+
+**不需要走流程**：
+| 变更类型 | 示例 |
+|----------|------|
+| Bug 修复 | 修复空指针、修复边界条件 |
+| 代码重构 | 重命名变量、提取函数（不改变行为）|
+| 文档更新 | 修复错别字、补充说明 |
+
+**关键判断**：
+```
+用户说"删除 X" → 是否改变系统行为/接口？
+  ├─ 是 → 必须走流程（即使用户明确授权）
+  └─ 否 → 可以直接执行
+```
+
+### 2.3 Phase-Based Routing
 
 | 当前 Phase | 默认路由 |
 |------------|----------|
@@ -219,19 +244,27 @@ pending → feature_requirements → feature_review → feature_design → featu
 |------|------|
 | `node scripts/state.js summary` | 获取状态摘要 |
 | `node scripts/state.js set-phase <id> <phase>` | 更新阶段 |
-| `node scripts/state.js activate-feature <id>` | 激活 Feature |
-| `node scripts/state.js deactivate-feature <id>` | 取消激活 Feature |
+| `node scripts/state.js activate <id>` | 激活 Work Item (v14.0) |
+| `node scripts/state.js deactivate <id>` | 取消激活 Work Item (v14.0) |
 | `node scripts/index.js` | 更新索引 |
 
 ---
 
-*Version: v1.1*
-*Aligned with: flow-workflows.md v8.2*
-*Updated: 2025-12-28*
+*Version: v1.2.1*
+*Aligned with: flow-workflows.md v8.2, fea-hooks-integration.md v1.5*
+*Updated: 2025-12-29*
 
 ---
 
 ## Changelog
+
+### v1.2.1 (2025-12-29)
+- 对齐 fea-hooks-integration v1.5：意图检测机制通过 UserPromptSubmit Hook 实现
+- §2.2 定义"什么需要走流程"，H8 实现"如何检测"
+
+### v1.2 (2025-12-29)
+- 新增 §2.2 Must Follow Process Criteria：明确定义必须走流程的变更类型
+- 修复工作流设计缺陷：防止 AI 在用户明确授权时跳过需求流程
 
 ### v1.1 (2025-12-28)
 - 新增 §7 Bug Fix Flow：根因分析流程

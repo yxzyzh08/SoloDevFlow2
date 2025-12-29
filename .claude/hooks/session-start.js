@@ -16,8 +16,8 @@
  *   2 - Block session start, stderr shown
  */
 
-const { readState, getActiveFeature, getProject, getSubtasks, getPendingDocs } = require('./lib/state-reader');
-const { formatWorkflowContext } = require('./lib/output');
+const { readState, getActiveFeature, getProject, getSubtasks, getPendingDocs, getRefactoringStatus } = require('./lib/state-reader');
+const { formatWorkflowContext, formatRefactoringContext } = require('./lib/output');
 
 function main() {
   let input = '';
@@ -58,6 +58,7 @@ function main() {
       const activeFeature = getActiveFeature(state);
       const subtasks = getSubtasks(state);
       const pendingDocs = getPendingDocs(state);
+      const refactoring = getRefactoringStatus(state);
 
       // Generate context
       const context = formatWorkflowContext({
@@ -68,6 +69,13 @@ function main() {
       });
 
       console.log(context);
+
+      // 如果启用了重构模式，额外输出重构上下文
+      if (refactoring) {
+        const refactoringContext = formatRefactoringContext(refactoring);
+        console.log(refactoringContext);
+      }
+
       process.exit(0);
 
     } catch (err) {

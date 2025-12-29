@@ -2,11 +2,12 @@
 
 /**
  * state.json Validation Script
- * Validates state.json against v13.0 schema
+ * Validates state.json against v14.0 schema
  *
  * v12.0.0: Features removed, status tracked in document frontmatter
  * v12.1.0: Added subtasks field for cross-feature task tracking
  * v13.0.0: Removed session structure (never used in practice)
+ * v14.0.0: Renamed activeFeatures to activeWorkItems, featureId to workitemId
  *
  * Usage: node scripts/validate-state.js
  */
@@ -18,13 +19,13 @@ const STATE_FILE = path.join(__dirname, '..', '.solodevflow', 'state.json');
 const INDEX_FILE = path.join(__dirname, '..', '.solodevflow', 'index.json');
 
 // Schema version
-const EXPECTED_SCHEMA_VERSION = "13.0.0";
+const EXPECTED_SCHEMA_VERSION = "14.0.0";
 
 // Enums
 const PROJECT_TYPES = ['web-app', 'cli-tool', 'backend', 'library', 'api-service', 'mobile-app'];
 const RESEARCH_METHODS = ['top-down', 'bottom-up'];
 const SUBTASK_STATUSES = ['pending', 'completed', 'skipped', 'in_progress'];
-const SUBTASK_SOURCES = ['ai', 'impact-analysis', 'user'];
+const SUBTASK_SOURCES = ['ai', 'impact-analysis', 'user', 'interrupted'];
 
 let errors = [];
 let warnings = [];
@@ -59,7 +60,11 @@ function validateState(state) {
   // Schema version
   if (!validateRequired(state, 'schemaVersion', 'root')) return;
   if (state.schemaVersion !== EXPECTED_SCHEMA_VERSION) {
-    warn(`Schema version mismatch: expected "${EXPECTED_SCHEMA_VERSION}", got "${state.schemaVersion}"`);
+    if (state.schemaVersion === '13.0.0') {
+      warn(`Schema version mismatch: expected "${EXPECTED_SCHEMA_VERSION}", got "${state.schemaVersion}". Run: node scripts/state.js migrate-v14`);
+    } else {
+      warn(`Schema version mismatch: expected "${EXPECTED_SCHEMA_VERSION}", got "${state.schemaVersion}"`);
+    }
   }
 
   // Project
@@ -79,10 +84,15 @@ function validateState(state) {
       validateEnum(state.flow.researchMethod, RESEARCH_METHODS, 'flow.researchMethod');
     }
 
-    // activeFeatures (v12.0: references index.json documents)
-    if (validateRequired(state.flow, 'activeFeatures', 'flow')) {
-      if (!Array.isArray(state.flow.activeFeatures)) {
-        error('flow.activeFeatures must be an array');
+    // Reject deprecated activeFeatures (v14.0: no backward compat)
+    if (state.flow.activeFeatures !== undefined) {
+      error('flow.activeFeatures is no longer supported. Use activeWorkItems instead.');
+    }
+
+    // activeWorkItems
+    if (validateRequired(state.flow, 'activeWorkItems', 'flow')) {
+      if (!Array.isArray(state.flow.activeWorkItems)) {
+        error('flow.activeWorkItems must be an array');
       } else {
         // Load index to validate references
         let index = null;
@@ -90,17 +100,17 @@ function validateState(state) {
           try {
             index = JSON.parse(fs.readFileSync(INDEX_FILE, 'utf8'));
           } catch (e) {
-            warn('Could not read index.json for activeFeatures validation');
+            warn('Could not read index.json for activeWorkItems validation');
           }
         }
 
-        state.flow.activeFeatures.forEach((featureId, i) => {
-          if (typeof featureId !== 'string') {
-            error(`flow.activeFeatures[${i}] must be a string`);
+        state.flow.activeWorkItems.forEach((workitemId, i) => {
+          if (typeof workitemId !== 'string') {
+            error(`flow.activeWorkItems[${i}] must be a string`);
           } else if (index) {
-            const doc = index.documents?.find(d => d.id === featureId);
+            const doc = index.documents?.find(d => d.id === workitemId);
             if (!doc) {
-              warn(`flow.activeFeatures references "${featureId}" not found in index.json`);
+              warn(`flow.activeWorkItems references "${workitemId}" not found in index.json`);
             }
           }
         });
@@ -110,7 +120,7 @@ function validateState(state) {
 
   // v13.0: session removed (was never used in practice)
   if (state.session !== undefined) {
-    warn('session is deprecated in v13.0. Run: node scripts/state.js migrate-v13');
+    warn('session is deprecated in v13.0. Run: node scripts/state.js migrate-v14');
   }
 
   // Domains
@@ -136,7 +146,7 @@ function validateState(state) {
     validateRequired(state.metadata, 'stateFileVersion', 'metadata');
   }
 
-  // Subtasks (v12.1+)
+  // Subtasks
   if (validateRequired(state, 'subtasks', 'root')) {
     if (!Array.isArray(state.subtasks)) {
       error('subtasks must be an array');
@@ -144,7 +154,13 @@ function validateState(state) {
       state.subtasks.forEach((subtask, i) => {
         const prefix = `subtasks[${i}]`;
         validateRequired(subtask, 'id', prefix);
-        validateRequired(subtask, 'featureId', prefix);
+        // workitemId is required (v14.0: no backward compat for featureId)
+        if (!subtask.workitemId) {
+          error(`${prefix} must have workitemId`);
+        }
+        if (subtask.featureId !== undefined) {
+          error(`${prefix}.featureId is no longer supported. Use workitemId instead.`);
+        }
         validateRequired(subtask, 'description', prefix);
         validateRequired(subtask, 'status', prefix);
         if (subtask.status) {
@@ -168,7 +184,7 @@ function validateState(state) {
 }
 
 function main() {
-  console.log('=== state.json Validation (v13.0) ===\n');
+  console.log('=== state.json Validation (v14.0) ===\n');
 
   // Check if file exists
   if (!fs.existsSync(STATE_FILE)) {
@@ -195,7 +211,8 @@ function main() {
   if (errors.length === 0 && warnings.length === 0) {
     console.log('✓ state.json is valid!\n');
     console.log(`Schema version: ${state.schemaVersion}`);
-    console.log(`Active features: ${state.flow.activeFeatures.length} (${state.flow.activeFeatures.join(', ') || 'none'})`);
+    const activeItems = state.flow.activeWorkItems || [];
+    console.log(`Active work items: ${activeItems.length} (${activeItems.join(', ') || 'none'})`);
     console.log(`Domains: ${Object.keys(state.domains).length}`);
     console.log(`Subtasks: ${state.subtasks?.length || 0} (${state.subtasks?.filter(s => s.status === 'pending').length || 0} pending)`);
     process.exit(0);

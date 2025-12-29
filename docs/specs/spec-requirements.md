@@ -1,4 +1,4 @@
-# Requirements Document Specification v2.11 <!-- id: spec_requirements -->
+# Requirements Document Specification v2.12 <!-- id: spec_requirements -->
 
 > 定义需求文档（PRD、Feature、Capability、Flow）的结构和编写标准
 
@@ -9,7 +9,7 @@
 - 此规范定义需求文档的**具体章节结构**
 - 元规范 `spec-meta.md` 定义文档类型和验证规则
 - 设计文档规范见 `spec-design.md`
-- **版本 v2.11**：Feature 章节 Core Capabilities → Core Functions，避免与 Capability Spec 混淆
+- **版本 v2.12**：Flow Spec 扩展 - 添加 Module Impact Specifications、Flow Workflow 阶段、子任务管理规范
 - **模板已消除**：AI 直接从本规范生成文档，不再使用 `template/requirements/` 模板
 
 ---
@@ -483,10 +483,13 @@ Consumers 章节声明哪些 Feature/Domain 使用该 Capability，支持文档�
 | Flow Overview | Yes | `flow_{name}_overview` | 流程目的、触发条件、参与方 |
 | Flow Steps | Yes | `flow_{name}_steps` | 流程步骤、分支、异常处理 |
 | Participants | Yes | `flow_{name}_participants` | 涉及的 Domain/Feature/外部系统 |
+| **Module Impact Specs** | **workMode=code 必填** | `flow_{name}_impact` | **对依赖模块的具体变更需求** |
 | Acceptance Criteria | Yes | `flow_{name}_acceptance` | 可验证的完成条件 |
+| Dependencies | Yes | `flow_{name}_dependencies` | 依赖的模块列表 |
 | Flow Diagram | No | `flow_{name}_diagram` | 流程复杂需要可视化 |
 | Error Handling | No | `flow_{name}_errors` | 有复杂异常场景 |
 | Constraints | No | `flow_{name}_constraints` | 有性能/时序等约束 |
+| Artifacts | workMode=code 必填 | `flow_{name}_artifacts` | 产物记录（代码/测试路径） |
 
 ### 6.1 Creation Criteria
 
@@ -494,6 +497,143 @@ Consumers 章节声明哪些 Feature/Domain 使用该 Capability，支持文档�
 - 业务流程跨越 2 个以上 Domain/Feature
 - 流程复杂度超出 PRD Core Flow 章节承载范围
 - 流程涉及多个系统或外部集成
+
+### 6.2 Flow vs Feature: Key Differences
+
+| 维度 | Feature | Flow |
+|------|---------|------|
+| **范围** | 自包含 | 跨模块编排 |
+| **依赖处理** | 声明依赖即可 | 需定义对依赖模块的具体变更需求 |
+| **需求文档** | 只关心自己 | 自己 + 依赖模块的 Module Impact Specs |
+| **实现方式** | 一个代码区域 | 多个模块同时变更 |
+| **子任务** | 可选 | 每个 Module Impact 应创建子任务 |
+
+### 6.3 Module Impact Specifications (workMode=code)
+
+> **关键章节**：当 Flow 的 `workMode=code` 时，必须包含此章节
+
+Flow 不仅定义流程本身，还需要明确对每个依赖模块的具体变更需求。这是 Flow 与 Feature 的核心区别。
+
+**结构模板**：
+
+```markdown
+## Module Impact Specifications <!-- id: flow_{name}_impact -->
+
+> 定义此 Flow 对每个依赖模块的具体变更需求
+
+### Impact on {module-id} <!-- id: flow_{name}_impact_{module} -->
+
+**模块**：{module-name}
+**变更范围**：{affected files/components}
+
+**需求描述**：
+1. {具体需求 1}
+2. {具体需求 2}
+3. ...
+
+**验收标准**：
+- [ ] {可验证的标准 1}
+- [ ] {可验证的标准 2}
+
+**子任务 ID**：{subtask-id}（由 state.js add-subtask 生成）
+
+---
+```
+
+**示例**（以 Refactoring Flow 为例）：
+
+```markdown
+## Module Impact Specifications <!-- id: flow_refactoring_impact -->
+
+### Impact on project-init <!-- id: flow_refactoring_impact_init -->
+
+**模块**：project-init
+**变更范围**：scripts/init.js
+
+**需求描述**：
+1. 添加 `detectExistingProject()` 函数
+2. 识别现有代码目录（src/, lib/, app/）
+3. 识别现有文档（docs/, README.md）
+4. 添加用户选择提示：是否进入重构模式
+
+**验收标准**：
+- [ ] 正确识别现有项目
+- [ ] 用户可选择进入重构模式
+- [ ] 选择后正确初始化 state.json
+
+**子任务 ID**：ST-xxx
+
+---
+
+### Impact on state-management <!-- id: flow_refactoring_impact_state -->
+
+**模块**：state-management
+**变更范围**：.solodevflow/state.json Schema, scripts/state.js
+
+**需求描述**：
+1. 添加 `project.refactoring` 字段到 Schema
+2. 添加 `set-refactor-phase` 命令
+3. 添加 `get-refactor-progress` 命令
+
+**验收标准**：
+- [ ] Schema 验证通过
+- [ ] 命令可正常执行
+- [ ] 进度正确追踪
+
+**子任务 ID**：ST-xxx
+```
+
+### 6.4 Flow Workflow (workMode=code)
+
+Flow 类型的工作流程与 Feature 不同：
+
+```
+Flow 工作流程:
+
+1. DEFINE (定义流程)
+   └─ 编写 Flow Overview, Flow Steps, Participants
+
+2. ANALYZE (分析影响)
+   └─ 识别所有依赖模块，填写 Dependencies 章节
+
+3. SPECIFY (编写模块需求) ← Flow 特有阶段
+   └─ 为每个依赖模块编写 Module Impact Specification
+   └─ 为每个 Module Impact 创建子任务
+   └─ 每个子任务独立审核
+
+4. REVIEW (整体审核)
+   └─ 审核完整 Flow + 所有 Module Impact Specs
+
+5. DESIGN (设计)
+   └─ 编写设计文档（如 Design Depth: required）
+
+6. IMPLEMENT (实现)
+   └─ 按子任务逐个实现各模块
+
+7. INTEGRATE (集成测试)
+   └─ 验证完整流程
+
+8. DONE
+```
+
+### 6.5 Subtask Management for Flow
+
+每个 Module Impact Specification 应创建对应的子任务：
+
+```bash
+# 创建 Module Impact 子任务
+node scripts/state.js add-subtask \
+  --workitem=refactoring \
+  --desc="[Module: project-init] 实现现有项目检测" \
+  --source=impact-analysis
+
+# 子任务命名规范
+# [Module: {module-id}] {简要描述}
+```
+
+子任务状态追踪：
+- 所有 Module Impact 子任务完成后，才能进入 DESIGN 阶段
+- 使用 `list-subtasks --workitem=<id>` 查看进度
 
 ---
 
@@ -578,7 +718,7 @@ minor: 内容更新（修改描述）
 
 ---
 
-*Version: v2.11*
+*Version: v2.12*
 *Created: 2024-12-20 (v1.0)*
-*Updated: 2025-12-27 (v2.11)*
-*Changes: v2.11 Feature 章节 Core Capabilities → Core Functions；v2.10 消除冗余；v2.9 新增 Core Concepts*
+*Updated: 2025-12-29 (v2.12)*
+*Changes: v2.12 Flow Spec 扩展（Module Impact Specs, Flow Workflow, 子任务管理）；v2.11 Feature 章节重命名；v2.10 消除冗余*

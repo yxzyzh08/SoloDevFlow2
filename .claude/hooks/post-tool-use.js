@@ -186,15 +186,15 @@ function runValidation(rule, filePath) {
 // =============================================================================
 
 /**
- * 获取当前活跃的 Feature ID
- * 返回 'unknown' 如果没有活跃的 Feature（后续会警告）
+ * 获取当前活跃的 Work Item ID
+ * 返回 'unknown' 如果没有活跃的 Work Item（后续会警告）
+ * v14.0: Work Item = Feature/Capability/Flow
  */
-function getActiveFeatureId() {
+function getActiveWorkItemId() {
   try {
     if (!fs.existsSync(STATE_FILE)) return 'unknown';
     const state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8'));
-    const activeId = state?.flow?.activeFeatures?.[0];
-    // 返回 'unassigned' 而非 'unknown'，更明确地表示未分配
+    const activeId = state?.flow?.activeWorkItems?.[0];
     return activeId || 'unassigned';
   } catch (e) {
     return 'unknown';
@@ -205,7 +205,8 @@ function getActiveFeatureId() {
  * 同步 TodoWrite 到 subtasks
  * - 只追加，不删除
  * - 通过 description 匹配判断是否已存在
- * - 如果没有 activeFeature，输出警告但继续同步（使用 'unassigned'）
+ * - 如果没有 activeWorkItem，输出警告但继续同步（使用 'unassigned'）
+ * v14.0: Uses workitemId instead of featureId
  */
 function syncTodoWriteToSubtasks(todos) {
   if (!fs.existsSync(STATE_FILE)) {
@@ -217,11 +218,11 @@ function syncTodoWriteToSubtasks(todos) {
     const state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8'));
     if (!state.subtasks) state.subtasks = [];
 
-    const featureId = getActiveFeatureId();
+    const workitemId = getActiveWorkItemId();
 
-    // 警告：没有活跃的 Feature
-    if (featureId === 'unassigned' || featureId === 'unknown') {
-      console.error('[TodoSync] Warning: No active feature. Subtasks will be marked as "unassigned". Activate a feature first with: node scripts/state.js activate-feature <id>');
+    // 警告：没有活跃的 Work Item
+    if (workitemId === 'unassigned' || workitemId === 'unknown') {
+      console.error('[TodoSync] Warning: No active work item. Subtasks will be marked as "unassigned". Activate a work item first with: node scripts/state.js activate <id>');
     }
     let addedCount = 0;
     let updatedCount = 0;
@@ -250,11 +251,11 @@ function syncTodoWriteToSubtasks(todos) {
           updatedCount++;
         }
       } else {
-        // 添加新 subtask
+        // 添加新 subtask (v14.0: uses workitemId)
         const id = `st_${Date.now()}_${String(state.subtasks.length + 1).padStart(3, '0')}`;
         state.subtasks.push({
           id,
-          featureId,
+          workitemId,
           description,
           status: mapTodoStatus(todo.status),
           source: 'ai',

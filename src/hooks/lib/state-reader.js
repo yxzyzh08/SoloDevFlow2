@@ -1,9 +1,12 @@
 /**
- * State Reader - 读取 state.json + index.json，提取 Feature 信息
+ * State Reader - 读取 state.json + index.json，提取 Work Item 信息
  *
  * Based on design: des-hooks-integration.md §3.4
  * Updated for v12.0.0: Features moved to index.json
  * Updated for v13.0.0: Removed session structure
+ * Updated for v14.0.0: Renamed activeFeatures to activeWorkItems
+ *
+ * Note: "Work Item" is the unified term for Feature/Capability/Flow
  */
 
 const fs = require('fs');
@@ -47,12 +50,12 @@ function readIndex() {
 }
 
 /**
- * 获取当前活跃的 Feature
+ * 获取当前活跃的 Work Item (Feature/Capability/Flow)
  * @param {object} state - state.json 数据
  * @returns {object|null}
  */
 function getActiveFeature(state) {
-  const activeId = state?.flow?.activeFeatures?.[0];
+  const activeId = state?.flow?.activeWorkItems?.[0];
   if (!activeId) {
     return null;
   }
@@ -114,15 +117,15 @@ function getSubtasks(state) {
 }
 
 /**
- * 获取指定 Feature 的未完成子任务
+ * 获取指定 Work Item 的未完成子任务
  * @param {object} state - state.json 数据
- * @param {string} featureId - Feature ID
+ * @param {string} workitemId - Work Item ID (Feature/Capability/Flow)
  * @returns {Array}
  */
-function getPendingSubtasksForFeature(state, featureId) {
+function getPendingSubtasksForFeature(state, workitemId) {
   const subtasks = state?.subtasks || [];
   return subtasks.filter(s =>
-    s.featureId === featureId &&
+    s.workitemId === workitemId &&
     (s.status === 'pending' || s.status === 'in_progress')
   );
 }
@@ -136,6 +139,19 @@ function getPendingDocs(state) {
   return state?.pendingDocs || [];
 }
 
+/**
+ * 获取重构模式状态
+ * @param {object} state - state.json 数据
+ * @returns {object|null} 重构状态或 null（未启用）
+ */
+function getRefactoringStatus(state) {
+  const refactoring = state?.project?.refactoring;
+  if (!refactoring?.enabled) {
+    return null;
+  }
+  return refactoring;
+}
+
 module.exports = {
   readState,
   readIndex,
@@ -144,6 +160,7 @@ module.exports = {
   getSubtasks,
   getPendingSubtasksForFeature,
   getPendingDocs,
+  getRefactoringStatus,
   STATE_PATH,
   INDEX_PATH
 };

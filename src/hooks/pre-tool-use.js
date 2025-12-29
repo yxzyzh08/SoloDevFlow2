@@ -232,7 +232,8 @@ function checkPhaseGuard(phase, status, toolName, filePath) {
 
 /**
  * 检查 set-phase done 命令是否有未完成的 subtasks
- * @returns {{ shouldWarn: boolean, featureId?: string, pendingCount?: number, pendingTasks?: Array }}
+ * v14.0: Updated to use "Work Item" terminology
+ * @returns {{ shouldWarn: boolean, workitemId?: string, pendingCount?: number, pendingTasks?: Array }}
  */
 function checkSetPhaseDone(toolName, toolInput, state) {
   if (toolName !== 'Bash') return { shouldWarn: false };
@@ -243,13 +244,13 @@ function checkSetPhaseDone(toolName, toolInput, state) {
   const match = command.match(/set-phase\s+(\S+)\s+done/i);
   if (!match) return { shouldWarn: false };
 
-  const featureId = match[1];
-  const pendingTasks = getPendingSubtasksForFeature(state, featureId);
+  const workitemId = match[1];
+  const pendingTasks = getPendingSubtasksForFeature(state, workitemId);
 
   if (pendingTasks.length > 0) {
     return {
       shouldWarn: true,
-      featureId,
+      workitemId,
       pendingCount: pendingTasks.length,
       pendingTasks
     };
@@ -274,7 +275,7 @@ function makeDecision(toolName, toolInput, state) {
       .map(t => `  - ${t.description}`)
       .join('\n');
     return formatAskDecision(
-      `Feature "${setPhaseCheck.featureId}" has ${setPhaseCheck.pendingCount} pending subtask(s):\n${taskList}\n\nComplete or skip these subtasks before marking the feature as done.`
+      `Work item "${setPhaseCheck.workitemId}" has ${setPhaseCheck.pendingCount} pending subtask(s):\n${taskList}\n\nComplete or skip these subtasks before marking the work item as done.`
     );
   }
 

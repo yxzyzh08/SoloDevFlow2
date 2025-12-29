@@ -6,7 +6,7 @@ status: done
 phase: done
 priority: P0
 domain: ai-config
-version: "1.3"
+version: "1.5"
 ---
 
 # Feature: Hooks Integration <!-- id: feat_hooks_integration -->
@@ -63,6 +63,7 @@ version: "1.3"
 | H5 | PostToolUse 验证触发 | 文档修改后触发验证脚本（可选） |
 | H6 | PostToolUse TodoWrite 同步 | AI 使用 TodoWrite 时自动同步到 state.json subtasks |
 | H7 | PreToolUse set-phase 守卫 | set-phase done 前检查是否有未完成的 subtasks |
+| H8 | UserPromptSubmit 意图检测 | 检测用户输入中的结构性变更意图，提示走需求流程 |
 
 ### 3.1 H1: SessionStart 上下文注入
 
@@ -169,6 +170,53 @@ Complete or skip these subtasks before marking the feature as done.
 
 **注意**：此守卫仅在命令不在 `settings.local.json` 的 allow list 中时生效。
 
+### 3.7 H8: UserPromptSubmit 结构性变更意图检测
+
+**问题背景**：
+
+当用户明确授权变更时（如"是的，请删除 byType"），AI 倾向于直接执行代码修改，跳过需求变更流程。这导致：
+- 需求文档与实现不同步
+- 人类失去审核机会
+- 变更缺乏可追溯性
+
+**设计思路**：
+
+不能基于具体文件名检测（每个项目关键文件不同），应基于用户输入的**意图关键词**检测。
+
+**触发条件**：UserPromptSubmit 时检测用户输入
+
+**意图关键词**：
+
+| 关键词 | 变更类型 | 示例 |
+|--------|----------|------|
+| 删除、移除、remove、delete | 删除功能 | "删除 byType"、"移除这个字段" |
+| 添加、新增、add、create | 新增功能 | "添加新命令"、"新增验证规则" |
+| 修改接口、改 API、change interface | 接口变更 | "修改返回格式" |
+| 重构、refactor | 结构重构 | "重构状态管理" |
+
+**检查逻辑**：
+
+1. 检测用户输入是否包含意图关键词
+2. 检查当前阶段是否为 `feature_requirements` 或 `feature_review`
+3. 如果包含关键词且不在需求阶段，在 `additionalContext` 中注入提示：
+
+```
+[Input Analysis Reminder]
+检测到可能的【{变更类型}】请求。
+请先执行 Input Analysis (参考 .solodevflow/flows/workflows.md §2)：
+1. 确认是否为需求变更（修改现有功能）
+2. 如是，先设置阶段：set-phase <id> feature_requirements
+3. 更新需求文档
+4. 完成后：set-phase <id> feature_review
+5. 等待人类审核批准后才能写代码
+```
+
+**设计原则**：
+- 基于意图检测，不依赖具体文件名（通用性）
+- 在 UserPromptSubmit 阶段提示（比 PreToolUse 更早）
+- 软性引导，通过 additionalContext 注入提示
+- 已在需求阶段时不重复提示
+
 ---
 
 ## 4. Acceptance Criteria <!-- id: feat_hooks_integration_acceptance -->
@@ -184,6 +232,8 @@ Complete or skip these subtasks before marking the feature as done.
 | TodoWrite 同步 | AI 使用 TodoWrite | 任务同步到 state.json subtasks |
 | TodoWrite 警告 | 无活跃 Feature 时使用 TodoWrite | 输出警告，featureId 标记为 `unassigned` |
 | set-phase done 守卫 | 有未完成 subtasks 时执行 set-phase done | 显示 ask 确认，列出未完成任务 |
+| 意图检测 - 非需求阶段 | 在 `done` 状态下输入"删除 xxx" | additionalContext 包含 [Input Analysis Reminder] |
+| 意图检测 - 需求阶段 | 在 `feature_requirements` 阶段输入"删除 xxx" | 不显示提示（已在流程中） |
 
 ---
 
@@ -239,13 +289,23 @@ Complete or skip these subtasks before marking the feature as done.
 
 ---
 
-*Version: v1.3*
+*Version: v1.5*
 *Created: 2025-12-27*
-*Updated: 2025-12-28*
+*Updated: 2025-12-29*
 
 ---
 
 ## Changelog
+
+### v1.5 (2025-12-29)
+- 重新设计 H8: 从 PreToolUse 文件名检测改为 UserPromptSubmit 意图检测
+- 基于用户输入的关键词检测变更意图（删除/添加/修改接口/重构）
+- 不依赖具体文件名，适用于所有项目
+
+### v1.4 (2025-12-29)
+- 新增 H8: PreToolUse 结构性变更守卫（已废弃，被 v1.5 替代）
+- 修复工作流设计缺陷：修改关键文件时提示走需求流程
+- 软性引导（ask），不强制阻止，允许紧急情况跳过
 
 ### v1.3 (2025-12-28)
 - `done` 状态守卫改为软性引导：block → ask

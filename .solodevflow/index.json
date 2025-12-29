@@ -1,12 +1,12 @@
 {
-  "generated": "2025-12-28T23:19:49.517+08:00",
+  "generated": "2025-12-29T17:01:33.980+08:00",
   "summary": {
-    "total": 17,
-    "done": 15,
+    "total": 18,
+    "done": 18,
     "in_progress": 0,
-    "not_started": 2
+    "not_started": 0
   },
-  "activeFeatures": [],
+  "activeWorkItems": [],
   "documents": [
     {
       "id": "design-hooks-integration",
@@ -29,6 +29,27 @@
         },
         {
           "id": "cap_document_validation",
+          "type": "soft"
+        }
+      ]
+    },
+    {
+      "id": "des-refactoring",
+      "type": "design",
+      "title": "Design: Refactoring Flow",
+      "workMode": null,
+      "status": "done",
+      "phase": null,
+      "priority": null,
+      "domain": null,
+      "path": "docs/designs/des-refactoring.md",
+      "dependencies": [
+        {
+          "id": "design_hooks_integration",
+          "type": "hard"
+        },
+        {
+          "id": "design_system_architecture",
           "type": "soft"
         }
       ]
@@ -272,9 +293,9 @@
       "id": "refactoring",
       "type": "flow",
       "title": "Refactoring",
-      "workMode": "document",
-      "status": "not_started",
-      "phase": null,
+      "workMode": "code",
+      "status": "done",
+      "phase": "done",
       "priority": "P1",
       "domain": "process",
       "path": "docs/requirements/flows/flow-refactoring.md",
@@ -365,7 +386,7 @@
       "title": "Workflows",
       "workMode": "document",
       "status": "done",
-      "phase": null,
+      "phase": "done",
       "priority": "P0",
       "domain": "process",
       "path": "docs/requirements/flows/flow-workflows.md",
@@ -389,410 +410,11 @@
       "type": "prd",
       "title": "SoloDevFlow 2.0",
       "workMode": null,
-      "status": "not_started",
+      "status": "done",
       "phase": null,
       "priority": null,
       "domain": null,
       "path": "docs/requirements/prd.md"
     }
-  ],
-  "byType": {
-    "design": [
-      {
-        "id": "design-hooks-integration",
-        "type": "design",
-        "title": "Hooks Integration Design v1.4",
-        "workMode": null,
-        "status": "done",
-        "phase": null,
-        "priority": null,
-        "domain": null,
-        "path": "docs/designs/des-hooks-integration.md",
-        "dependencies": [
-          {
-            "id": "feat_state_management",
-            "type": "hard"
-          },
-          {
-            "id": "feat_input_capture",
-            "type": "soft"
-          },
-          {
-            "id": "cap_document_validation",
-            "type": "soft"
-          }
-        ]
-      },
-      {
-        "id": "design-system-architecture",
-        "type": "design",
-        "title": "System Architecture - SoloDevFlow 2.0",
-        "workMode": null,
-        "status": "done",
-        "phase": null,
-        "priority": null,
-        "domain": null,
-        "path": "docs/designs/des-system-architecture.md"
-      }
-    ],
-    "capability": [
-      {
-        "id": "document-validation",
-        "type": "capability",
-        "title": "Document Validation",
-        "workMode": "code",
-        "status": "done",
-        "phase": null,
-        "priority": "P0",
-        "domain": "process",
-        "path": "docs/requirements/capabilities/cap-document-validation.md"
-      }
-    ],
-    "feature": [
-      {
-        "id": "change-impact-tracking",
-        "type": "feature",
-        "title": "Change Impact Tracking",
-        "workMode": "code",
-        "status": "done",
-        "phase": "done",
-        "priority": "P0",
-        "domain": "process",
-        "path": "docs/requirements/features/fea-change-impact-tracking.md",
-        "dependencies": [
-          {
-            "id": "state-management",
-            "type": "hard"
-          },
-          {
-            "id": "hooks-integration",
-            "type": "hard"
-          },
-          {
-            "id": "spec-meta",
-            "type": "soft"
-          }
-        ]
-      },
-      {
-        "id": "hooks-integration",
-        "type": "feature",
-        "title": "Hooks Integration",
-        "workMode": "code",
-        "status": "done",
-        "phase": "done",
-        "priority": "P0",
-        "domain": "ai-config",
-        "path": "docs/requirements/features/fea-hooks-integration.md",
-        "dependencies": [
-          {
-            "id": "state-management",
-            "type": "hard"
-          },
-          {
-            "id": "project-init",
-            "type": "soft"
-          },
-          {
-            "id": "cap-document-validation",
-            "type": "soft"
-          }
-        ]
-      },
-      {
-        "id": "input-capture",
-        "type": "feature",
-        "title": "Input Capture",
-        "workMode": "document",
-        "status": "done",
-        "phase": null,
-        "priority": "P0",
-        "domain": "process",
-        "path": "docs/requirements/features/fea-input-capture.md",
-        "dependencies": [
-          {
-            "id": "state-management",
-            "type": "soft"
-          }
-        ]
-      },
-      {
-        "id": "project-init",
-        "type": "feature",
-        "title": "Project Init",
-        "workMode": "code",
-        "status": "done",
-        "phase": "done",
-        "priority": "P0",
-        "domain": "tooling",
-        "path": "docs/requirements/features/fea-project-init.md",
-        "dependencies": [
-          {
-            "id": "state-management",
-            "type": "hard"
-          },
-          {
-            "id": "write-commands",
-            "type": "soft"
-          },
-          {
-            "id": "meta-spec",
-            "type": "soft"
-          }
-        ]
-      },
-      {
-        "id": "review-assistant",
-        "type": "feature",
-        "title": "Review Assistant",
-        "workMode": null,
-        "status": "done",
-        "phase": null,
-        "priority": "P0",
-        "domain": "ai-config",
-        "path": "docs/requirements/features/fea-review-assistant.md",
-        "dependencies": [
-          {
-            "id": "spec-requirements",
-            "type": "hard"
-          },
-          {
-            "id": "prd",
-            "type": "hard"
-          }
-        ]
-      },
-      {
-        "id": "state-management",
-        "type": "feature",
-        "title": "State Management",
-        "workMode": "code",
-        "status": "done",
-        "phase": "done",
-        "priority": "P0",
-        "domain": "process",
-        "path": "docs/requirements/features/fea-state-management.md",
-        "dependencies": [
-          {
-            "id": "requirements-doc",
-            "type": "hard"
-          }
-        ]
-      },
-      {
-        "id": "write-commands",
-        "type": "feature",
-        "title": "Write Commands",
-        "workMode": "document",
-        "status": "done",
-        "phase": null,
-        "priority": "P0",
-        "domain": "ai-config",
-        "path": "docs/requirements/features/fea-write-commands.md",
-        "dependencies": [
-          {
-            "id": "spec-requirements",
-            "type": "hard"
-          },
-          {
-            "id": "spec-design",
-            "type": "hard"
-          },
-          {
-            "id": "spec-meta",
-            "type": "soft"
-          },
-          {
-            "id": "cap-document-validation",
-            "type": "soft"
-          }
-        ]
-      }
-    ],
-    "flow": [
-      {
-        "id": "design-flow",
-        "type": "flow",
-        "title": "Design",
-        "workMode": "document",
-        "status": "done",
-        "phase": null,
-        "priority": "P0",
-        "domain": "process",
-        "path": "docs/requirements/flows/flow-design.md",
-        "dependencies": [
-          {
-            "id": "flow-workflows",
-            "type": "hard"
-          },
-          {
-            "id": "flow-requirements",
-            "type": "hard"
-          }
-        ]
-      },
-      {
-        "id": "implementation-flow",
-        "type": "flow",
-        "title": "Implementation",
-        "workMode": "document",
-        "status": "done",
-        "phase": null,
-        "priority": "P0",
-        "domain": "process",
-        "path": "docs/requirements/flows/flow-implementation.md",
-        "dependencies": [
-          {
-            "id": "flow-workflows",
-            "type": "hard"
-          },
-          {
-            "id": "flow-design",
-            "type": "soft"
-          },
-          {
-            "id": "flow-requirements",
-            "type": "hard"
-          },
-          {
-            "id": "spec-dev",
-            "type": "soft"
-          },
-          {
-            "id": "spec-test",
-            "type": "soft"
-          }
-        ]
-      },
-      {
-        "id": "refactoring",
-        "type": "flow",
-        "title": "Refactoring",
-        "workMode": "document",
-        "status": "not_started",
-        "phase": null,
-        "priority": "P1",
-        "domain": "process",
-        "path": "docs/requirements/flows/flow-refactoring.md",
-        "dependencies": [
-          {
-            "id": "project-init",
-            "type": "hard"
-          },
-          {
-            "id": "state-management",
-            "type": "hard"
-          },
-          {
-            "id": "write-commands",
-            "type": "hard"
-          },
-          {
-            "id": "hooks-integration",
-            "type": "soft"
-          },
-          {
-            "id": "cap-document-validation",
-            "type": "soft"
-          }
-        ]
-      },
-      {
-        "id": "requirements-flow",
-        "type": "flow",
-        "title": "Requirements Processing",
-        "workMode": "document",
-        "status": "done",
-        "phase": null,
-        "priority": "P0",
-        "domain": "process",
-        "path": "docs/requirements/flows/flow-requirements.md",
-        "dependencies": [
-          {
-            "id": "flow-workflows",
-            "type": "hard"
-          },
-          {
-            "id": "write-commands",
-            "type": "hard"
-          },
-          {
-            "id": "change-impact-tracking",
-            "type": "soft"
-          },
-          {
-            "id": "spec-requirements",
-            "type": "hard"
-          }
-        ]
-      },
-      {
-        "id": "testing-flow",
-        "type": "flow",
-        "title": "Testing",
-        "workMode": "document",
-        "status": "done",
-        "phase": null,
-        "priority": "P0",
-        "domain": "process",
-        "path": "docs/requirements/flows/flow-testing.md",
-        "dependencies": [
-          {
-            "id": "flow-workflows",
-            "type": "hard"
-          },
-          {
-            "id": "flow-implementation",
-            "type": "hard"
-          },
-          {
-            "id": "flow-requirements",
-            "type": "hard"
-          },
-          {
-            "id": "spec-test",
-            "type": "soft"
-          }
-        ]
-      },
-      {
-        "id": "workflows",
-        "type": "flow",
-        "title": "Workflows",
-        "workMode": "document",
-        "status": "done",
-        "phase": null,
-        "priority": "P0",
-        "domain": "process",
-        "path": "docs/requirements/flows/flow-workflows.md",
-        "dependencies": [
-          {
-            "id": "state-management",
-            "type": "hard"
-          },
-          {
-            "id": "hooks-integration",
-            "type": "soft"
-          },
-          {
-            "id": "document-validation",
-            "type": "soft"
-          }
-        ]
-      }
-    ],
-    "prd": [
-      {
-        "id": "prd",
-        "type": "prd",
-        "title": "SoloDevFlow 2.0",
-        "workMode": null,
-        "status": "not_started",
-        "phase": null,
-        "priority": null,
-        "domain": null,
-        "path": "docs/requirements/prd.md"
-      }
-    ]
-  }
+  ]
 }

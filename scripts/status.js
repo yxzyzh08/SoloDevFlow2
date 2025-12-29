@@ -5,6 +5,7 @@
  * Shows current state summary with document tree view
  *
  * v12.0.0: Uses index.json for document status
+ * v14.0.0: Renamed activeFeatures to activeWorkItems
  *
  * Usage: npm run status
  */
@@ -90,15 +91,16 @@ function main() {
   console.log(`Method: ${state.flow.researchMethod}`);
   console.log('');
 
-  // Active features
-  console.log('=== Active Features ===\n');
-  if (state.flow.activeFeatures.length === 0) {
+  // Active work items
+  const activeWorkItems = state.flow.activeWorkItems || [];
+  console.log('=== Active Work Items ===\n');
+  if (activeWorkItems.length === 0) {
     console.log('  (none)');
   } else {
-    state.flow.activeFeatures.forEach((id, i) => {
+    activeWorkItems.forEach((id, i) => {
       const doc = index.documents.find(d => d.id === id);
       if (doc) {
-        console.log(`  ${i + 1}. ${id}`);
+        console.log(`  ${i + 1}. ${id} [${doc.type}]`);
         console.log(`     Status: ${doc.status} | Path: ${doc.path}`);
       } else {
         console.log(`  ${i + 1}. ${id} (not in index)`);

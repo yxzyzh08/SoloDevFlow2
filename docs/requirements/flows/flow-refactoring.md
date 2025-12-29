@@ -1,11 +1,12 @@
 ---
 type: flow
 id: refactoring
-workMode: document
-status: not_started
+workMode: code
+status: done
+phase: done
 priority: P1
 domain: process
-version: "2.0"
+version: "2.3"
 ---
 
 # Flow: Refactoring <!-- id: flow_refactoring -->
@@ -464,6 +465,16 @@ PRD
 | 依赖关系复杂 | 先完成无依赖的 Feature，逐步补充依赖 |
 | 用户不确定需求 | 记录现状，标记待确认，继续推进 |
 
+### 6.5 Rollback 策略
+
+| 场景 | 策略 | 命令 |
+|------|------|------|
+| 阶段内回滚 | 撤销当前阶段的变更 | `git revert <commit>` |
+| 跨阶段回滚 | 回退到上一阶段检查点 | `git reset --hard <checkpoint>` |
+| 完全回滚 | 恢复到重构前状态 | `git checkout refactor-backup` |
+
+**建议**：每个阶段完成后创建标签 `refactor-phase-<n>`，便于精确回滚。
+
 ---
 
 ## 7. Entry Point <!-- id: flow_refactoring_entry -->
@@ -529,7 +540,94 @@ function detectExistingProject() {
 
 ---
 
-## 10. Artifacts <!-- id: flow_refactoring_artifacts -->
+## 10. Module Impact Specifications <!-- id: flow_refactoring_module_impact -->
+
+> Flow (workMode=code) 专属章节：定义每个依赖模块的具体变更需求
+
+### [Module: project-init]
+
+**变更概述**：扩展 init.js 支持现有项目检测和重构模式初始化
+
+**接口变更**：
+
+| 变更类型 | 描述 |
+|----------|------|
+| 新增函数 | `detectExistingProject(): boolean` - 检测是否为现有项目 |
+| 新增函数 | `initRefactoringMode(): void` - 初始化重构模式 |
+| 修改函数 | `init()` - 添加重构模式分支 |
+
+**实现要点**：
+1. 检测条件：存在 src/ 或 docs/ 但无 .solodevflow/
+2. 用户交互：询问是否启用重构模式
+3. 初始化：创建 state.json 并设置 `project.refactoring.enabled = true`
+
+**验收标准**：
+- [ ] 正确检测现有项目（有代码/文档但无 .solodevflow）
+- [ ] 用户选择重构模式后正确初始化状态
+- [ ] 用户选择普通模式后正常初始化
+
+**审批状态**：✅ 已审批 (2025-12-29)
+
+---
+
+### [Module: state-management]
+
+**变更概述**：扩展 state.json Schema 支持重构状态追踪
+
+**接口变更**：
+
+| 变更类型 | 描述 |
+|----------|------|
+| Schema 扩展 | 添加 `project.refactoring` 字段 |
+| 新增命令 | `set-refactoring-phase <phase>` |
+| 新增命令 | `update-refactoring-progress <type> <done> <total>` |
+
+**Schema 定义**：
+```json
+{
+  "project.refactoring": {
+    "enabled": "boolean",
+    "phase": "understand | prd | requirements | design | validate | completed",
+    "progress": {
+      "prd": "not_started | in_progress | done",
+      "features": { "total": "number", "done": "number" },
+      "capabilities": { "total": "number", "done": "number" },
+      "flows": { "total": "number", "done": "number" },
+      "designs": { "total": "number", "done": "number", "skipped": "boolean" }
+    },
+    "startedAt": "ISO date string",
+    "completedAt": "ISO date string | null"
+  }
+}
+```
+
+**验收标准**：
+- [ ] state.json 支持 refactoring 字段读写
+- [ ] set-refactoring-phase 正确更新阶段
+- [ ] update-refactoring-progress 正确更新进度
+- [ ] 阶段转换验证（不允许跳过阶段）
+
+**审批状态**：✅ 已审批 (2025-12-29)
+
+---
+
+### [Module: write-commands]
+
+**变更概述**：无代码变更，仅声明依赖关系
+
+**说明**：Refactoring Flow 使用现有的 /write-* 命令（/write-prd, /write-feature, /write-capability, /write-flow, /write-design）生成文档，无需修改这些命令。
+
+**依赖方式**：纯消费依赖（调用现有接口）
+
+**验收标准**：
+- [ ] /write-prd 可在重构模式下正常使用
+- [ ] /write-feature 可在重构模式下正常使用
+
+**审批状态**：✅ 无需变更（纯消费）
+
+---
+
+## 11. Artifacts <!-- id: flow_refactoring_artifacts -->
 
 | Type | Path | Required | Description |
 |------|------|----------|-------------|
@@ -541,11 +639,14 @@ function detectExistingProject() {
 
 ---
 
-*Version: v2.0*
+*Version: v2.3*
 *Created: 2025-12-27*
-*Updated: 2025-12-28*
+*Updated: 2025-12-29*
 
 ## Changelog
 
+- **v2.3** (2025-12-29): 添加 §10 Module Impact Specifications（Flow workMode=code 专属章节示例）
+- **v2.2** (2025-12-29): 修正 workMode: document → code（此 Flow 需要代码实现）
+- **v2.1** (2025-12-29): 添加 §6.5 Rollback 策略，明确阶段内/跨阶段/完全回滚的操作指南
 - **v2.0** (2025-12-28): 基于 2025 行业最佳实践全面增强：添加详细阶段行为、方法论参考、验收标准
 - **v1.0** (2025-12-28): 合并 fea-project-refactor 内容，消除文档重复

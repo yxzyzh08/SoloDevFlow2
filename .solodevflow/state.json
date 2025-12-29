@@ -1,18 +1,41 @@
 {
-  "schemaVersion": "13.0.0",
+  "schemaVersion": "14.0.0",
   "project": {
     "name": "SoloDevFlow 2.0",
     "description": "为超级个体打造的自进化人机协作开发系统",
     "type": "backend",
     "createdAt": "2024-12-16",
-    "updatedAt": "2025-12-27"
+    "updatedAt": "2025-12-27",
+    "refactoring": {
+      "enabled": false,
+      "phase": "prd",
+      "progress": {
+        "prd": "in_progress",
+        "features": {
+          "total": 10,
+          "done": 3
+        },
+        "capabilities": {
+          "total": 0,
+          "done": 0
+        },
+        "flows": {
+          "total": 0,
+          "done": 0
+        },
+        "designs": {
+          "total": 0,
+          "done": 0,
+          "skipped": false
+        }
+      },
+      "startedAt": "2025-12-29T16:33:41.991+08:00",
+      "completedAt": "2025-12-29T16:34:43.495+08:00"
+    }
   },
   "flow": {
     "researchMethod": "bottom-up",
-    "activeFeatures": [
-      "hooks-integration",
-      "change-impact-tracking"
-    ]
+    "activeWorkItems": []
   },
   "domains": {
     "specification": "规范文档（元规范/需求/设计/开发/测试）",
@@ -25,10 +48,10 @@
     "lastGitCommit": "",
     "lastGitCommitMessage": "",
     "lastGitCommitAt": "",
-    "stateFileVersion": 215,
+    "stateFileVersion": 315,
     "totalStateChanges": 22
   },
-  "lastUpdated": "2025-12-28T23:19:49.511+08:00",
+  "lastUpdated": "2025-12-29T16:53:38.123+08:00",
   "subtasks": [],
   "solodevflow": {
     "version": "2.0.0",

@@ -138,6 +138,85 @@ function isSelfProject(targetPath) {
   }
 }
 
+/**
+ * 检测是否为现有项目（需要重构模式）
+ * @returns {Object} { isExisting: boolean, indicators: string[] }
+ */
+function detectExistingProject(targetPath) {
+  const indicators = [];
+
+  // 1. 已有 SoloDevFlow 安装 → 不是"现有项目"（走升级流程）
+  if (fs.existsSync(path.join(targetPath, '.solodevflow'))) {
+    return { isExisting: false, indicators: [] };
+  }
+
+  // 2. 是 SoloDevFlow 自身 → 不是"现有项目"
+  if (isSelfProject(targetPath)) {
+    return { isExisting: false, indicators: [] };
+  }
+
+  // 3. 检测代码目录存在
+  const codeIndicators = ['src/', 'lib/', 'app/', 'packages/', 'server/', 'client/'];
+  for (const dir of codeIndicators) {
+    const fullPath = path.join(targetPath, dir);
+    if (fs.existsSync(fullPath) && fs.statSync(fullPath).isDirectory()) {
+      indicators.push(dir);
+    }
+  }
+
+  // 4. 检测文档存在
+  const docIndicators = ['docs/', 'README.md', 'CHANGELOG.md', 'doc/'];
+  for (const file of docIndicators) {
+    if (fs.existsSync(path.join(targetPath, file))) {
+      indicators.push(file);
+    }
+  }
+
+  // 5. 检测项目配置文件存在（表明这是一个已有项目）
+  const configIndicators = ['package.json', 'requirements.txt', 'go.mod', 'Cargo.toml', 'pom.xml', 'build.gradle'];
+  for (const file of configIndicators) {
+    if (fs.existsSync(path.join(targetPath, file))) {
+      indicators.push(file);
+    }
+  }
+
+  return {
+    isExisting: indicators.length > 0,
+    indicators
+  };
+}
+
+/**
+ * 初始化重构模式
+ */
+async function initRefactoringMode(config) {
+  const { execSync } = require('child_process');
+  const targetPath = config.targetPath;
+  const stateFile = path.join(targetPath, '.solodevflow/state.json');
+
+  // 读取并更新 state.json
+  const state = JSON.parse(fs.readFileSync(stateFile, 'utf-8'));
+
+  if (!state.project) state.project = {};
+
+  state.project.refactoring = {
+    enabled: true,
+    phase: 'understand',
+    progress: {
+      prd: 'not_started',
+      features: { total: 0, done: 0 },
+      capabilities: { total: 0, done: 0 },
+      flows: { total: 0, done: 0 },
+      designs: { total: 0, done: 0, skipped: false }
+    },
+    startedAt: toBeijingISOString(),
+    completedAt: null
+  };
+
+  fs.writeFileSync(stateFile, JSON.stringify(state, null, 2));
+  log('重构模式已启用', 'success');
+}
+
 // ============================================================================
 // Checker Component
 // ============================================================================
@@ -229,6 +308,39 @@ async function checkPrerequisites(config, rl) {
     // Not installed
     if (config.upgrade) {
       throw new Error('升级模式要求目标项目已安装 SoloDevFlow');
+    }
+
+    // Check if this is an existing project (has code/docs but no SoloDevFlow)
+    const existingProject = detectExistingProject(config.targetPath);
+    if (existingProject.isExisting) {
+      console.log('\n检测到现有项目内容:');
+      for (const indicator of existingProject.indicators.slice(0, 5)) {
+        console.log(`  - ${indicator}`);
+      }
+      if (existingProject.indicators.length > 5) {
+        console.log(`  ... 及其他 ${existingProject.indicators.length - 5} 项`);
+      }
+
+      console.log('\n是否启用重构模式？');
+      console.log('  1. 是，按重构流程迁移到 SoloDevFlow 规范（推荐）');
+      console.log('  2. 否，作为新项目初始化（保留现有文件）');
+      console.log('  3. 取消');
+
+      const answer = await question(rl, '\n请输入选项 (1-3): ');
+
+      switch (answer.trim()) {
+        case '1':
+          config.refactoringMode = true;
+          log('将启用重构模式', 'info');
+          break;
+        case '2':
+          config.refactoringMode = false;
+          log('将作为新项目初始化', 'info');
+          break;
+        case '3':
+        default:
+          throw new Error('操作取消');
+      }
     }
   }
 
@@ -583,6 +695,28 @@ function finalize(config) {
 
 更多信息请查看 CLAUDE.md
 `);
+  } else if (config.refactoringMode) {
+    console.log(`
+项目: ${projectName}
+类型: ${config.projectType}
+路径: ${config.targetPath}
+模式: 重构模式（Refactoring）
+
+下一步:
+  1. cd ${config.targetPath}
+  2. 使用 Claude Code 打开项目
+  3. AI 将进入 UNDERSTAND 阶段，开始理解现有系统
+
+重构流程:
+  UNDERSTAND → PRD → REQUIREMENTS → DESIGN → VALIDATE → 完成
+
+当前阶段: UNDERSTAND（理解系统）
+  - AI 将扫描代码结构、分析技术栈
+  - 生成系统理解报告
+  - 等待你确认理解准确后进入下一阶段
+
+更多信息请查看 CLAUDE.md
+`);
   } else {
     console.log(`
 项目: ${projectName}
@@ -775,6 +909,11 @@ async function main() {
     // Generate config (skip for bootstrap mode)
     if (!config.bootstrap) {
       await generateConfig(config);
+    }
+
+    // Enable refactoring mode if selected
+    if (config.refactoringMode) {
+      await initRefactoringMode(config);
     }
 
     // Finalize

@@ -165,24 +165,17 @@ function main() {
     not_started: docs.filter(d => d.status === 'not_started').length
   };
 
-  // 按类型分组
-  const byType = {};
-  for (const doc of docs) {
-    if (!byType[doc.type]) byType[doc.type] = [];
-    byType[doc.type].push(doc);
-  }
-
-  // 找出当前聚焦的 feature（status = in_progress）
-  const activeFeatures = docs
-    .filter(d => d.type === 'feature' && d.status === 'in_progress')
+  // 找出当前聚焦的 work item（status = in_progress）
+  // Note: This is for display purposes; actual activeWorkItems is in state.json
+  const activeWorkItems = docs
+    .filter(d => (d.type === 'feature' || d.type === 'capability' || d.type === 'flow') && d.status === 'in_progress')
     .map(d => d.id);
 
   const index = {
     generated: toBeijingISOString(),
     summary,
-    activeFeatures,
-    documents: docs,
-    byType
+    activeWorkItems,
+    documents: docs
   };
 
   // 确保输出目录存在
@@ -199,7 +192,7 @@ function main() {
   console.log(`  完成: ${summary.done}`);
   console.log(`  进行中: ${summary.in_progress}`);
   console.log(`  未开始: ${summary.not_started}`);
-  console.log(`\n当前聚焦: ${activeFeatures.length > 0 ? activeFeatures.join(', ') : '无'}`);
+  console.log(`\n当前聚焦: ${activeWorkItems.length > 0 ? activeWorkItems.join(', ') : '无'}`);
   if (cleanupResult.cleaned > 0) {
     console.log(`\n已清理 ${cleanupResult.cleaned} 个已完成 subtasks`);
   }
