@@ -81,6 +81,36 @@ function copyDir(src, dest) {
   }
 }
 
+/**
+ * 复制 flows 目录，处理路径和引用
+ * @param {string} src - 源目录
+ * @param {string} dest - 目标目录
+ * @param {boolean} isBootstrap - 是否为自举模式
+ */
+function copyFlowFiles(src, dest, isBootstrap = false) {
+  ensureDir(dest);
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+
+    if (entry.isDirectory()) {
+      copyFlowFiles(srcPath, destPath, isBootstrap);
+    } else if (entry.name.endsWith('.md') && !isBootstrap) {
+      // 非自举模式：处理 markdown 文件
+      let content = fs.readFileSync(srcPath, 'utf-8');
+      // 1. 删除需求文档引用（目标项目没有这些文档）
+      content = content.replace(/\*\*需求文档\*\*：\[.*?\]\(.*?\)\n?/g, '');
+      // 2. 替换脚本路径：scripts/ → .solodevflow/scripts/
+      content = content.replace(/node scripts\//g, 'node .solodevflow/scripts/');
+      fs.writeFileSync(destPath, content);
+    } else {
+      copyFile(srcPath, destPath);
+    }
+  }
+}
+
 function renderTemplate(templatePath, variables) {
   let content = fs.readFileSync(templatePath, 'utf-8');
 
@@ -485,11 +515,13 @@ async function copyToolFiles(config) {
   const targetPath = config.targetPath;
 
   // 1. Copy .solodevflow/flows/ (from template/flows/)
+  // 非自举模式：清理需求文档引用 + 替换脚本路径
+  // 自举模式：保留原样（SoloDevFlow 自身使用源码路径）
   log('  复制 .solodevflow/flows/...');
   const flowsSrc = path.join(SOLODEVFLOW_ROOT, 'template/flows');
   const flowsDest = path.join(targetPath, '.solodevflow/flows');
   if (fs.existsSync(flowsSrc)) {
-    copyDir(flowsSrc, flowsDest);
+    copyFlowFiles(flowsSrc, flowsDest, config.bootstrap);
     log('    .solodevflow/flows/', 'success');
   } else {
     log('    template/flows/ 不存在，跳过', 'warn');

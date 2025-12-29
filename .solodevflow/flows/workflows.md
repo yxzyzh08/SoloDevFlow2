@@ -11,16 +11,24 @@
 **每次对话开始**：
 
 ```
-读取 state.json / index.json
+读取 state.json
     ↓
-汇报状态
-    ├─ 当前聚焦 Feature
-    ├─ 当前 phase
-    ├─ 进行中的 subtasks
-    └─ 待处理文档（pendingDocs）
-    ↓
-等待用户指示
+检查 project.refactoring.enabled
+    ├─ true → 加载 refactoring.md（重构模式）
+    └─ false → 继续正常工作流
+            ↓
+        汇报状态
+            ├─ 当前聚焦 Feature
+            ├─ 当前 phase
+            ├─ 进行中的 subtasks
+            └─ 待处理文档（pendingDocs）
+            ↓
+        等待用户指示
 ```
+
+**重构模式检测**：
+- 如果 `project.refactoring.enabled = true`，切换到 `refactoring.md` 执行规范
+- 重构完成后（`enabled = false`），自动回到本工作流
 
 ---
 
@@ -250,13 +258,16 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 ---
 
-*Version: v1.2.1*
-*Aligned with: flow-workflows.md v8.2, fea-hooks-integration.md v1.5*
+*Version: v1.3*
+*Aligned with: flow-workflows.md v8.2, fea-hooks-integration.md v1.5, flow-refactoring.md v2.3*
 *Updated: 2025-12-29*
 
 ---
 
 ## Changelog
+
+### v1.3 (2025-12-29)
+- §1 Session Start 添加重构模式检测：检查 project.refactoring.enabled，自动加载 refactoring.md
 
 ### v1.2.1 (2025-12-29)
 - 对齐 fea-hooks-integration v1.5：意图检测机制通过 UserPromptSubmit Hook 实现

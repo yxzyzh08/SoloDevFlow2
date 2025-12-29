@@ -127,7 +127,7 @@
 [提示用户确认]
     ↓
 [等待反馈]
-    ├─ 通过 → set-phase <id> done + deactivate
+    ├─ 通过 → set-phase <id> done + deactivate-feature
     ├─ 条件通过 → 记录问题，set-phase <id> done
     └─ 不通过 → 记录问题，返回实现阶段修复
 ```
@@ -194,7 +194,7 @@
     ↓
 set-phase <id> done
     ↓
-deactivate <id>
+deactivate-feature <id>
     ↓
 更新需求文档 Artifacts 章节（如需要）
     ↓
@@ -243,7 +243,7 @@ Feature 完成
 | 工具 | 用途 |
 |------|------|
 | `node scripts/state.js set-phase <id> done` | 标记完成 |
-| `node scripts/state.js deactivate <id>` | 取消激活 Work Item (v14.0) |
+| `node scripts/state.js deactivate-feature <id>` | 取消激活 Feature |
 | `node scripts/index.js` | 更新索引 |
 
 ---

@@ -9,8 +9,8 @@
       "path": "../CVM_Demo2"
     },
     {
-      "name": "devspec2",
-      "path": "../devspec2"
+      "name": "book_app",
+      "path": "../book_app"
     }
   ],
   "settings": {}

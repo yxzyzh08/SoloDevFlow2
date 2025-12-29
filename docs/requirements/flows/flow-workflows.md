@@ -6,7 +6,7 @@ status: done
 phase: done
 priority: P0
 domain: process
-version: "8.3"
+version: "8.4"
 ---
 
 # Flow: Workflows <!-- id: flow_workflows -->
@@ -14,7 +14,7 @@ version: "8.3"
 > 标准工作流，定义人机协作的输入处理和流程路由
 
 **执行规范**：[.solodevflow/flows/workflows.md](../../.solodevflow/flows/workflows.md)
-> 执行规范由 AI 根据本需求文档生成。需求变更后需重新生成执行规范。
+> 执行规范由 AI 根据本需求文档生成，模板位于 `template/flows/workflows.md`。
 
 ---
 
@@ -247,10 +247,17 @@ version: "8.3"
 ### 7.2 Session Start
 
 每次对话开始：
-1. 读取 `state.json` 和 `index.json`
-2. 显示活跃 Feature 和 phase
-3. 显示进行中的 subtasks
-4. 等待用户指示
+1. 读取 `state.json`
+2. **检查重构模式**：如果 `project.refactoring.enabled = true`，切换到 `refactoring.md` 执行规范
+3. 正常模式下继续：
+   - 显示活跃 Feature 和 phase
+   - 显示进行中的 subtasks
+   - 等待用户指示
+
+**重构模式自动切换**：
+- 重构模式通过 `state.json` 的 `project.refactoring.enabled` 标志控制
+- AI 在 Session Start 检测此标志，自动加载对应的执行规范
+- 重构完成后（`enabled = false`），自动回到正常工作流
 
 ---
 
@@ -465,7 +472,7 @@ node scripts/state.js add-subtask \
 
 ---
 
-*Version: v8.3*
+*Version: v8.4*
 *Created: 2024-12-20*
 *Updated: 2025-12-29*
-*Changes: v8.3 添加 §3.4 Work Item Type Routing, §13 Flow Type Handling（Module Impact Specifications 流程）；v8.2 添加 Review Assistance*
+*Changes: v8.4 §7.2 Session Start 添加重构模式检测（与 flow-refactoring.md 联动）；v8.3 添加 §3.4 Work Item Type Routing, §13 Flow Type Handling（Module Impact Specifications 流程）；v8.2 添加 Review Assistance*

@@ -11,16 +11,24 @@
 **每次对话开始**：
 
 ```
-读取 state.json / index.json
+读取 state.json
     ↓
-汇报状态
-    ├─ 当前聚焦 Feature
-    ├─ 当前 phase
-    ├─ 进行中的 subtasks
-    └─ 待处理文档（pendingDocs）
-    ↓
-等待用户指示
+检查 project.refactoring.enabled
+    ├─ true → 加载 refactoring.md（重构模式）
+    └─ false → 继续正常工作流
+            ↓
+        汇报状态
+            ├─ 当前聚焦 Feature
+            ├─ 当前 phase
+            ├─ 进行中的 subtasks
+            └─ 待处理文档（pendingDocs）
+            ↓
+        等待用户指示
 ```
+
+**重构模式检测**：
+- 如果 `project.refactoring.enabled = true`，切换到 `refactoring.md` 执行规范
+- 重构完成后（`enabled = false`），自动回到本工作流
 
 ---
 
@@ -54,7 +62,32 @@
 - "修复登录问题" → ❌ 不是直接执行（问题不明确）
 - "修复 login.js 第42行空指针" → ✅ 直接执行
 
-### 2.2 Phase-Based Routing
+### 2.2 Must Follow Process Criteria
+
+以下情况**必须**走需求变更流程，即使用户明确授权：
+
+| 变更类型 | 示例 | 流程 |
+|----------|------|------|
+| 数据结构变更 | 修改 state.json/index.json schema | 需求 → 审核 → 实现 |
+| API/命令接口变更 | 添加/删除/修改命令行参数 | 需求 → 审核 → 实现 |
+| 删除现有功能 | 删除 byType、删除命令别名 | 需求 → 审核 → 实现 |
+| 添加新功能 | 新增 Hook、新增验证规则 | 需求 → 审核 → 实现 |
+
+**不需要走流程**：
+| 变更类型 | 示例 |
+|----------|------|
+| Bug 修复 | 修复空指针、修复边界条件 |
+| 代码重构 | 重命名变量、提取函数（不改变行为）|
+| 文档更新 | 修复错别字、补充说明 |
+
+**关键判断**：
+```
+用户说"删除 X" → 是否改变系统行为/接口？
+  ├─ 是 → 必须走流程（即使用户明确授权）
+  └─ 否 → 可以直接执行
+```
+
+### 2.3 Phase-Based Routing
 
 | 当前 Phase | 默认路由 |
 |------------|----------|
@@ -147,10 +180,51 @@ pending → feature_requirements → feature_review → feature_design → featu
 | `feature_requirements` | Write/Edit `src/**/*`, `tests/**/*` |
 | `feature_review` | Write/Edit `docs/designs/**/*`, `src/**/*` |
 | `feature_design` | Write/Edit `src/**/*`, `tests/**/*` |
+| `done` | Write/Edit `src/**/*`, `scripts/**/*` (ask 确认) |
 
 ---
 
-## 7. Execution Principles
+## 7. Bug Fix Flow
+
+**Bug 修复流程**（适用于 status=done 的 Feature）：
+
+```
+发现 Bug
+    ↓
+根因分析（Root Cause Analysis）
+    ↓
+判断根因类型
+    ├─ 需求问题 → 修改需求文档 → feature_requirements → feature_review
+    ├─ 设计问题 → 修改设计文档 → feature_design → feature_review
+    └─ 实现问题 → 直接修复代码（无需修改文档）
+```
+
+### 7.1 根因类型判断
+
+| 根因类型 | 特征 | 处理方式 |
+|----------|------|----------|
+| **需求问题** | 需求描述不清、遗漏、矛盾 | 先更新需求文档 |
+| **设计问题** | 设计方案有缺陷、接口定义错误 | 先更新设计文档 |
+| **实现问题** | 代码逻辑错误，但需求和设计正确 | 直接修复代码 |
+
+### 7.2 示例
+
+| Bug | 根因分析 | 处理 |
+|-----|----------|------|
+| "用户名可以为空" | 需求未规定非空验证 → 需求问题 | 更新需求文档 |
+| "API 返回格式不一致" | 设计文档接口定义有歧义 → 设计问题 | 更新设计文档 |
+| "数组越界" | 代码边界条件处理错误 → 实现问题 | 直接修复代码 |
+
+### 7.3 Hook 行为
+
+当修改 done 状态 Feature 的代码时，PreToolUse Hook 会弹出确认：
+- 提醒进行根因分析
+- 用户确认后允许修改
+- 这是软性引导，不强制阻止
+
+---
+
+## 8. Execution Principles
 
 ### 始终做
 
@@ -159,6 +233,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 - 进入子流程 → 加载对应执行规范
 - 状态更新 → 通过 State CLI
 - 文档变更 → 运行 index.js
+- Bug 修复 → 先进行根因分析
 
 ### 绝不做
 
@@ -167,21 +242,45 @@ pending → feature_requirements → feature_review → feature_design → featu
 - 跳过 review 阶段
 - 未经人类批准更新 phase
 - 直接编辑 state.json
+- 跳过根因分析直接修复 done 状态的代码
 
 ---
 
-## 8. Tools Reference
+## 9. Tools Reference
 
 | 工具 | 用途 |
 |------|------|
 | `node scripts/state.js summary` | 获取状态摘要 |
 | `node scripts/state.js set-phase <id> <phase>` | 更新阶段 |
-| `node scripts/state.js activate-feature <id>` | 激活 Feature |
-| `node scripts/state.js deactivate-feature <id>` | 取消激活 Feature |
+| `node scripts/state.js activate <id>` | 激活 Work Item (v14.0) |
+| `node scripts/state.js deactivate <id>` | 取消激活 Work Item (v14.0) |
 | `node scripts/index.js` | 更新索引 |
 
 ---
 
-*Version: v1.0*
-*Aligned with: flow-workflows.md v8.2*
-*Updated: 2025-12-28*
+*Version: v1.3*
+*Aligned with: flow-workflows.md v8.2, fea-hooks-integration.md v1.5, flow-refactoring.md v2.3*
+*Updated: 2025-12-29*
+
+---
+
+## Changelog
+
+### v1.3 (2025-12-29)
+- §1 Session Start 添加重构模式检测：检查 project.refactoring.enabled，自动加载 refactoring.md
+
+### v1.2.1 (2025-12-29)
+- 对齐 fea-hooks-integration v1.5：意图检测机制通过 UserPromptSubmit Hook 实现
+- §2.2 定义"什么需要走流程"，H8 实现"如何检测"
+
+### v1.2 (2025-12-29)
+- 新增 §2.2 Must Follow Process Criteria：明确定义必须走流程的变更类型
+- 修复工作流设计缺陷：防止 AI 在用户明确授权时跳过需求流程
+
+### v1.1 (2025-12-28)
+- 新增 §7 Bug Fix Flow：根因分析流程
+- 更新 §6 Phase Guards：添加 done 状态守卫
+- 更新 §8 Execution Principles：添加根因分析相关原则
+
+### v1.0 (2025-12-28)
+- 初始版本

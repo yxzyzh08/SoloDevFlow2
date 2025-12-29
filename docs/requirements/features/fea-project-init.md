@@ -2,11 +2,11 @@
 type: feature
 id: project-init
 workMode: code
-status: done
-phase: done
+status: in_progress
+phase: feature_requirements
 priority: P0
 domain: tooling
-version: "1.5"
+version: "1.6"
 ---
 
 # Feature: Project Init <!-- id: feat_project_init -->
@@ -121,14 +121,22 @@ target-project/
 target-project/
 └── .solodevflow/
     └── flows/
-        └── workflows.md      # AI 执行规范
+        ├── workflows.md      # AI 执行规范（主工作流）
+        ├── refactoring.md    # AI 执行规范（重构模式）
+        ├── requirements.md   # AI 执行规范（需求处理）
+        ├── design.md         # AI 执行规范（设计处理）
+        ├── implementation.md # AI 执行规范（实现处理）
+        └── testing.md        # AI 执行规范（测试处理）
 ```
 
 **源路径**：`SoloDevFlow/template/flows/` → 目标项目 `.solodevflow/flows/`
 
 **规则**：
-- 直接复制，覆盖已存在的文件
+- 覆盖已存在的文件
 - 工作流文件是运行时实例，可被升级更新
+- **复制时清理无效引用**（仅非自举模式）：删除 `**需求文档**：[...](...)`
+  - 原因：该引用指向 SoloDevFlow 源项目的需求文档，在目标项目中无效
+  - **自举模式例外**：保留引用（SoloDevFlow 自身有这些需求文档，引用有效）
 
 #### C4: 命令安装
 
@@ -388,7 +396,8 @@ SoloDevFlow/
 | Item | Verification | Pass Criteria |
 |------|--------------|---------------|
 | 运行时目录 | 检查目标项目 | `.solodevflow/` 目录和初始文件存在 |
-| 工作流安装 | 检查目标项目 | `.solodevflow/flows/workflows.md` 存在 |
+| 工作流安装 | 检查目标项目 | `.solodevflow/flows/` 包含 6 个执行规范文件 |
+| 引用清理 | 检查 flows/*.md | 不包含 `**需求文档**：` 行（仅常规项目） |
 | 脚本安装 | 检查目标项目 | `.solodevflow/scripts/` 包含 6 个运行时脚本 + lib/ |
 | 命令安装 | 检查目标项目 | `.claude/commands/` 包含 7 个 write-*.md |
 | Hooks 安装 | 检查目标项目 | `.claude/hooks/` 包含 4 个钩子文件 + lib/ |
@@ -406,6 +415,7 @@ SoloDevFlow/
 | 自身检测 | 运行 `solodevflow init .` | 识别为自举模式，打印提示信息 |
 | init/upgrade 等效 | 分别运行两条命令 | 行为一致，都执行 bootstrap |
 | 工作流更新 | 检查 `.solodevflow/flows/` | 从 `template/flows/` 同步 |
+| 引用保留 | 检查 flows/*.md | 保留 `**需求文档**：` 行（自举模式不清理） |
 | 命令更新 | 检查 `.claude/commands/` | 从 `template/commands/` 同步 |
 | 规范不复制 | 检查 `docs/specs/` | 保持不变（源码不复制给自己） |
 | 脚本不复制 | 检查根目录 `scripts/` | 保持不变（源码不覆盖） |
@@ -459,7 +469,7 @@ SoloDevFlow/
 
 ---
 
-*Version: v1.5*
+*Version: v1.6*
 *Created: 2025-12-21*
-*Updated: 2025-12-28*
-*Changes: v1.5 添加 C5 Hooks 安装、移除 sourcePath、更新脚本列表（6个+lib/）、修复 Boundaries；v1.4 澄清自举模式；v1.3 函数编号修正*
+*Updated: 2025-12-29*
+*Changes: v1.6 C3 添加复制时清理无效引用规则（自举模式例外）、更新 flows 文件列表（6个）；v1.5 添加 C5 Hooks 安装、移除 sourcePath、更新脚本列表（6个+lib/）、修复 Boundaries；v1.4 澄清自举模式；v1.3 函数编号修正*

@@ -1,12 +1,14 @@
 {
-  "generated": "2025-12-29T17:01:33.980+08:00",
+  "generated": "2025-12-29T23:27:32.873+08:00",
   "summary": {
     "total": 18,
-    "done": 18,
-    "in_progress": 0,
+    "done": 17,
+    "in_progress": 1,
     "not_started": 0
   },
-  "activeWorkItems": [],
+  "activeWorkItems": [
+    "project-init"
+  ],
   "documents": [
     {
       "id": "design-hooks-integration",
@@ -148,8 +150,8 @@
       "type": "feature",
       "title": "Project Init",
       "workMode": "code",
-      "status": "done",
-      "phase": "done",
+      "status": "in_progress",
+      "phase": "feature_requirements",
       "priority": "P0",
       "domain": "tooling",
       "path": "docs/requirements/features/fea-project-init.md",
