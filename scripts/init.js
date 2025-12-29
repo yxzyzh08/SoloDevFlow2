@@ -575,6 +575,24 @@ async function copyToolFiles(config) {
   } else {
     log('  跳过 .claude/hooks/（自举模式使用源码）', 'info');
   }
+
+  // 6. Generate .claude/settings.local.json (non-bootstrap mode only)
+  // This is required for Claude Code to recognize and execute hooks
+  if (!config.bootstrap) {
+    log('  生成 .claude/settings.local.json...');
+    const settingsTemplatePath = path.join(SOLODEVFLOW_ROOT, 'scripts/templates/settings.local.json.template');
+    const settingsDestPath = path.join(targetPath, '.claude/settings.local.json');
+    if (fs.existsSync(settingsTemplatePath)) {
+      const settingsContent = fs.readFileSync(settingsTemplatePath, 'utf-8');
+      ensureDir(path.join(targetPath, '.claude'));
+      fs.writeFileSync(settingsDestPath, settingsContent);
+      log('    .claude/settings.local.json', 'success');
+    } else {
+      log('    settings.local.json.template 不存在，跳过', 'warn');
+    }
+  } else {
+    log('  跳过 .claude/settings.local.json（自举模式使用源码）', 'info');
+  }
 }
 
 // ============================================================================
@@ -684,6 +702,7 @@ function finalize(config) {
   - .solodevflow/scripts/（运行时脚本）
   - .claude/commands/（命令文件）
   - .claude/hooks/（Hook 脚本）
+  - .claude/settings.local.json（Hook 配置）
   - docs/specs/（规范文档）
   - CLAUDE.md（流程控制器）
 
