@@ -6,7 +6,7 @@ status: in_progress
 phase: feature_requirements
 priority: P0
 domain: tooling
-version: "1.6"
+version: "1.7"
 ---
 
 # Feature: Project Init <!-- id: feat_project_init -->
@@ -137,6 +137,9 @@ target-project/
 - **复制时清理无效引用**（仅非自举模式）：删除 `**需求文档**：[...](...)`
   - 原因：该引用指向 SoloDevFlow 源项目的需求文档，在目标项目中无效
   - **自举模式例外**：保留引用（SoloDevFlow 自身有这些需求文档，引用有效）
+- **复制时替换脚本路径**（仅非自举模式）：`node scripts/` → `node .solodevflow/scripts/`
+  - 原因：SoloDevFlow 源项目使用 `scripts/`，目标项目使用 `.solodevflow/scripts/`
+  - **自举模式例外**：保留原路径（SoloDevFlow 自身使用源码目录 `scripts/`）
 
 #### C4: 命令安装
 
@@ -398,6 +401,7 @@ SoloDevFlow/
 | 运行时目录 | 检查目标项目 | `.solodevflow/` 目录和初始文件存在 |
 | 工作流安装 | 检查目标项目 | `.solodevflow/flows/` 包含 6 个执行规范文件 |
 | 引用清理 | 检查 flows/*.md | 不包含 `**需求文档**：` 行（仅常规项目） |
+| 脚本路径替换 | 检查 flows/*.md | `node scripts/` 已替换为 `node .solodevflow/scripts/`（仅常规项目） |
 | 脚本安装 | 检查目标项目 | `.solodevflow/scripts/` 包含 6 个运行时脚本 + lib/ |
 | 命令安装 | 检查目标项目 | `.claude/commands/` 包含 7 个 write-*.md |
 | Hooks 安装 | 检查目标项目 | `.claude/hooks/` 包含 4 个钩子文件 + lib/ |
@@ -416,6 +420,7 @@ SoloDevFlow/
 | init/upgrade 等效 | 分别运行两条命令 | 行为一致，都执行 bootstrap |
 | 工作流更新 | 检查 `.solodevflow/flows/` | 从 `template/flows/` 同步 |
 | 引用保留 | 检查 flows/*.md | 保留 `**需求文档**：` 行（自举模式不清理） |
+| 脚本路径保留 | 检查 flows/*.md | 保留 `node scripts/`（自举模式不替换） |
 | 命令更新 | 检查 `.claude/commands/` | 从 `template/commands/` 同步 |
 | 规范不复制 | 检查 `docs/specs/` | 保持不变（源码不复制给自己） |
 | 脚本不复制 | 检查根目录 `scripts/` | 保持不变（源码不覆盖） |
@@ -469,7 +474,7 @@ SoloDevFlow/
 
 ---
 
-*Version: v1.6*
+*Version: v1.7*
 *Created: 2025-12-21*
 *Updated: 2025-12-29*
-*Changes: v1.6 C3 添加复制时清理无效引用规则（自举模式例外）、更新 flows 文件列表（6个）；v1.5 添加 C5 Hooks 安装、移除 sourcePath、更新脚本列表（6个+lib/）、修复 Boundaries；v1.4 澄清自举模式；v1.3 函数编号修正*
+*Changes: v1.7 C3 添加脚本路径替换规则（自举模式例外）；v1.6 C3 添加复制时清理无效引用规则（自举模式例外）、更新 flows 文件列表（6个）；v1.5 添加 C5 Hooks 安装、移除 sourcePath、更新脚本列表（6个+lib/）、修复 Boundaries；v1.4 澄清自举模式；v1.3 函数编号修正*
