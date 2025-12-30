@@ -50,10 +50,10 @@
     "lastGitCommit": "",
     "lastGitCommitMessage": "",
     "lastGitCommitAt": "",
-    "stateFileVersion": 445,
+    "stateFileVersion": 479,
     "totalStateChanges": 22
   },
-  "lastUpdated": "2025-12-30T13:50:16.609+08:00",
+  "lastUpdated": "2025-12-30T15:07:35.816+08:00",
   "subtasks": [
     {
       "id": "st_1767066580932_004",
@@ -168,10 +168,26 @@
       "status": "in_progress",
       "source": "ai",
       "createdAt": "2025-12-30T13:50:16.599+08:00"
+    },
+    {
+      "id": "st_1767074762813_016",
+      "workitemId": "hooks-integration",
+      "description": "提出修复方案",
+      "status": "in_progress",
+      "source": "ai",
+      "createdAt": "2025-12-30T14:06:02.814+08:00"
+    },
+    {
+      "id": "st_1767075013221_019",
+      "workitemId": "hooks-integration",
+      "description": "更新 spec-requirements.md（PRD 阶段定义）",
+      "status": "pending",
+      "source": "ai",
+      "createdAt": "2025-12-30T14:10:13.221+08:00"
     }
   ],
   "solodevflow": {
     "version": "2.0.0",
-    "upgradedAt": "2025-12-30T09:50:31.576+08:00"
+    "upgradedAt": "2025-12-30T15:07:07.032+08:00"
   }
 }

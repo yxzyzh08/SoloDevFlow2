@@ -169,7 +169,18 @@ const PROTECTED_FILES = [
 ];
 
 /**
- * 自动批准规则 (§4.3.3)
+ * 模板保护规则 (§4.3.5 H9)
+ * 阻止直接修改 .solodevflow/flows/，引导修改 template/flows/
+ */
+const TEMPLATE_PROTECTION_RULES = [
+  {
+    instancePattern: '.solodevflow/flows/*.md',
+    templatePattern: 'template/flows/'
+  }
+];
+
+/**
+ * 自动批准规则 (§4.3.6)
  */
 const AUTO_APPROVE_RULES = [
   { tool: 'Read', patterns: ['*.md', '**/*.md', '*.json', '**/*.json', '*.txt', '**/*.txt'] },
@@ -214,6 +225,34 @@ function checkAutoApprove(toolName, filePath) {
     }
   }
   return false;
+}
+
+/**
+ * 检查模板保护规则 (H9)
+ * 阻止直接修改 .solodevflow/flows/，引导修改 template/flows/
+ */
+function checkTemplateProtection(toolName, filePath) {
+  if (!filePath) return null;
+  if (toolName !== 'Write' && toolName !== 'Edit') return null;
+
+  for (const rule of TEMPLATE_PROTECTION_RULES) {
+    if (matchGlob(rule.instancePattern, filePath)) {
+      // 提取文件名
+      const filename = path.basename(filePath);
+      const templatePath = rule.templatePattern + filename;
+
+      return {
+        decision: 'block',
+        reason: `[Template Protection]\n` +
+                `不应直接修改 ${filePath}。\n\n` +
+                `正确流程：\n` +
+                `1. 修改 ${templatePath}（模板源）\n` +
+                `2. 审核通过后，人类运行升级脚本更新项目实例\n\n` +
+                `请改为修改: ${templatePath}`
+      };
+    }
+  }
+  return null;
 }
 
 /**
@@ -363,6 +402,12 @@ function makeDecision(toolName, toolInput, state) {
   // 1. 检查自动批准（最高优先级）
   if (checkAutoApprove(toolName, filePath)) {
     return formatAllowDecision();
+  }
+
+  // 1.5. 检查模板保护 (H9)
+  const templateResult = checkTemplateProtection(toolName, filePath);
+  if (templateResult) {
+    return formatBlockDecision(templateResult.reason);
   }
 
   // 2. 检查保护文件

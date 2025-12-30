@@ -3,10 +3,10 @@ type: feature
 id: hooks-integration
 workMode: code
 status: in_progress
-phase: feature_implementation
+phase: feature_review
 priority: P0
 domain: ai-config
-version: "1.6"
+version: "1.7"
 ---
 
 # Feature: Hooks Integration <!-- id: feat_hooks_integration -->
@@ -64,6 +64,7 @@ version: "1.6"
 | H6 | PostToolUse TodoWrite 同步 | AI 使用 TodoWrite 时自动同步到 state.json subtasks |
 | H7 | PreToolUse set-phase 守卫 | set-phase done 前检查是否有未完成的 subtasks |
 | H8 | UserPromptSubmit 意图检测 | 检测用户输入中的结构性变更意图，提示走需求流程 |
+| H9 | PreToolUse 模板保护 | 阻止直接修改 .solodevflow/flows/，引导修改 template/flows/ |
 
 ### 3.1 H1: SessionStart 上下文注入
 
@@ -232,6 +233,45 @@ Complete or skip these subtasks before marking the feature as done.
 - 软性引导，通过 additionalContext 注入提示
 - 已在需求阶段时不重复提示
 
+### 3.8 H9: PreToolUse 模板保护
+
+**问题背景**：
+
+AI 修改执行规范时，直接修改 `.solodevflow/flows/*.md`（项目实例），而应该修改 `template/flows/*.md`（模板源）。正确流程是：
+1. 修改 `template/flows/*.md`（模板）
+2. 审核通过
+3. 人类通过升级脚本更新 `.solodevflow/flows/`
+
+**触发条件**：PreToolUse，工具为 Write/Edit，目标路径匹配 `.solodevflow/flows/*.md`
+
+**行为**：
+- 返回 `block` 决策
+- 提示信息引导 AI 修改 `template/flows/` 而不是 `.solodevflow/flows/`
+
+**输出示例**：
+```
+[Template Protection]
+不应直接修改 .solodevflow/flows/{filename}。
+
+正确流程：
+1. 修改 template/flows/{filename}（模板源）
+2. 审核通过后，人类运行升级脚本更新项目实例
+
+请改为修改: template/flows/{filename}
+```
+
+**配套措施**（方案 A）：
+
+在 `template/flows/*.md` 文件头部添加注释，提醒 AI 这是模板源文件：
+
+```markdown
+<!--
+  Template Source File
+  修改此文件后，需要通过升级脚本同步到项目的 .solodevflow/flows/
+  请勿直接修改 .solodevflow/flows/ 中的文件
+-->
+```
+
 ---
 
 ## 4. Acceptance Criteria <!-- id: feat_hooks_integration_acceptance -->
@@ -249,6 +289,8 @@ Complete or skip these subtasks before marking the feature as done.
 | set-phase done 守卫 | 有未完成 subtasks 时执行 set-phase done | 显示 ask 确认，列出未完成任务 |
 | 意图检测 - 非需求阶段 | 在 `done` 状态下输入"删除 xxx" | additionalContext 包含 [Input Analysis Reminder] |
 | 意图检测 - 需求阶段 | 在 `feature_requirements` 阶段输入"删除 xxx" | 不显示提示（已在流程中） |
+| 模板保护 - 阻止修改实例 | 尝试 Edit `.solodevflow/flows/workflows.md` | 操作被阻止，提示修改 template/flows/ |
+| 模板保护 - 允许修改模板 | 尝试 Edit `template/flows/workflows.md` | 操作允许 |
 
 ---
 
@@ -304,13 +346,18 @@ Complete or skip these subtasks before marking the feature as done.
 
 ---
 
-*Version: v1.6*
+*Version: v1.7*
 *Created: 2025-12-27*
 *Updated: 2025-12-30*
 
 ---
 
 ## Changelog
+
+### v1.7 (2025-12-30)
+- 新增 H9: PreToolUse 模板保护（阻止直接修改 .solodevflow/flows/，引导修改 template/flows/）
+- 配套方案 A：模板文件头部添加注释提醒
+- 解决执行规范修改流程问题：模板 → 升级脚本 → 实例
 
 ### v1.6 (2025-12-30)
 - 新增文档层级定义：Product Level / Work Item Level / Implementation Level

@@ -1,3 +1,9 @@
+<!--
+  Template Source File
+  修改此文件后，需要通过升级脚本同步到项目的 .solodevflow/flows/
+  请勿直接修改 .solodevflow/flows/ 中的文件
+-->
+
 # Bug Fix Flow - Execution Spec
 
 > AI 执行规范：Bug 修复流程（代码优先，后补文档）

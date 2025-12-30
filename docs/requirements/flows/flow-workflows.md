@@ -6,15 +6,15 @@ status: done
 phase: done
 priority: P0
 domain: process
-version: "8.7"
+version: "9.1"
 ---
 
 # Flow: Workflows <!-- id: flow_workflows -->
 
 > 标准工作流，定义人机协作的输入处理和流程路由
 
-**执行规范**：[.solodevflow/flows/workflows.md](../../.solodevflow/flows/workflows.md)
-> 执行规范由 AI 根据本需求文档生成，模板位于 `template/flows/workflows.md`。
+**执行规范**：`.solodevflow/flows/workflows.md`
+> **重要**：AI 修改执行规范时，必须修改 `template/flows/workflows.md`（模板源），而非 `.solodevflow/flows/`（项目实例）。项目实例通过 `solodevflow upgrade .` 从模板同步。
 
 ---
 
@@ -27,7 +27,8 @@ version: "8.7"
 | 职责 | 说明 |
 |------|------|
 | **意图路由** | 识别用户输入类型，路由到对应子流程 |
-| **阶段流转** | 管理 Feature 生命周期（pending → done） |
+| **PRD 层管理** | 管理 PRD 生命周期（draft → decomposing → done） |
+| **Work Item 层管理** | 管理单个功能生命周期（pending → done） |
 | **上下文管理** | 跨对话保持状态 |
 
 **设计原则**：
@@ -366,9 +367,139 @@ Step 4: 文档同步（§5.4）
 
 ---
 
-## 9. Phase Lifecycle <!-- id: flow_phase -->
+## 9. Two-Layer Lifecycle <!-- id: flow_two_layer -->
 
-### 9.1 Phase Sequence
+> 工作流管理两个独立但相互关联的生命周期：PRD 层和 Work Item 层
+
+### 9.1 Layer Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          PRD Layer                                       │
+│                                                                          │
+│   prd_draft → prd_scope_review → prd_decomposing ──────→ prd_done       │
+│                                       │                      ↑           │
+│                                       │ (可回溯修改 PRD)      │           │
+│                                       ↓                      │           │
+│   ┌───────────────────────────────────────────────────────────┐         │
+│   │              Work Item Layer (每个独立运行)                 │         │
+│   │                                                            │         │
+│   │   Feature 1: pending → requirements → review → design →...│         │
+│   │   Feature 2: pending → requirements → review → design →...│         │
+│   │   Capability 1: ...                                        │         │
+│   │   Flow 1: ...                                              │─────────┘
+│   │                                                            │
+│   │   ※ 所有 Work Items 需求阶段完成 → PRD 可关闭              │
+│   └───────────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+| 层级 | 职责 | 状态存储 |
+|------|------|----------|
+| **PRD Layer** | 产品 scope 管理、需求分解协调 | `state.json → prd.phase` |
+| **Work Item Layer** | 单个功能的完整生命周期 | 文档 frontmatter `phase` |
+
+### 9.2 Layer Interaction
+
+| 交互场景 | 说明 |
+|----------|------|
+| **向下分解** | PRD scope 批准后，自动进入分解阶段，逐个调研 Work Items |
+| **向上回溯** | 调研 Work Item 时发现需要修改 PRD（新增 Domain、调整 scope） |
+| **汇聚关闭** | 所有 Work Items 需求阶段完成后，PRD 才能关闭 |
+
+---
+
+## 10. PRD Lifecycle <!-- id: flow_prd_lifecycle -->
+
+> PRD 作为顶层文档，有独立于 Work Item 的生命周期
+
+### 10.1 PRD Phase Sequence
+
+```
+prd_draft → prd_scope_review → prd_decomposing → prd_done
+```
+
+| Phase | 说明 | 下一步 |
+|-------|------|--------|
+| `prd_draft` | PRD 初稿编写中 | 完成后 → `prd_scope_review` |
+| `prd_scope_review` | High-level scope 审核 | 批准后 → `prd_decomposing` |
+| `prd_decomposing` | 需求分解阶段，逐个调研 Feature/Capability/Flow | 全部完成 → `prd_done` |
+| `prd_done` | PRD 关闭，所有 Work Items 可独立进入后续阶段 | - |
+
+### 10.2 PRD Scope Review
+
+> 这是 PRD 层的审核，不同于 Work Item 的 feature_review
+
+**审核内容**：
+- 产品愿景是否清晰
+- Domain 划分是否合理
+- Feature Roadmap 是否完整覆盖需求
+- 优先级排序是否正确
+
+**批准后**：
+- PRD phase 进入 `prd_decomposing`
+- **路由到 [flow-requirements.md](flow-requirements.md) §5 PRD Decomposing Flow**
+
+### 10.3 Decomposing Phase Routing
+
+> 分解阶段的执行细节定义在需求子流程中
+
+**路由规则**：
+- 当 `prd.phase = prd_decomposing` 时
+- 加载 [flow-requirements.md](flow-requirements.md) §5 PRD Decomposing Flow
+- 按该子流程执行需求分解
+
+**子流程职责**：
+- 读取 Feature Roadmap，按优先级处理
+- 调用 Flow A/B 进行需求调研
+- PRD 回溯修改规则
+- Work Item 需求完成判定
+
+### 10.4 PRD Close Criteria
+
+> PRD 关闭条件：所有 Work Items 需求阶段完成
+
+**检查清单**：
+- [ ] Feature Roadmap 中所有 Work Items 的 phase ≥ `feature_design`（即通过了 requirements 和 review）
+- [ ] 没有遗漏的 Work Items（所有发现的功能都已记录）
+- [ ] 人类显式确认 PRD 完整性
+
+**关闭命令**：
+```bash
+node scripts/state.js set-prd-phase prd_done
+```
+
+### 10.5 PRD State Fields
+
+> 存储在 `state.json` 中
+
+```json
+{
+  "prd": {
+    "phase": "prd_decomposing",
+    "scopeApprovedAt": "2025-01-01T00:00:00Z",
+    "decomposingStartedAt": "2025-01-01T00:00:00Z",
+    "totalWorkItems": 12,
+    "completedRequirements": 5
+  }
+}
+```
+
+| 字段 | 说明 |
+|------|------|
+| `phase` | PRD 当前阶段 |
+| `scopeApprovedAt` | Scope 审核通过时间 |
+| `decomposingStartedAt` | 进入分解阶段的时间 |
+| `totalWorkItems` | Feature Roadmap 中的 Work Item 总数 |
+| `completedRequirements` | 已完成需求阶段的 Work Item 数量 |
+
+---
+
+## 11. Work Item Phase Lifecycle <!-- id: flow_phase -->
+
+> 单个 Work Item（Feature/Capability/Flow）的生命周期
+
+### 11.1 Phase Sequence
 
 ```
 pending → feature_requirements → feature_review → feature_design → feature_implementation → feature_testing → done
@@ -384,7 +515,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 | `feature_implementation` | 编写代码 + 单元测试 + 集成测试 |
 | `feature_testing` | 系统级测试（E2E/性能/安全/回归） |
 
-### 9.2 Phase Transitions
+### 11.2 Phase Transitions
 
 | 转换 | 触发条件 | 命令 |
 |------|----------|------|
@@ -395,7 +526,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 | → testing | 实现完成 | `set-phase <id> feature_testing` |
 | → done | 测试通过 | `set-phase <id> done` |
 
-### 9.3 Phase Guards
+### 11.3 Phase Guards
 
 | Phase | 阻止的操作 |
 |-------|------------|
@@ -405,7 +536,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 ---
 
-## 10. Hooks Integration <!-- id: flow_hooks -->
+## 12. Hooks Integration <!-- id: flow_hooks -->
 
 > Hooks 实现工作流自动化，详见 [fea-hooks-integration.md](../features/fea-hooks-integration.md)
 
@@ -418,7 +549,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 ---
 
-## 11. Execution Principles <!-- id: flow_principles -->
+## 13. Execution Principles <!-- id: flow_principles -->
 
 ### 始终做
 
@@ -438,7 +569,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 ---
 
-## 12. Dependencies <!-- id: flow_dependencies -->
+## 14. Dependencies <!-- id: flow_dependencies -->
 
 | Dependency | Type | 说明 |
 |------------|------|------|
@@ -448,7 +579,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 ---
 
-## 13. Acceptance Criteria <!-- id: flow_acceptance -->
+## 15. Acceptance Criteria <!-- id: flow_acceptance -->
 
 | Item | Verification | Pass Criteria |
 |------|--------------|---------------|
@@ -459,15 +590,17 @@ pending → feature_requirements → feature_review → feature_design → featu
 | 审核流程 | 提交文档后 | 进入 review 阶段 |
 | 批准语法 | 说"批准" | phase 正确转换 |
 | 按需加载 | 进入子流程 | 只加载对应文档 |
-| Flow 类型识别 | type=flow + workMode=code | 进入 §14 特殊流程 |
+| Flow 类型识别 | type=flow + workMode=code | 进入 §16 特殊流程 |
+| PRD 层生命周期 | PRD 完成后 | 正确进入 prd_decomposing 而非直接设计阶段 |
+| 两层状态机 | PRD 和 Work Item | 独立管理，正确交互 |
 
 ---
 
-## 14. Flow Type Handling (workMode=code) <!-- id: flow_type_handling -->
+## 16. Flow Type Handling (workMode=code) <!-- id: flow_type_handling -->
 
 > Flow 类型 workMode=code 时的特殊处理流程
 
-### 14.1 Why Flow is Different
+### 16.1 Why Flow is Different
 
 | 维度 | Feature | Flow (workMode=code) |
 |------|---------|----------------------|
@@ -476,7 +609,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 | **需求粒度** | 单一功能需求 | 分解为多个模块需求 |
 | **审批范围** | 单一文档审批 | 多个模块影响需分别审批 |
 
-### 14.2 Flow Workflow Stages
+### 16.2 Flow Workflow Stages
 
 ```
 [REQUIREMENTS] → [REVIEW] → [MODULE IMPACT] → [DESIGN] → [IMPLEMENTATION] → [TESTING] → [DONE]
@@ -490,7 +623,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 3. 每个 Module Impact 单独审批
 4. 全部审批后才能进入 DESIGN 阶段
 
-### 14.3 Module Impact Specification Process
+### 16.3 Module Impact Specification Process
 
 ```
 [Flow 需求通过审批]
@@ -512,7 +645,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 [进入 DESIGN 阶段]
 ```
 
-### 14.4 子任务命名规范
+### 16.4 子任务命名规范
 
 ```bash
 # 创建 Module Impact 分析子任务
@@ -528,7 +661,7 @@ node scripts/state.js add-subtask \
   --source=impact-analysis
 ```
 
-### 14.5 Phase Transition Rules (Flow)
+### 16.5 Phase Transition Rules (Flow)
 
 | 转换 | 条件 | 说明 |
 |------|------|------|
@@ -536,7 +669,7 @@ node scripts/state.js add-subtask \
 | review → design | **所有 Module Impact 审批通过** | Flow 专属条件 |
 | design → implementation | 设计文档完成 | 标准转换 |
 
-### 14.6 Module Impact Specification Template
+### 16.6 Module Impact Specification Template
 
 在 Flow 文档中，Section 6 (或适当位置) 添加：
 
@@ -563,7 +696,7 @@ node scripts/state.js add-subtask \
 **审批状态**：🔲 待审批 / ✅ 已审批
 ```
 
-### 14.7 Execution Checklist
+### 16.7 Execution Checklist
 
 **进入 MODULE IMPACT 阶段时**：
 - [ ] 确认 Flow 类型且 workMode=code
@@ -579,7 +712,7 @@ node scripts/state.js add-subtask \
 
 ---
 
-*Version: v8.7*
+*Version: v9.1*
 *Created: 2024-12-20*
 *Updated: 2025-12-30*
-*Changes: v8.7 §5 Bug Fix Flow 重构为"代码优先"流程，新增 §5.4 Post-Fix Documentation Sync（设计文档直接更新，需求文档走变更流程）；v8.6 §7 Subflow References 重构，添加执行规范列和触发条件；v8.5 新增 §5 Bug Fix Flow*
+*Changes: v9.1 简化 §10 PRD Lifecycle，移除执行细节，添加路由到 flow-requirements.md §5；v9.0 新增 §9 Two-Layer Lifecycle 和 §10 PRD Lifecycle（两层状态机设计）*

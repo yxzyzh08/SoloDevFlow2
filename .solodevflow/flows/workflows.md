@@ -1,3 +1,9 @@
+<!--
+  Template Source File
+  修改此文件后，需要通过升级脚本同步到项目的 .solodevflow/flows/
+  请勿直接修改 .solodevflow/flows/ 中的文件
+-->
+
 # Workflows - Execution Spec
 
 > AI 执行规范：主工作流的执行流程
@@ -17,8 +23,15 @@
     ├─ true → 加载 refactoring.md（重构模式）
     └─ false → 继续正常工作流
             ↓
+        检查 prd.phase（PRD 层状态）
+            ├─ prd_draft → 提示继续编写 PRD
+            ├─ prd_scope_review → 提示审核 PRD scope
+            ├─ prd_decomposing → 汇报分解进度，继续调研 Work Items
+            └─ prd_done → 正常模式
+            ↓
         汇报状态
-            ├─ 当前聚焦 Feature
+            ├─ PRD 阶段和进度（如在分解中）
+            ├─ 当前聚焦 Work Item
             ├─ 当前 phase
             ├─ 进行中的 subtasks
             └─ 待处理文档（pendingDocs）
@@ -158,7 +171,72 @@ set-phase <id> feature_review
 
 ---
 
-## 5. Phase Lifecycle
+## 5. Two-Layer Lifecycle
+
+> 工作流管理两个独立但相互关联的生命周期
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        PRD Layer                                 │
+│                                                                  │
+│  prd_draft → prd_scope_review → prd_decomposing → prd_done      │
+│                                       │               ↑          │
+│                                       ↓               │          │
+│  ┌────────────────────────────────────────────────────┐         │
+│  │           Work Item Layer (每个独立运行)            │         │
+│  │                                                     │         │
+│  │  Feature 1: pending → requirements → review → ...  │─────────┘
+│  │  Feature 2: pending → requirements → review → ...  │
+│  │  ※ 所有 Work Items 需求阶段完成 → PRD 可关闭       │
+│  └────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────────────────┘
+```
+
+| 层级 | 职责 | 状态存储 |
+|------|------|----------|
+| **PRD Layer** | 产品 scope 管理、需求分解协调 | `state.json → prd.phase` |
+| **Work Item Layer** | 单个功能的完整生命周期 | 文档 frontmatter `phase` |
+
+---
+
+## 6. PRD Lifecycle
+
+### 6.1 PRD Phase Sequence
+
+```
+prd_draft → prd_scope_review → prd_decomposing → prd_done
+```
+
+| Phase | 说明 | AI 行为 |
+|-------|------|---------|
+| `prd_draft` | PRD 初稿编写中 | 调用 /write-prd 编写 |
+| `prd_scope_review` | High-level scope 审核 | 提示用户审核，等待批准 |
+| `prd_decomposing` | 需求分解阶段 | 加载 requirements.md §5 |
+| `prd_done` | PRD 关闭 | 正常模式，Work Items 独立推进 |
+
+### 6.2 PRD Decomposing Routing
+
+> 分解阶段的执行细节定义在需求子流程中
+
+**路由规则**：
+- 当 `prd.phase = prd_decomposing` 时
+- 加载 [requirements.md](requirements.md) §5 PRD Decomposing Flow
+- 按该子流程执行需求分解
+
+### 6.3 PRD Close Criteria
+
+**关闭条件**：
+- [ ] 所有 Work Items 的 phase ≥ `feature_design`
+- [ ] 人类显式确认 PRD 完整性
+
+**关闭命令**：
+```bash
+node scripts/state.js set-prd-phase prd_done
+```
+
+---
+
+## 7. Work Item Phase Lifecycle
 
 ```
 pending → feature_requirements → feature_review → feature_design → feature_implementation → feature_testing → done
@@ -174,7 +252,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 ---
 
-## 6. Phase Guards
+## 8. Phase Guards
 
 | Phase | 阻止的操作 |
 |-------|------------|
@@ -185,7 +263,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 ---
 
-## 7. Subflow References
+## 9. Subflow References
 
 > 子流程独立文档，按需加载
 
@@ -204,7 +282,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 ---
 
-## 8. Execution Principles
+## 10. Execution Principles
 
 ### 始终做
 
@@ -226,25 +304,39 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 ---
 
-## 9. Tools Reference
+## 11. Tools Reference
 
 | 工具 | 用途 |
 |------|------|
 | `node scripts/state.js summary` | 获取状态摘要 |
 | `node scripts/state.js set-phase <id> <phase>` | 更新阶段 |
-| `node scripts/state.js activate <id>` | 激活 Work Item (v14.0) |
-| `node scripts/state.js deactivate <id>` | 取消激活 Work Item (v14.0) |
+| `node scripts/state.js activate <id>` | 激活 Work Item |
+| `node scripts/state.js deactivate <id>` | 取消激活 Work Item |
+| `node scripts/state.js set-prd-phase <phase>` | 设置 PRD 阶段 |
+| `node scripts/state.js get-prd-progress` | 获取 PRD 分解进度 |
 | `node scripts/index.js` | 更新索引 |
 
 ---
 
-*Version: v1.4*
-*Aligned with: flow-workflows.md v8.6, fea-hooks-integration.md v1.5, flow-refactoring.md v2.3*
+*Version: v2.1*
+*Aligned with: flow-workflows.md v9.1, fea-state-management.md v16.0*
 *Updated: 2025-12-30*
 
 ---
 
 ## Changelog
+
+### v2.1 (2025-12-30)
+- §6.2 简化为 PRD Decomposing Routing（只保留路由，执行细节移至 requirements.md §5）
+- 对齐需求文档 flow-workflows.md v9.1
+
+### v2.0 (2025-12-30)
+- **重大更新**：两层状态机设计（PRD 层 + Work Item 层）
+- 新增 §5 Two-Layer Lifecycle：区分 PRD 层和 Work Item 层生命周期
+- 新增 §6 PRD Lifecycle：PRD 阶段流转、路由规则、关闭条件
+- §1 Session Start 添加 PRD 层状态检测
+- §11 Tools Reference 添加 PRD 相关命令
+- 对齐需求文档 flow-workflows.md v9.0
 
 ### v1.4 (2025-12-30)
 - §2 Input Analysis 添加 Bug 修复路由（加载 bugfix.md）

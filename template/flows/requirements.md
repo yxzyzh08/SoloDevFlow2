@@ -1,3 +1,9 @@
+<!--
+  Template Source File
+  修改此文件后，需要通过升级脚本同步到项目的 .solodevflow/flows/
+  请勿直接修改 .solodevflow/flows/ 中的文件
+-->
+
 # Requirements Flow - Execution Spec
 
 > AI 执行规范：需求处理阶段的执行流程
@@ -219,7 +225,90 @@ set-phase <id> feature_review
 
 ---
 
-## 5. Execution Principles
+## 5. Flow D: PRD Decomposing
+
+> PRD 分解阶段的执行流程，由 workflows.md §6.2 路由到此
+
+### 5.1 Trigger Condition
+
+当 `state.json → prd.phase = prd_decomposing` 时触发此流程。
+
+### 5.2 Decomposing Flow
+
+```
+[PRD scope 批准]
+    ↓
+[读取 PRD Feature Roadmap]
+    ↓
+[按优先级排序 Work Items]
+    ↓
+┌─────────────────────────────────────────────────────────┐
+│  循环处理每个 Work Item:                                  │
+│                                                          │
+│  1. activate <id>                                        │
+│  2. set-phase <id> feature_requirements                  │
+│  3. 判断 Work Item 类型:                                 │
+│     ├─ 新功能 → 调用 §2 Flow A                           │
+│     └─ 已有变更 → 调用 §3 Flow B                         │
+│  4. set-phase <id> feature_review                        │
+│  5. 等待人类审核                                         │
+│     ├─ 批准 → Work Item 需求阶段完成                      │
+│     ├─ 需要修改 PRD → §5.3 PRD 回溯修改                  │
+│     └─ 发现新 Work Item → §5.4 动态添加                  │
+│  6. 继续下一个 Work Item                                  │
+│                                                          │
+│  ※ Work Items 可并行调研（多个同时激活）                   │
+│  ※ 调研顺序按依赖关系和优先级决定                         │
+└─────────────────────────────────────────────────────────┘
+    ↓
+[所有 Work Items 需求阶段完成]
+    ↓
+[PRD 最终审核]
+    ↓
+[set-prd-phase prd_done]
+```
+
+### 5.3 PRD Backtrack Modification
+
+> 在需求调研过程中，可能发现需要修改 PRD
+
+**允许的修改**：
+
+| 修改类型 | 说明 | 执行方式 |
+|----------|------|----------|
+| 添加新 Domain | 发现需要新的领域划分 | 直接修改 PRD → 添加新 Work Items |
+| 添加新 Feature | 发现需要新功能 | 直接修改 PRD → 激活新 Work Item 调研 |
+| 修改 Feature 描述 | 调研后发现 scope 需调整 | 直接修改 PRD 章节 |
+| 调整优先级 | 根据调研结果重排 | 直接修改 PRD |
+| 删除 Feature | 调研后发现不需要 | 修改 PRD → 标记 Work Item 为 skipped |
+
+**不允许的修改**：
+- 根本性改变产品愿景（需重新走 PRD draft 流程）
+
+### 5.4 Dynamic Work Item Addition
+
+**发现新 Work Item 时**：
+1. 暂停当前调研
+2. 修改 PRD，添加新 Feature/Capability/Flow 到 Feature Roadmap
+3. 运行 `node scripts/index.js` 更新索引
+4. 决定是否立即调研新 Work Item（根据依赖关系）
+5. 继续原调研或切换到新 Work Item
+
+### 5.5 Decomposing Completion Check
+
+**完成条件**：
+- [ ] Feature Roadmap 中所有 Work Items 的 phase ≥ `feature_design`
+- [ ] 没有遗漏的 Work Items
+- [ ] 人类显式确认 PRD 完整性
+
+**完成后**：
+```bash
+node scripts/state.js set-prd-phase prd_done
+```
+
+---
+
+## 6. Execution Principles
 
 ### 始终做
 
@@ -238,7 +327,7 @@ set-phase <id> feature_review
 
 ---
 
-## 6. Tools Reference
+## 7. Tools Reference
 
 | 工具 | 用途 |
 |------|------|
@@ -250,6 +339,18 @@ set-phase <id> feature_review
 
 ---
 
-*Version: v1.0*
-*Aligned with: flow-requirements.md v1.0*
-*Updated: 2025-12-28*
+*Version: v2.0*
+*Aligned with: flow-requirements.md v2.0*
+*Updated: 2025-12-30*
+
+---
+
+## Changelog
+
+### v2.0 (2025-12-30)
+- 新增 §5 Flow D: PRD Decomposing（PRD 分解执行流程）
+- 重新编号 §5→§6 Execution Principles，§6→§7 Tools Reference
+- 对齐需求文档 flow-requirements.md v2.0
+
+### v1.0 (2025-12-28)
+- 初始版本

@@ -14,7 +14,7 @@ version: "2.5"
 > 文档架构重构工作流，将现有项目渐进式迁移至 SoloDevFlow 规范体系
 
 **执行规范**：`.solodevflow/flows/refactoring.md`
-> 执行规范由 AI 根据本需求文档生成，模板位于 `template/flows/refactoring.md`。
+> **重要**：AI 修改执行规范时，必须修改 `template/flows/refactoring.md`（模板源），而非 `.solodevflow/flows/`（项目实例）。项目实例通过 `solodevflow upgrade .` 从模板同步。
 
 ---
 

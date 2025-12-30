@@ -6,7 +6,7 @@ status: done
 phase: done
 priority: P0
 domain: process
-version: "15.0"
+version: "16.0"
 ---
 
 # Feature: State Management <!-- id: feat_state_management -->
@@ -166,8 +166,9 @@ version: "15.0"
 
 ```json
 {
-  "schemaVersion": "14.0.0",
+  "schemaVersion": "16.0.0",
   "project": { ... },
+  "prd": { ... },
   "flow": { ... },
   "domains": { ... },
   "subtasks": [],
@@ -246,6 +247,54 @@ version: "15.0"
 - v5.0：`currentFeature` → `activeFeatures`（支持多任务）
 - v14.0：`activeFeatures` → `activeWorkItems`（术语统一）
 - ~~`currentPhase`~~、~~`currentDomain`~~：v5.0 移除（冗余）
+
+#### prd (v16.0 新增)
+
+> PRD 层级生命周期管理，独立于 Work Item 层
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `phase` | enum | PRD 当前阶段（见下方枚举） |
+| `scopeApprovedAt` | string | Scope 审核通过时间（ISO 8601，可选） |
+| `decomposingStartedAt` | string | 进入分解阶段的时间（ISO 8601，可选） |
+| `totalWorkItems` | number | Feature Roadmap 中的 Work Item 总数（可选） |
+| `completedRequirements` | number | 已完成需求阶段的 Work Item 数量（可选） |
+
+**prd.phase 枚举**：
+
+| 值 | 说明 | 触发条件 |
+|----|------|----------|
+| `prd_draft` | PRD 初稿编写中 | 创建 PRD 时 |
+| `prd_scope_review` | High-level scope 审核 | PRD 初稿完成后 |
+| `prd_decomposing` | 需求分解阶段 | Scope 批准后，逐个调研 Feature/Capability/Flow |
+| `prd_done` | PRD 关闭 | 所有 Work Items 需求阶段完成 |
+
+**两层状态机设计**：
+- **PRD 层**：管理产品整体 scope 和需求分解进度（`state.json → prd.phase`）
+- **Work Item 层**：管理单个功能的完整生命周期（文档 frontmatter `phase`）
+
+**使用示例**：
+```json
+{
+  "prd": {
+    "phase": "prd_decomposing",
+    "scopeApprovedAt": "2025-01-01T00:00:00Z",
+    "decomposingStartedAt": "2025-01-01T00:00:00Z",
+    "totalWorkItems": 12,
+    "completedRequirements": 5
+  }
+}
+```
+
+**CLI 命令**：
+```bash
+node scripts/state.js set-prd-phase <phase>     # 设置 PRD 阶段
+node scripts/state.js get-prd-progress          # 获取 PRD 分解进度
+```
+
+**PRD 关闭条件**（详见 flow-workflows.md §10.5）：
+- Feature Roadmap 中所有 Work Items 的 phase ≥ `feature_design`
+- 人类显式确认 PRD 完整性
 
 #### Document Metadata（存储在文档 frontmatter）
 
@@ -741,9 +790,10 @@ echo "</tool-schema>"
 | v13.0 | **移除 session 结构**：session.mode/context/pendingRequirements 设计过于理想化，实际从未使用 |
 | v14.0 | **术语统一**：`activeFeatures` → `activeWorkItems`，`featureId` → `workitemId`。"Work Item" 作为 Feature/Capability/Flow 的统一术语。CLI 命令简化：`activate-feature` → `activate`，`deactivate-feature` → `deactivate` |
 | v15.0 | **CLI 自文档化**：新增 `--schema` 命令，输出结构化 JSON 描述所有命令、参数、枚举值和示例，解决 AI 调用工具时的命令猜测问题 |
+| v16.0 | **PRD 层生命周期**：新增 `prd` 顶层字段（phase/scopeApprovedAt/decomposingStartedAt/totalWorkItems/completedRequirements），实现两层状态机设计（PRD 层 + Work Item 层），修复 PRD 完成后直接进入设计阶段的流程缺陷 |
 
 **Schema 升级**：
-- v15.0: 无 Schema 变更，仅新增 CLI 命令
+- v16.0: 新增 `prd` 字段，需手动添加到 state.json
 - v14.0: 运行 `node scripts/state.js migrate-v14` 自动迁移
 - 其他版本：由 AI 直接编辑 state.json 执行
 
@@ -920,8 +970,8 @@ version: "12.1"
 
 ---
 
-*Version: v15.0*
+*Version: v16.0*
 *Created: 2024-12-20*
 *Updated: 2025-12-30*
-*Changes: v15.0 新增 CLI 自文档化（--schema 命令），输出结构化 JSON 描述所有命令，解决 AI 调用工具时的命令猜测问题*
+*Changes: v16.0 新增 PRD 层生命周期管理（prd 字段），实现两层状态机设计，修复 PRD 完成后直接进入设计阶段的流程缺陷*
 *Applies to: SoloDevFlow 2.0*

@@ -2,13 +2,13 @@
 type: design
 id: design-hooks-integration
 status: in_progress
-version: "1.5"
+version: "1.6"
 inputs:
   - docs/requirements/flows/flow-workflows.md#flow_hooks
   - docs/requirements/features/fea-hooks-integration.md
 ---
 
-# Hooks Integration Design v1.4 <!-- id: design_hooks_integration -->
+# Hooks Integration Design v1.6 <!-- id: design_hooks_integration -->
 
 > Claude Code Hooks Integration - 工作流自动化技术设计
 
@@ -378,7 +378,33 @@ Confirm you have analyzed the root cause?
 | `.env`, `*.key`, `*.pem` | block | 安全敏感文件 |
 | `docs/specs/*.md` | ask | 触发警告，提示运行影响分析 |
 
-#### 4.3.5 Auto-Approve Rules
+#### 4.3.5 Template Protection Rules (H9)
+
+阻止直接修改 `.solodevflow/flows/` 中的执行规范实例文件，引导 AI 修改 `template/flows/` 模板源。
+
+**保护规则**：
+
+| 文件模式 | 保护行为 | 原因 |
+|----------|----------|------|
+| `.solodevflow/flows/*.md` | block | 执行规范实例，应修改模板源 |
+| `template/flows/*.md` | allow | 模板源文件，允许修改 |
+
+**输出消息**：
+
+```
+[Template Protection]
+不应直接修改 .solodevflow/flows/{filename}。
+
+正确流程：
+1. 修改 template/flows/{filename}（模板源）
+2. 审核通过后，人类运行升级脚本更新项目实例
+
+请改为修改: template/flows/{filename}
+```
+
+**实现位置**：`pre-tool-use.js` 的 `checkTemplateProtection()` 函数。
+
+#### 4.3.6 Auto-Approve Rules
 
 | 工具 | 文件模式 | 决策 |
 |------|----------|------|
@@ -575,7 +601,7 @@ Based on requirements §9.10:
 
 ---
 
-*Version: v1.4*
+*Version: v1.6*
 *Created: 2025-12-25*
 *Updated: 2025-12-30*
 *Author: Claude Sonnet 4.5*
@@ -583,6 +609,10 @@ Based on requirements §9.10:
 ---
 
 ## Changelog
+
+### v1.6 (2025-12-30)
+- 新增 §4.3.5 Template Protection Rules (H9)：阻止直接修改 .solodevflow/flows/，引导修改 template/flows/
+- 重新编号 §4.3.5 → §4.3.6 Auto-Approve Rules
 
 ### v1.5 (2025-12-30)
 - 新增文档层级定义：Product Level / Work Item Level / Implementation Level

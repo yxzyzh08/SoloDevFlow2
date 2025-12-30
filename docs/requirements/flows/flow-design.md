@@ -14,7 +14,7 @@ version: "1.0"
 
 **Parent Flow**: [flow-workflows.md](flow-workflows.md) §6
 **执行规范**：`.solodevflow/flows/design.md`
-> 执行规范由 AI 根据本需求文档生成，模板位于 `template/flows/design.md`。
+> **重要**：AI 修改执行规范时，必须修改 `template/flows/design.md`（模板源），而非 `.solodevflow/flows/`（项目实例）。项目实例通过 `solodevflow upgrade .` 从模板同步。
 
 ---
 

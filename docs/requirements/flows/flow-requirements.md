@@ -5,7 +5,7 @@ workMode: document
 status: done
 priority: P0
 domain: process
-version: "1.0"
+version: "2.0"
 ---
 
 # Flow: Requirements Processing <!-- id: flow_requirements -->
@@ -14,7 +14,7 @@ version: "1.0"
 
 **Parent Flow**: [flow-workflows.md](flow-workflows.md) §6
 **执行规范**：`.solodevflow/flows/requirements.md`
-> 执行规范由 AI 根据本需求文档生成，模板位于 `template/flows/requirements.md`。
+> **重要**：AI 修改执行规范时，必须修改 `template/flows/requirements.md`（模板源），而非 `.solodevflow/flows/`（项目实例）。项目实例通过 `solodevflow upgrade .` 从模板同步。
 
 ---
 
@@ -286,9 +286,92 @@ Phase 4c: CONFIRM & EXECUTE（确认并执行）
 
 ---
 
-## 5. Methodology Reference <!-- id: flow_requirements_methodology -->
+## 5. Flow D: PRD Decomposing <!-- id: flow_prd_decomposing -->
 
-### 5.1 Impact Analysis Output Format
+> PRD 分解阶段的执行流程，由 flow-workflows.md §10.3 路由到此
+
+### 5.1 Trigger Condition
+
+当 `state.json → prd.phase = prd_decomposing` 时触发此流程。
+
+### 5.2 Decomposing Flow
+
+```
+[PRD scope 批准]
+    ↓
+[读取 PRD Feature Roadmap]
+    ↓
+[按优先级排序 Work Items]
+    ↓
+┌─────────────────────────────────────────────────────────┐
+│  循环处理每个 Work Item:                                  │
+│                                                          │
+│  1. activate <id>                                        │
+│  2. set-phase <id> feature_requirements                  │
+│  3. 判断 Work Item 类型:                                 │
+│     ├─ 新功能 → 调用 §2 Flow A                           │
+│     └─ 已有变更 → 调用 §3 Flow B                         │
+│  4. set-phase <id> feature_review                        │
+│  5. 等待人类审核                                         │
+│     ├─ 批准 → Work Item 需求阶段完成                      │
+│     ├─ 需要修改 PRD → §5.3 PRD 回溯修改                  │
+│     └─ 发现新 Work Item → §5.4 动态添加                  │
+│  6. 继续下一个 Work Item                                  │
+│                                                          │
+│  ※ Work Items 可并行调研（多个同时激活）                   │
+│  ※ 调研顺序按依赖关系和优先级决定                         │
+└─────────────────────────────────────────────────────────┘
+    ↓
+[所有 Work Items 需求阶段完成]
+    ↓
+[PRD 最终审核]
+    ↓
+[set-prd-phase prd_done]
+```
+
+### 5.3 PRD Backtrack Modification
+
+> 在需求调研过程中，可能发现需要修改 PRD
+
+**允许的修改**：
+
+| 修改类型 | 说明 | 执行方式 |
+|----------|------|----------|
+| 添加新 Domain | 发现需要新的领域划分 | 直接修改 PRD → 添加新 Work Items |
+| 添加新 Feature | 发现需要新功能 | 直接修改 PRD → 激活新 Work Item 调研 |
+| 修改 Feature 描述 | 调研后发现 scope 需调整 | 直接修改 PRD 章节 |
+| 调整优先级 | 根据调研结果重排 | 直接修改 PRD |
+| 删除 Feature | 调研后发现不需要 | 修改 PRD → 标记 Work Item 为 skipped |
+
+**不允许的修改**：
+- 根本性改变产品愿景（需重新走 PRD draft 流程）
+
+### 5.4 Dynamic Work Item Addition
+
+**发现新 Work Item 时**：
+1. 暂停当前调研
+2. 修改 PRD，添加新 Feature/Capability/Flow 到 Feature Roadmap
+3. 运行 `node scripts/index.js` 更新索引
+4. 决定是否立即调研新 Work Item（根据依赖关系）
+5. 继续原调研或切换到新 Work Item
+
+### 5.5 Decomposing Completion Check
+
+**完成条件**：
+- [ ] Feature Roadmap 中所有 Work Items 的 phase ≥ `feature_design`
+- [ ] 没有遗漏的 Work Items
+- [ ] 人类显式确认 PRD 完整性
+
+**完成后**：
+```bash
+node scripts/state.js set-prd-phase prd_done
+```
+
+---
+
+## 6. Methodology Reference <!-- id: flow_requirements_methodology -->
+
+### 6.1 Impact Analysis Output Format
 
 ```markdown
 ## 影响分析结果
@@ -306,14 +389,14 @@ Phase 4c: CONFIRM & EXECUTE（确认并执行）
 - [ ] 任务2
 ```
 
-### 5.2 Dependency Type Rules
+### 6.2 Dependency Type Rules
 
 | 类型 | 判断标准 | 示例 |
 |------|----------|------|
 | **hard** | 必须先有 A 才能实现 B；A 的接口是 B 的核心功能基础 | 认证模块(A) → 用户管理(B) |
 | **soft** | B 没有 A 也能工作，但功能受限；A 是 B 的增强而非基础 | 日志模块(A) → 大多数功能(B) |
 
-### 5.3 Subtasks Format
+### 6.3 Subtasks Format
 
 ```markdown
 ## Subtasks
@@ -328,7 +411,7 @@ Phase 4c: CONFIRM & EXECUTE（确认并执行）
 - 每个 subtask 明确操作对象和操作内容
 - 区分"更新"（必须做）和"评估"（可能需要）
 
-### 5.4 EARS Format
+### 6.4 EARS Format
 
 结构化需求表达格式：
 
@@ -341,7 +424,7 @@ Phase 4c: CONFIRM & EXECUTE（确认并执行）
 
 ---
 
-## 6. Dependencies <!-- id: flow_requirements_dependencies -->
+## 7. Dependencies <!-- id: flow_requirements_dependencies -->
 
 | Dependency | Type | 说明 |
 |------------|------|------|
@@ -352,7 +435,7 @@ Phase 4c: CONFIRM & EXECUTE（确认并执行）
 
 ---
 
-*Version: v1.1*
+*Version: v2.0*
 *Created: 2025-12-28*
-*Updated: 2025-12-28*
-*Changes: v1.1 添加执行规范引用；v1.0 从 fea-requirements-expert.md 提取，作为独立子流程*
+*Updated: 2025-12-30*
+*Changes: v2.0 新增 §5 Flow D: PRD Decomposing（PRD 分解执行流程，从 flow-workflows.md 迁移）；v1.1 添加执行规范引用*
