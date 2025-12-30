@@ -42,6 +42,7 @@
 意图识别
     ├─ 直接执行 → 立即执行，不走流程
     ├─ 产品咨询 → §3 Consulting
+    ├─ Bug 修复 → 加载 bugfix.md
     ├─ 需求处理 → 加载 requirements.md
     ├─ 设计处理 → 加载 design.md
     ├─ 实现处理 → 加载 implementation.md
@@ -184,43 +185,22 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 ---
 
-## 7. Bug Fix Flow
+## 7. Subflow References
 
-**Bug 修复流程**（适用于 status=done 的 Feature）：
+> 子流程独立文档，按需加载
 
-```
-发现 Bug
-    ↓
-根因分析（Root Cause Analysis）
-    ↓
-判断根因类型
-    ├─ 需求问题 → 修改需求文档 → feature_requirements → feature_review
-    ├─ 设计问题 → 修改设计文档 → feature_design → feature_review
-    └─ 实现问题 → 直接修复代码（无需修改文档）
-```
+| 子流程 | 文档 | 触发条件 |
+|--------|------|----------|
+| **需求流程** | [requirements.md](requirements.md) | `feature_requirements` 阶段 |
+| **设计流程** | [design.md](design.md) | `feature_design` 阶段 |
+| **实现流程** | [implementation.md](implementation.md) | `feature_implementation` 阶段 |
+| **测试流程** | [testing.md](testing.md) | `feature_testing` 阶段 |
+| **Bug 修复流程** | [bugfix.md](bugfix.md) | 报告/发现 Bug |
+| **重构流程** | [refactoring.md](refactoring.md) | `project.refactoring.enabled = true` |
 
-### 7.1 根因类型判断
-
-| 根因类型 | 特征 | 处理方式 |
-|----------|------|----------|
-| **需求问题** | 需求描述不清、遗漏、矛盾 | 先更新需求文档 |
-| **设计问题** | 设计方案有缺陷、接口定义错误 | 先更新设计文档 |
-| **实现问题** | 代码逻辑错误，但需求和设计正确 | 直接修复代码 |
-
-### 7.2 示例
-
-| Bug | 根因分析 | 处理 |
-|-----|----------|------|
-| "用户名可以为空" | 需求未规定非空验证 → 需求问题 | 更新需求文档 |
-| "API 返回格式不一致" | 设计文档接口定义有歧义 → 设计问题 | 更新设计文档 |
-| "数组越界" | 代码边界条件处理错误 → 实现问题 | 直接修复代码 |
-
-### 7.3 Hook 行为
-
-当修改 done 状态 Feature 的代码时，PreToolUse Hook 会弹出确认：
-- 提醒进行根因分析
-- 用户确认后允许修改
-- 这是软性引导，不强制阻止
+**加载策略**：
+- 主流程（本文档）：每次 Session 加载
+- 子流程：进入对应阶段或触发条件时按需加载
 
 ---
 
@@ -258,13 +238,18 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 ---
 
-*Version: v1.3*
-*Aligned with: flow-workflows.md v8.2, fea-hooks-integration.md v1.5, flow-refactoring.md v2.3*
-*Updated: 2025-12-29*
+*Version: v1.4*
+*Aligned with: flow-workflows.md v8.6, fea-hooks-integration.md v1.5, flow-refactoring.md v2.3*
+*Updated: 2025-12-30*
 
 ---
 
 ## Changelog
+
+### v1.4 (2025-12-30)
+- §2 Input Analysis 添加 Bug 修复路由（加载 bugfix.md）
+- §7 重构为 Subflow References：Bug Fix Flow 独立为 bugfix.md
+- 对齐需求文档 flow-workflows.md v8.5
 
 ### v1.3 (2025-12-29)
 - §1 Session Start 添加重构模式检测：检查 project.refactoring.enabled，自动加载 refactoring.md

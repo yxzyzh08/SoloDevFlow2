@@ -13,8 +13,13 @@
 const fs = require('fs');
 const path = require('path');
 
-const STATE_FILE = path.join(__dirname, '..', '.solodevflow', 'state.json');
-const INDEX_FILE = path.join(__dirname, '..', '.solodevflow', 'index.json');
+// 自动检测项目根目录
+const isInstalledProject = __dirname.includes('.solodevflow');
+const PROJECT_ROOT = isInstalledProject
+  ? path.join(__dirname, '../..')
+  : path.join(__dirname, '..');
+const STATE_FILE = path.join(PROJECT_ROOT, '.solodevflow', 'state.json');
+const INDEX_FILE = path.join(PROJECT_ROOT, '.solodevflow', 'index.json');
 
 /**
  * Read JSON file safely

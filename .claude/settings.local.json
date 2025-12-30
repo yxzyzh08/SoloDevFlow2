@@ -27,7 +27,10 @@
       "Bash(npm run test:kb:*)",
       "WebFetch(domain:github.com)",
       "Bash(node:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(for f in template/flows/*.md)",
+      "Bash(done)"
     ]
   },
   "hooks": {

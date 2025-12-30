@@ -4,7 +4,13 @@ const path = require('path');
 const { execSync } = require('child_process');
 const { toBeijingISOString } = require('./lib/datetime');
 
-const PROJECT_ROOT = path.join(__dirname, '..');
+// 自动检测项目根目录：
+// - 如果在 .solodevflow/scripts/ 下（目标项目），回退两级
+// - 如果在 scripts/ 下（源项目），回退一级
+const isInstalledProject = __dirname.includes('.solodevflow');
+const PROJECT_ROOT = isInstalledProject
+  ? path.join(__dirname, '../..')
+  : path.join(__dirname, '..');
 const STATE_FILE = path.join(PROJECT_ROOT, '.solodevflow/state.json');
 const INDEX_FILE = path.join(PROJECT_ROOT, '.solodevflow/index.json');
 const LOCK_FILE = path.join(PROJECT_ROOT, '.solodevflow/state.lock');

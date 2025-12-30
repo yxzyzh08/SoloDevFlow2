@@ -35,7 +35,7 @@
   - Features: done/total
   - Capabilities: done/total
   - Flows: done/total
-  - Designs: done/total (或 skipped)
+  - Designs: done/total
 
 下一步：[具体建议]
 ```
@@ -189,46 +189,48 @@ Output: 需求文档体系
 
 ---
 
-## 5. Phase: DESIGN（可选）
+## 5. Phase: DESIGN（强制）
 
-> 为复杂 Feature 补充设计文档
+> 按设计规范重构所有设计文档
+
+**核心原则**：
+- **强制执行**：无论原项目是否有设计文档，都进入设计重构阶段
+- **结构重构优先**：聚焦文档组织和结构的标准化，不做内容的重大变更
+- **参考原有内容**：充分复用原设计文档的有效内容
 
 **AI 行为**：
 
 ```
-Step 4.1: 识别需要设计的 Feature
-    ├─ 扫描所有 Feature Spec
-    ├─ 筛选 design_depth: required
-    └─ 列出待补充设计的 Feature 清单
+Step 4.1: 识别现有设计文档
+    ├─ 扫描项目中的设计相关文档
+    │   ├─ docs/ 目录下的架构/设计文档
+    │   ├─ 文件名含 design/architecture/spec 的文档
+    │   └─ README 中的技术架构章节
+    └─ 列出待重构的设计文档清单
 
-Step 4.2: 逐个编写设计文档
+Step 4.2: 匹配 Feature 与设计需求
+    ├─ 扫描所有 Feature Spec
+    ├─ 为每个 Feature 确定设计需求：
+    │   ├─ design_depth: required → 必须有独立设计文档
+    │   └─ design_depth: optional → 参考原有内容决定
+    └─ 生成设计文档编写清单
+
+Step 4.3: 逐个重构设计文档
     ├─ 对每个需要设计的 Feature：
+    │   ├─ 读取对应的原设计文档（如有）
     │   ├─ 读取 Feature Spec 理解需求
-    │   ├─ 分析现有代码实现
-    │   ├─ 使用 /write-design 命令
+    │   ├─ 使用 /write-design 命令（参考原内容）
+    │   ├─ 确保符合设计规范结构
     │   └─ 更新 Feature 的 Artifacts 章节
     └─ 向用户汇报进度
 
-Step 4.3: 用户决策
-    └─ 用户可选择：
-        ├─ 继续完成所有设计
-        └─ 跳过，后续按需补充
+Step 4.4: 归档原设计文档
+    └─ 将原设计文档移至 docs/legacy/（见 §10）
 
-Output: 设计文档（或跳过标记）
+Output: 符合规范的设计文档体系
 ```
 
-**跳过设计**：
-
-```
-用户说"跳过设计"
-    ↓
-更新 state.json:
-  project.refactoring.progress.designs.skipped = true
-    ↓
-进入 VALIDATE 阶段
-```
-
-**退出条件**：设计文档完成或用户跳过 → 进入 VALIDATE 阶段
+**退出条件**：所有需要设计的 Feature 都已完成设计文档重构 → 进入 VALIDATE 阶段
 
 ---
 
@@ -278,7 +280,7 @@ Output: 验证报告 + 重构完成状态
 | Feature | X | ✓ |
 | Capability | X | ✓ |
 | Flow | X | ✓ |
-| Design | X | ✓/skipped |
+| Design | X | ✓ |
 
 ### 验证结果
 - [x] npm run validate:docs 通过
@@ -339,7 +341,110 @@ Output: 验证报告 + 重构完成状态
 
 ---
 
-## 10. Execution Principles
+## 10. Legacy Document Archiving
+
+> 老项目文档识别与归档执行指导
+
+### 归档规则
+
+| 规则 | 内容 |
+|------|------|
+| **归档目录** | `docs/legacy/` |
+| **归档时机** | 对应新文档编写完成后立即归档 |
+| **版本控制** | 归档目录纳入 Git |
+| **强制执行** | 重构完成前，所有识别到的老文档必须归档 |
+
+### 老项目文档识别规则
+
+> AI 必须主动识别并归档老项目文档
+
+**识别范围**：
+
+| 文档类型 | 识别规则 | 示例 |
+|----------|----------|------|
+| 需求文档 | 文件名含 requirement/spec/需求/功能 | `requirements.md`, `功能说明.md` |
+| 设计文档 | 文件名含 design/architecture/架构/设计 | `architecture.md`, `系统设计.md` |
+| 测试文档 | 文件名含 test/测试/qa | `test-plan.md`, `测试用例.md` |
+| API 文档 | 文件名含 api/接口 | `api.md`, `接口文档.md` |
+| 产品文档 | 文件名含 prd/product/产品 | `prd.md`, `产品说明.md` |
+
+**识别位置**：
+
+```
+项目根目录/
+├─ docs/                    # 主要扫描目录
+│   ├─ *.md                 # 所有 markdown 文件
+│   └─ */                   # 所有子目录
+├─ *.md                     # 根目录 markdown 文件
+└─ doc/                     # 备选文档目录
+```
+
+**识别排除**：
+
+| 排除项 | 原因 |
+|--------|------|
+| `docs/requirements/` | SoloDevFlow 标准目录 |
+| `docs/designs/` | SoloDevFlow 标准目录 |
+| `docs/legacy/` | 已归档目录 |
+| `.solodevflow/` | 系统目录 |
+
+### 归档流程
+
+```
+新文档编写完成
+    ↓
+验证通过
+    ↓
+扫描并识别对应的老文档
+    ├─ 按文档类型匹配
+    ├─ 按功能模块匹配
+    └─ 按文件内容关键词匹配
+    ↓
+执行归档：
+    mv <老文档> docs/legacy/
+    ├─ 保持原文件名
+    ├─ 如有冲突，添加日期后缀（如 readme-20251230.md）
+    └─ 保留目录结构（如 docs/legacy/api/）
+    ↓
+向用户汇报归档结果
+```
+
+### 各阶段归档时机
+
+| 阶段 | 触发条件 | 归档内容 |
+|------|----------|----------|
+| PRD | 新 PRD 完成 | README 中的产品说明、老产品文档 |
+| REQUIREMENTS | 每个 Feature Spec 完成 | 对应功能的老需求文档 |
+| DESIGN | 每个 Design Doc 完成 | 对应模块的老架构/设计文档 |
+| VALIDATE | 全量验证通过 | **强制归档剩余所有老文档** |
+
+### VALIDATE 阶段强制归档
+
+```
+全量验证通过
+    ↓
+执行最终归档扫描
+    ├─ 扫描所有文档目录
+    ├─ 识别未归档的老文档
+    └─ 列出待归档清单
+    ↓
+批量归档剩余老文档
+    ↓
+生成归档报告
+    └─ 包含：已归档文档列表、归档前后路径映射
+```
+
+### 不归档的文档
+
+- README.md（更新而非归档）
+- LICENSE
+- CHANGELOG.md
+- 配置文件（.gitignore 等）
+- 代码注释/内联文档
+
+---
+
+## 11. Execution Principles
 
 ### 始终做
 
@@ -357,6 +462,13 @@ Output: 验证报告 + 重构完成状态
 
 ---
 
-*Version: v1.0*
-*Aligned with: flow-refactoring.md v2.3*
+*Version: v1.2*
+*Aligned with: flow-refactoring.md v2.5*
 *Created: 2025-12-29*
+*Updated: 2025-12-30*
+
+## Changelog
+
+- **v1.2** (2025-12-30): §5 DESIGN 从"可选"改为"强制"；§10 增强老项目文档识别规则（识别范围、识别位置、排除规则、VALIDATE 阶段强制归档）
+- **v1.1** (2025-12-30): 添加 §10 Legacy Document Archiving，同步需求文档 v2.4 的归档策略
+- **v1.0** (2025-12-29): 初始版本

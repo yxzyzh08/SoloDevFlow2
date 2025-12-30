@@ -2,11 +2,11 @@
 type: feature
 id: project-init
 workMode: code
-status: in_progress
-phase: feature_requirements
+status: done
+phase: done
 priority: P0
 domain: tooling
-version: "1.7"
+version: "1.8"
 ---
 
 # Feature: Project Init <!-- id: feat_project_init -->
@@ -348,7 +348,7 @@ state.solodevflow.upgradedAt = new Date().toISOString();
 | `.solodevflow/flows/` | **覆盖** | 从 `template/flows/` 同步 |
 | `.solodevflow/scripts/` | **不创建** | 使用根目录 `scripts/` 源码 |
 | `.claude/commands/` | **覆盖** | 从 `template/commands/` 同步 |
-| `.claude/hooks/` | **不覆盖** | 使用 `src/hooks/` 源码（自举模式） |
+| `.claude/hooks/` | **覆盖** | 从 `src/hooks/` 同步（Claude Code 只识别此目录） |
 | `docs/specs/` | **跳过** | 源码已存在，不复制给自己 |
 | `scripts/` | **跳过** | 源码已存在，不覆盖 |
 | `CLAUDE.md` | **跳过** | 保留项目自身的配置 |
@@ -376,19 +376,81 @@ SoloDevFlow/
     └── commands/         # ✅ 从 template/commands/ 同步
 ```
 
+##### 模式4：重构项目升级（`solodevflow upgrade/init <path>` 当 `refactoring.enabled = true`）
+
+**使用场景**：项目正在进行重构（从现有代码迁移到 SoloDevFlow 规范），需要升级 SoloDevFlow 版本以获取新功能或修复。
+
+**检测条件**：
+```javascript
+const state = require(path.join(targetPath, '.solodevflow/state.json'));
+const isInstalled = fs.existsSync(path.join(targetPath, '.solodevflow'));
+const isRefactoringProject = state.project?.refactoring?.enabled === true;
+
+// init 命令特殊处理：已安装 + 重构状态 → 进入重构升级流程
+if (command === 'init' && isInstalled && isRefactoringProject) {
+  // 不报错，而是进入重构升级流程
+  return executeRefactoringUpgrade();
+}
+```
+
+**命令行为**：
+```bash
+# 两条命令在重构项目上等效
+solodevflow init <path>     # 已安装 + 重构状态 → 进入重构升级流程
+solodevflow upgrade <path>  # 重构状态 → 执行重构升级
+```
+
+| 文件/目录 | 操作 | 说明 |
+|----------|------|------|
+| `.solodevflow/state.json` | **部分更新** | 更新版本信息，**保留重构状态** |
+| `.solodevflow/flows/` | **覆盖** | 使用新版本执行规范 |
+| `.solodevflow/scripts/` | **覆盖** | 使用新版本脚本 |
+| `.claude/commands/` | **覆盖** | 使用新版本命令 |
+| `.claude/hooks/` | **覆盖** | 使用新版本钩子 |
+| `docs/specs/` | **覆盖** | 使用新版本规范 |
+| `docs/requirements/*` | **保留** | 用户已编写的需求文档不动 |
+| `docs/designs/*` | **保留** | 用户已编写的设计文档不动 |
+| `docs/legacy/*` | **保留** | 已归档的老文档不动 |
+| `CLAUDE.md` | **覆盖** | 使用新版本配置 |
+
+**state.json 更新规则**：
+```javascript
+// ✅ 只更新版本信息
+state.solodevflow.version = newVersion;
+state.solodevflow.upgradedAt = new Date().toISOString();
+
+// ✅ 保留重构状态（关键）
+// state.project.refactoring.enabled    - 保留
+// state.project.refactoring.phase      - 保留
+// state.project.refactoring.progress   - 保留
+// state.project.refactoring.startedAt  - 保留
+// state.project.refactoring.completedAt - 保留
+
+// ✅ 保留用户数据
+// state.project.name, state.schemaVersion 等 - 保留
+```
+
+**升级后行为**：
+- 继续当前重构阶段（phase 不变）
+- 使用新版本的执行规范（`.solodevflow/flows/refactoring.md`）
+- 重构进度保持不变
+
 **核心差异总结**：
 
-| 操作 | 常规安装 | 常规升级 | 自举模式 |
-|------|---------|---------|---------|
-| `.solodevflow/flows/` | ✅ 创建 | ✅ 覆盖 | ✅ 同步 |
-| `.solodevflow/scripts/` | ✅ 创建 | ✅ 覆盖 | ❌ 不创建 |
-| `.claude/commands/` | ✅ 创建 | ✅ 覆盖 | ✅ 同步 |
-| `.claude/hooks/` | ✅ 创建 | ✅ 覆盖 | ❌ 跳过 |
-| `docs/specs/` | ✅ 复制 | ✅ 覆盖 | ❌ 跳过 |
-| `CLAUDE.md` | ✅ 生成 | ✅ 覆盖 | ❌ 跳过 |
-| `state.json` | 创建空数据 | 保留数据 | 保留数据 |
-| `init` 命令 | 首次安装 | 报错 | 等效 upgrade |
-| `upgrade` 命令 | 报错 | 更新 | 执行 bootstrap |
+| 操作 | 常规安装 | 常规升级 | 自举模式 | 重构升级 |
+|------|---------|---------|---------|---------|
+| `.solodevflow/flows/` | ✅ 创建 | ✅ 覆盖 | ✅ 同步 | ✅ 覆盖 |
+| `.solodevflow/scripts/` | ✅ 创建 | ✅ 覆盖 | ❌ 不创建 | ✅ 覆盖 |
+| `.claude/commands/` | ✅ 创建 | ✅ 覆盖 | ✅ 同步 | ✅ 覆盖 |
+| `.claude/hooks/` | ✅ 创建 | ✅ 覆盖 | ✅ 同步 | ✅ 覆盖 |
+| `docs/specs/` | ✅ 复制 | ✅ 覆盖 | ❌ 跳过 | ✅ 覆盖 |
+| `docs/requirements/*` | - | - | - | ✅ 保留 |
+| `docs/designs/*` | - | - | - | ✅ 保留 |
+| `docs/legacy/*` | - | - | - | ✅ 保留 |
+| `CLAUDE.md` | ✅ 生成 | ✅ 覆盖 | ❌ 跳过 | ✅ 覆盖 |
+| `state.json` | 创建空数据 | 保留数据 | 保留数据 | 保留重构状态 |
+| `init` 命令 | 首次安装 | 报错 | 等效 upgrade | 等效 upgrade |
+| `upgrade` 命令 | 报错 | 更新 | 执行 bootstrap | 重构升级 |
 
 ---
 
@@ -430,6 +492,28 @@ SoloDevFlow/
 | 版本更新 | 检查 state.json | `solodevflow.version` 已更新 |
 | 幂等性 | 重复运行自举 | 可多次执行，不破坏项目数据 |
 
+### 3.3 重构项目升级
+
+| Item | Verification | Pass Criteria |
+|------|--------------|---------------|
+| upgrade 重构检测 | 运行 `upgrade` 当 `refactoring.enabled=true` | 识别为重构项目，执行重构升级流程 |
+| init 重构检测 | 运行 `init` 当已安装且 `refactoring.enabled=true` | 不报错，进入重构升级流程 |
+| init/upgrade 等效 | 在重构项目上分别运行两条命令 | 行为一致，都执行重构升级 |
+| 工作流更新 | 检查 `.solodevflow/flows/` | 使用新版本执行规范 |
+| 脚本更新 | 检查 `.solodevflow/scripts/` | 使用新版本脚本 |
+| 命令更新 | 检查 `.claude/commands/` | 使用新版本命令 |
+| Hooks 更新 | 检查 `.claude/hooks/` | 使用新版本钩子 |
+| 规范更新 | 检查 `docs/specs/` | 使用新版本规范 |
+| 需求文档保留 | 检查 `docs/requirements/*` | 用户编写的文档保持不变 |
+| 设计文档保留 | 检查 `docs/designs/*` | 用户编写的文档保持不变 |
+| 归档文档保留 | 检查 `docs/legacy/*` | 已归档文档保持不变 |
+| 重构状态保留 | 检查 state.json | `project.refactoring.*` 全部保留 |
+| 重构阶段保留 | 检查 state.json | `project.refactoring.phase` 保持不变 |
+| 重构进度保留 | 检查 state.json | `project.refactoring.progress` 保持不变 |
+| 版本更新 | 检查 state.json | `solodevflow.version` 已更新 |
+| 升级时间更新 | 检查 state.json | `solodevflow.upgradedAt` 已更新 |
+| 继续重构 | 升级后 SessionStart | 正确显示重构进度，可继续重构 |
+
 ---
 
 ## 4. Artifacts <!-- id: feat_project_init_artifacts -->
@@ -453,6 +537,7 @@ SoloDevFlow/
 - 初始化 SoloDevFlow 到目标项目（init 命令）
 - 升级已安装的 SoloDevFlow（upgrade 命令）
 - 自举模式（SoloDevFlow 自身升级）
+- 重构项目升级（保留重构状态和用户文档）
 - 复制规范、命令、工具、Hooks
 - 生成配置文件
 
@@ -474,7 +559,7 @@ SoloDevFlow/
 
 ---
 
-*Version: v1.7*
+*Version: v1.9*
 *Created: 2025-12-21*
-*Updated: 2025-12-29*
-*Changes: v1.7 C3 添加脚本路径替换规则（自举模式例外）；v1.6 C3 添加复制时清理无效引用规则（自举模式例外）、更新 flows 文件列表（6个）；v1.5 添加 C5 Hooks 安装、移除 sourcePath、更新脚本列表（6个+lib/）、修复 Boundaries；v1.4 澄清自举模式；v1.3 函数编号修正*
+*Updated: 2025-12-30*
+*Changes: v1.9 修复自举模式 hooks 同步：`.claude/hooks/` 从"跳过"改为"同步"（Claude Code 只识别此目录）；v1.8 新增模式4：重构项目升级（保留重构状态和用户文档）；v1.7 C3 添加脚本路径替换规则（自举模式例外）；v1.6 C3 添加复制时清理无效引用规则（自举模式例外）、更新 flows 文件列表（6个）；v1.5 添加 C5 Hooks 安装、移除 sourcePath、更新脚本列表（6个+lib/）、修复 Boundaries；v1.4 澄清自举模式；v1.3 函数编号修正*

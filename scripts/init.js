@@ -153,6 +153,24 @@ function getInstalledInfo(targetPath) {
 }
 
 /**
+ * 检测目标项目是否处于重构模式
+ * @returns {boolean}
+ */
+function isRefactoringProject(targetPath) {
+  const stateFile = path.join(targetPath, '.solodevflow/state.json');
+  if (!fs.existsSync(stateFile)) {
+    return false;
+  }
+
+  try {
+    const state = JSON.parse(fs.readFileSync(stateFile, 'utf-8'));
+    return state.project?.refactoring?.enabled === true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
  * 检测目标项目是否为 SoloDevFlow 自身
  */
 function isSelfProject(targetPath) {
@@ -301,9 +319,21 @@ async function checkPrerequisites(config, rl) {
     console.log(`  类型: ${installedInfo.projectType}`);
     console.log(`  安装时间: ${installedInfo.installedAt}\n`);
 
-    if (config.upgrade) {
-      // Upgrade mode specified via CLI
-      log(`将升级到 ${VERSION}`, 'info');
+    // Check if project is in refactoring mode
+    const isRefactoring = isRefactoringProject(config.targetPath);
+    if (isRefactoring) {
+      console.log('  \x1b[33m状态: 重构模式进行中\x1b[0m\n');
+    }
+
+    if (config.upgrade || (isRefactoring && !config.force)) {
+      // Upgrade mode specified via CLI, or refactoring project with init command
+      if (isRefactoring) {
+        config.refactoringUpgrade = true;
+        log(`重构项目升级：将升级到 ${VERSION}（保留重构状态和用户文档）`, 'info');
+      } else {
+        log(`将升级到 ${VERSION}`, 'info');
+      }
+      config.upgrade = true;
       config.projectType = installedInfo.projectType;
       config.existingInfo = installedInfo;
     } else if (config.force) {
@@ -461,6 +491,62 @@ async function upgradeFiles(config) {
 }
 
 // ============================================================================
+// Refactoring Upgrade Component
+// ============================================================================
+
+/**
+ * 重构项目升级：更新工具文件，保留重构状态和用户文档
+ *
+ * 重构升级特点：
+ * - 更新工具链（flows, scripts, commands, hooks, specs）
+ * - 保留重构状态（project.refactoring.*）
+ * - 保留用户编写的文档（docs/requirements/*, docs/designs/*, docs/legacy/*）
+ */
+async function upgradeRefactoringProject(config) {
+  log('重构项目升级：更新工具文件，保留重构状态...');
+
+  const targetPath = config.targetPath;
+  const now = toBeijingISOString().split('T')[0];
+
+  // 1. Update state.json version info (preserve refactoring state and user data)
+  log('  更新 state.json 版本信息（保留重构状态）...');
+  const stateFile = path.join(targetPath, '.solodevflow/state.json');
+  const state = JSON.parse(fs.readFileSync(stateFile, 'utf-8'));
+
+  // ✅ 只更新版本信息
+  state.solodevflow = {
+    version: VERSION,
+    installedAt: state.solodevflow?.installedAt || now,
+    upgradedAt: now
+  };
+  state.lastUpdated = now;
+
+  // ✅ 保留重构状态（关键）
+  // state.project.refactoring.enabled    - 保留
+  // state.project.refactoring.phase      - 保留
+  // state.project.refactoring.progress   - 保留
+  // state.project.refactoring.startedAt  - 保留
+  // state.project.refactoring.completedAt - 保留
+
+  fs.writeFileSync(stateFile, JSON.stringify(state, null, 2));
+
+  const refactoringPhase = state.project?.refactoring?.phase || 'unknown';
+  log(`    .solodevflow/state.json（版本已更新，重构状态已保留：${refactoringPhase}）`, 'success');
+
+  // 2. Preserve user documents
+  log('  保留用户文档...', 'success');
+  log('    docs/requirements/* - 保留', 'info');
+  log('    docs/designs/* - 保留', 'info');
+  log('    docs/legacy/* - 保留', 'info');
+
+  // 3. Copy tool files (overwrite)
+  // copyToolFiles() will update flows, commands, scripts, hooks, specs
+  await copyToolFiles(config);
+
+  log('重构项目升级完成', 'success');
+}
+
+// ============================================================================
 // Bootstrap Component
 // ============================================================================
 
@@ -594,18 +680,14 @@ async function copyToolFiles(config) {
     log('  跳过 .solodevflow/scripts/（自举模式使用源码）', 'info');
   }
 
-  // 5. Copy src/hooks/ to .claude/hooks/ (non-bootstrap mode only)
-  // Bootstrap mode uses src/hooks/ source directly
-  if (!config.bootstrap) {
-    log('  复制 .claude/hooks/...');
-    const hooksSrc = path.join(SOLODEVFLOW_ROOT, 'src', 'hooks');
-    const hooksDest = path.join(targetPath, '.claude', 'hooks');
-    if (fs.existsSync(hooksSrc)) {
-      copyDir(hooksSrc, hooksDest);
-      log('    .claude/hooks/', 'success');
-    }
-  } else {
-    log('  跳过 .claude/hooks/（自举模式使用源码）', 'info');
+  // 5. Copy src/hooks/ to .claude/hooks/ (always, including bootstrap mode)
+  // Claude Code only recognizes hooks in .claude/hooks/ directory
+  log('  复制 .claude/hooks/...');
+  const hooksSrc = path.join(SOLODEVFLOW_ROOT, 'src', 'hooks');
+  const hooksDest = path.join(targetPath, '.claude', 'hooks');
+  if (fs.existsSync(hooksSrc)) {
+    copyDir(hooksSrc, hooksDest);
+    log('    .claude/hooks/', 'success');
   }
 
   // 6. Generate .claude/settings.local.json (non-bootstrap mode only)
@@ -693,6 +775,9 @@ function finalize(config) {
 
   if (config.bootstrap) {
     log(`SoloDevFlow ${VERSION} 自举更新成功!`, 'success');
+  } else if (config.refactoringUpgrade) {
+    const oldVersion = config.existingInfo?.version || 'unknown';
+    log(`SoloDevFlow ${oldVersion} → ${VERSION} 重构项目升级成功!`, 'success');
   } else if (config.upgrade) {
     const oldVersion = config.existingInfo?.version || 'unknown';
     log(`SoloDevFlow ${oldVersion} → ${VERSION} 升级成功!`, 'success');
@@ -711,10 +796,10 @@ function finalize(config) {
 已同步:
   ✅ .solodevflow/flows/    ← template/flows/
   ✅ .claude/commands/      ← template/commands/
+  ✅ .claude/hooks/         ← src/hooks/
 
 已跳过（使用源码）:
   ⏭️  .solodevflow/scripts/ （使用 scripts/ 源码）
-  ⏭️  .claude/hooks/        （使用 src/hooks/ 源码）
   ⏭️  docs/specs/           （源码已存在）
   ⏭️  CLAUDE.md             （保留项目配置）
 
@@ -722,6 +807,50 @@ function finalize(config) {
   📦 .solodevflow/state.json（项目状态数据）
 
 版本已更新至: ${VERSION}
+`);
+  } else if (config.refactoringUpgrade) {
+    // Read current refactoring state for display
+    const stateFile = path.join(config.targetPath, '.solodevflow/state.json');
+    let refactoringPhase = 'unknown';
+    let refactoringProgress = '';
+    try {
+      const state = JSON.parse(fs.readFileSync(stateFile, 'utf-8'));
+      refactoringPhase = state.project?.refactoring?.phase || 'unknown';
+      const progress = state.project?.refactoring?.progress;
+      if (progress) {
+        refactoringProgress = `PRD: ${progress.prd}, Features: ${progress.features?.done}/${progress.features?.total}`;
+      }
+    } catch (e) { /* ignore */ }
+
+    console.log(`
+项目: ${projectName}
+类型: ${config.projectType}
+路径: ${config.targetPath}
+模式: 重构项目升级（Refactoring Upgrade）
+
+已更新（工具链）:
+  ✅ .solodevflow/flows/（工作流文件）
+  ✅ .solodevflow/scripts/（运行时脚本）
+  ✅ .claude/commands/（命令文件）
+  ✅ .claude/hooks/（Hook 脚本）
+  ✅ .claude/settings.local.json（Hook 配置）
+  ✅ docs/specs/（规范文档）
+  ✅ CLAUDE.md（流程控制器）
+
+已保留（重构状态）:
+  📦 .solodevflow/state.json（重构状态已保留）
+  📄 docs/requirements/*（用户需求文档）
+  📄 docs/designs/*（用户设计文档）
+  📄 docs/legacy/*（已归档文档）
+
+重构进度:
+  当前阶段: ${refactoringPhase}
+  ${refactoringProgress ? `进度: ${refactoringProgress}` : ''}
+
+下一步:
+  使用 Claude Code 打开项目，继续重构流程
+
+更多信息请查看 CLAUDE.md
 `);
   } else if (config.upgrade) {
     console.log(`
@@ -949,8 +1078,11 @@ async function main() {
     if (config.bootstrap) {
       // Bootstrap mode (self-project)
       await bootstrapFiles(config);
+    } else if (config.refactoringUpgrade) {
+      // Refactoring project upgrade mode
+      await upgradeRefactoringProject(config);
     } else if (config.upgrade) {
-      // Upgrade mode
+      // Regular upgrade mode
       await upgradeFiles(config);
     } else {
       // Fresh install mode

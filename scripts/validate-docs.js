@@ -27,6 +27,12 @@
 const fs = require('fs');
 const path = require('path');
 
+// 自动检测项目根目录
+const isInstalledProject = __dirname.includes('.solodevflow');
+const PROJECT_ROOT = isInstalledProject
+  ? path.join(__dirname, '../..')
+  : path.join(__dirname, '..');
+
 // ═══════════════════════════════════════════════════════════════════════════
 // META-SPEC v2.7 (硬编码，不从文档读取)
 // ═══════════════════════════════════════════════════════════════════════════
@@ -98,7 +104,7 @@ const META_SPEC = {
 // Constants
 // ═══════════════════════════════════════════════════════════════════════════
 
-const DOCS_DIR = path.join(__dirname, '..', 'docs');
+const DOCS_DIR = path.join(PROJECT_ROOT, 'docs');
 const REQUIREMENTS_DIR = path.join(DOCS_DIR, 'requirements');
 const DESIGNS_DIR = path.join(DOCS_DIR, 'designs');
 const TESTS_DIR = path.join(DOCS_DIR, 'tests');

@@ -20,10 +20,15 @@ const fs = require('fs');
 const path = require('path');
 const { toBeijingISOString } = require('./lib/datetime');
 
-const REQUIREMENTS_DIR = path.join(__dirname, '..', 'docs', 'requirements');
-const DESIGNS_DIR = path.join(__dirname, '..', 'docs', 'designs');
-const STATE_FILE = path.join(__dirname, '..', '.solodevflow', 'state.json');
-const INDEX_FILE = path.join(__dirname, '..', '.solodevflow', 'index.json');
+// 自动检测项目根目录
+const isInstalledProject = __dirname.includes('.solodevflow');
+const PROJECT_ROOT = isInstalledProject
+  ? path.join(__dirname, '../..')
+  : path.join(__dirname, '..');
+const REQUIREMENTS_DIR = path.join(PROJECT_ROOT, 'docs', 'requirements');
+const DESIGNS_DIR = path.join(PROJECT_ROOT, 'docs', 'designs');
+const STATE_FILE = path.join(PROJECT_ROOT, '.solodevflow', 'state.json');
+const INDEX_FILE = path.join(PROJECT_ROOT, '.solodevflow', 'index.json');
 
 // Document type detection
 function getDocType(filePath) {

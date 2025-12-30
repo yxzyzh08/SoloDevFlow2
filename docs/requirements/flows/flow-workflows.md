@@ -6,7 +6,7 @@ status: done
 phase: done
 priority: P0
 domain: process
-version: "8.4"
+version: "8.7"
 ---
 
 # Flow: Workflows <!-- id: flow_workflows -->
@@ -76,11 +76,12 @@ version: "8.4"
 |------|----------|----------|
 | **直接执行** | 简单明确、单步操作 | 立即执行，不走流程 |
 | **产品咨询** | 询问功能、进度、实现 | §4 Consulting Flow |
+| **Bug 修复** | 报告问题、修复请求 | §5 Bug Fix Flow |
 | **需求处理** | 新功能、变更、规范修改 | [flow-requirements.md](flow-requirements.md) |
 | **设计处理** | 进入设计阶段 | [flow-design.md](flow-design.md) |
 | **实现处理** | 进入实现阶段 | [flow-implementation.md](flow-implementation.md) |
 | **测试处理** | 进入测试阶段 | [flow-testing.md](flow-testing.md) |
-| **审核批准** | 批准/通过（review 阶段） | §5 Review Approval |
+| **审核批准** | 批准/通过（review 阶段） | §6 Review Approval |
 | **无关想法** | 与本产品完全无关 | 直接拒绝 |
 
 ### 3.2 Direct Execution Criteria
@@ -163,11 +164,112 @@ version: "8.4"
 
 ---
 
-## 5. Review Approval Flow <!-- id: flow_review -->
+## 5. Bug Fix Flow <!-- id: flow_bugfix -->
+
+> Bug 修复流程：代码优先，后补文档
+
+### 5.1 Bug Source Classification
+
+| 来源 | 特征 | 处理优先级 |
+|------|------|------------|
+| **开发中发现** | 在 implementation/testing 阶段发现 | 立即处理，不切换 Work Item |
+| **已完成功能** | status=done 的 Work Item 出现问题 | 修复代码 → 补充文档 |
+| **用户报告** | 外部用户反馈的问题 | 创建新 Work Item 或关联现有 |
+
+### 5.2 Bug Fix Decision Flow
+
+```
+[报告/发现 Bug]
+    ↓
+[问题定位]
+    ├─ 能直接定位（文件+行号明确）→ 直接修复（§5.3）
+    └─ 不能直接定位（问题模糊）
+            ↓
+        [分析问题，明确范围]
+            ↓
+        [判断影响范围]
+            ├─ 单文件/局部 → 直接修复（§5.3）
+            └─ 跨模块/系统性 → 需求变更流程
+```
+
+### 5.3 Code-First Fix Flow
+
+> 核心原则：先修复代码，再补充文档
+
+```
+Step 1: 问题复现
+    └─ 明确触发条件和错误现象
+
+Step 2: 定位问题代码
+    └─ 确定出错的文件和函数
+
+Step 3: 修复代码
+    └─ 编写修复代码 + 验证测试
+
+Step 4: 文档同步（§5.4）
+    └─ 分析是否需要更新设计/需求文档
+```
+
+### 5.4 Post-Fix Documentation Sync
+
+> 代码修复后，分析是否需要同步文档
+
+**决策流程**：
+
+```
+[代码修复完成]
+    ↓
+[分析：是否需要更新设计文档？]
+    ├─ 是（接口变更、架构调整）→ 直接更新设计文档
+    └─ 否 → 继续
+    ↓
+[分析：是否需要更新需求文档？]
+    ├─ 是（功能变更、新增约束）→ 走需求变更流程
+    └─ 否 → 完成
+```
+
+**文档更新标准**：
+
+| 文档类型 | 需要更新的情况 | 处理方式 |
+|----------|----------------|----------|
+| **设计文档** | 接口定义变更、数据结构调整、架构修改 | 直接更新 |
+| **需求文档** | 功能行为变更、新增业务规则、删除功能 | 需求变更流程 |
+
+### 5.5 Quick Fix Criteria
+
+以下情况可**直接修复**，无需文档同步：
+
+| 条件 | 示例 |
+|------|------|
+| ✅ 纯实现问题 | 边界条件、空指针、类型错误 |
+| ✅ 不影响接口 | 内部实现修正，API 不变 |
+| ✅ 不影响行为 | 性能优化、代码重构 |
+| ✅ 开发中发现 | Work Item 仍在 implementation 阶段 |
+
+### 5.6 Bug Fix Examples
+
+| Bug 修复 | 设计文档 | 需求文档 |
+|----------|----------|----------|
+| 修复空指针异常 | 不需要 | 不需要 |
+| 修复 API 返回格式 | 需要（接口定义） | 不需要 |
+| 添加非空验证 | 不需要 | 需要（新增约束） |
+| 修复边界条件 | 不需要 | 不需要 |
+
+### 5.7 Phase Guards Behavior
+
+当修改 `status=done` 的 Work Item 代码时：
+
+- PreToolUse Hook 弹出 `ask` 确认（非强制阻止）
+- 提醒检查文档同步需求
+- 用户确认后允许修改
+
+---
+
+## 6. Review Approval Flow <!-- id: flow_review -->
 
 > 审核审批流程：人类审核文档，批准后进入下一阶段
 
-### 5.1 Core Principles
+### 6.1 Core Principles
 
 | 原则 | 说明 |
 |------|------|
@@ -175,7 +277,7 @@ version: "8.4"
 | **人类审核必需** | AI 生成的文档必须经人类审核 |
 | **显式批准** | 必须说"批准"/"通过"才能进入下一阶段 |
 
-### 5.2 Review Flow
+### 6.2 Review Flow
 
 ```
 [AI 完成文档]
@@ -190,7 +292,7 @@ version: "8.4"
     └─ 拒绝 → 返回上一阶段
 ```
 
-### 5.3 Approval Syntax
+### 6.3 Approval Syntax
 
 | 类型 | 关键词 |
 |------|--------|
@@ -198,7 +300,7 @@ version: "8.4"
 | **修改** | "修改 xxx"、"补充 xxx" |
 | **拒绝** | "重新来"、"需求不对" |
 
-### 5.4 Review Assistance（可选）
+### 6.4 Review Assistance（可选）
 
 > 人类可主动调用辅助工具进行深度审核
 
@@ -217,26 +319,29 @@ version: "8.4"
 
 ---
 
-## 6. Subflow References <!-- id: flow_subflows -->
+## 7. Subflow References <!-- id: flow_subflows -->
 
 > 子流程独立文档，按需加载
 
-| 子流程 | 文档 | 触发阶段 |
-|--------|------|----------|
-| **需求流程** | [flow-requirements.md](flow-requirements.md) | `feature_requirements` |
-| **设计流程** | [flow-design.md](flow-design.md) | `feature_design` |
-| **实现流程** | [flow-implementation.md](flow-implementation.md) | `feature_implementation` |
-| **测试流程** | [flow-testing.md](flow-testing.md) | `feature_testing` |
+| 子流程 | 需求文档 | 执行规范 | 触发条件 |
+|--------|----------|----------|----------|
+| **需求流程** | [flow-requirements.md](flow-requirements.md) | requirements.md | `feature_requirements` 阶段 |
+| **设计流程** | [flow-design.md](flow-design.md) | design.md | `feature_design` 阶段 |
+| **实现流程** | [flow-implementation.md](flow-implementation.md) | implementation.md | `feature_implementation` 阶段 |
+| **测试流程** | [flow-testing.md](flow-testing.md) | testing.md | `feature_testing` 阶段 |
+| **Bug 修复流程** | §5 Bug Fix Flow（本文档） | bugfix.md | 报告/发现 Bug |
+| **重构流程** | [flow-refactoring.md](flow-refactoring.md) | refactoring.md | `refactoring.enabled = true` |
 
 **加载策略**：
-- 主流程（本文档）：每次 Session 加载
-- 子流程：进入对应阶段时按需加载
+- 主流程（workflows.md）：每次 Session 加载
+- 子流程执行规范：进入对应阶段或触发条件时按需加载
+- 需求文档：作为 AI 理解流程的参考依据
 
 ---
 
-## 7. Context Management <!-- id: flow_context -->
+## 8. Context Management <!-- id: flow_context -->
 
-### 7.1 State Persistence
+### 8.1 State Persistence
 
 | 状态 | 存储位置 | 说明 |
 |------|----------|------|
@@ -244,7 +349,7 @@ version: "8.4"
 | subtasks | state.json | 进行中的任务列表 |
 | phase | 文档 frontmatter | Feature 的当前阶段 |
 
-### 7.2 Session Start
+### 8.2 Session Start
 
 每次对话开始：
 1. 读取 `state.json`
@@ -261,9 +366,9 @@ version: "8.4"
 
 ---
 
-## 8. Phase Lifecycle <!-- id: flow_phase -->
+## 9. Phase Lifecycle <!-- id: flow_phase -->
 
-### 8.1 Phase Sequence
+### 9.1 Phase Sequence
 
 ```
 pending → feature_requirements → feature_review → feature_design → feature_implementation → feature_testing → done
@@ -279,7 +384,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 | `feature_implementation` | 编写代码 + 单元测试 + 集成测试 |
 | `feature_testing` | 系统级测试（E2E/性能/安全/回归） |
 
-### 8.2 Phase Transitions
+### 9.2 Phase Transitions
 
 | 转换 | 触发条件 | 命令 |
 |------|----------|------|
@@ -290,7 +395,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 | → testing | 实现完成 | `set-phase <id> feature_testing` |
 | → done | 测试通过 | `set-phase <id> done` |
 
-### 8.3 Phase Guards
+### 9.3 Phase Guards
 
 | Phase | 阻止的操作 |
 |-------|------------|
@@ -300,7 +405,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 ---
 
-## 9. Hooks Integration <!-- id: flow_hooks -->
+## 10. Hooks Integration <!-- id: flow_hooks -->
 
 > Hooks 实现工作流自动化，详见 [fea-hooks-integration.md](../features/fea-hooks-integration.md)
 
@@ -313,7 +418,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 ---
 
-## 10. Execution Principles <!-- id: flow_principles -->
+## 11. Execution Principles <!-- id: flow_principles -->
 
 ### 始终做
 
@@ -333,7 +438,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 ---
 
-## 11. Dependencies <!-- id: flow_dependencies -->
+## 12. Dependencies <!-- id: flow_dependencies -->
 
 | Dependency | Type | 说明 |
 |------------|------|------|
@@ -343,24 +448,26 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 ---
 
-## 12. Acceptance Criteria <!-- id: flow_acceptance -->
+## 13. Acceptance Criteria <!-- id: flow_acceptance -->
 
 | Item | Verification | Pass Criteria |
 |------|--------------|---------------|
 | 意图识别 | 测试各类输入 | 正确路由到对应流程 |
+| Bug 修复路由 | 报告 bug | 进入 §5 Bug Fix Flow |
+| 根因分析 | done 状态修复 | 正确判断根因类型并选择修复路径 |
 | 阶段路由 | 切换 phase | 自动加载对应子流程 |
 | 审核流程 | 提交文档后 | 进入 review 阶段 |
 | 批准语法 | 说"批准" | phase 正确转换 |
 | 按需加载 | 进入子流程 | 只加载对应文档 |
-| Flow 类型识别 | type=flow + workMode=code | 进入 §13 特殊流程 |
+| Flow 类型识别 | type=flow + workMode=code | 进入 §14 特殊流程 |
 
 ---
 
-## 13. Flow Type Handling (workMode=code) <!-- id: flow_type_handling -->
+## 14. Flow Type Handling (workMode=code) <!-- id: flow_type_handling -->
 
 > Flow 类型 workMode=code 时的特殊处理流程
 
-### 13.1 Why Flow is Different
+### 14.1 Why Flow is Different
 
 | 维度 | Feature | Flow (workMode=code) |
 |------|---------|----------------------|
@@ -369,7 +476,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 | **需求粒度** | 单一功能需求 | 分解为多个模块需求 |
 | **审批范围** | 单一文档审批 | 多个模块影响需分别审批 |
 
-### 13.2 Flow Workflow Stages
+### 14.2 Flow Workflow Stages
 
 ```
 [REQUIREMENTS] → [REVIEW] → [MODULE IMPACT] → [DESIGN] → [IMPLEMENTATION] → [TESTING] → [DONE]
@@ -383,7 +490,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 3. 每个 Module Impact 单独审批
 4. 全部审批后才能进入 DESIGN 阶段
 
-### 13.3 Module Impact Specification Process
+### 14.3 Module Impact Specification Process
 
 ```
 [Flow 需求通过审批]
@@ -405,7 +512,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 [进入 DESIGN 阶段]
 ```
 
-### 13.4 子任务命名规范
+### 14.4 子任务命名规范
 
 ```bash
 # 创建 Module Impact 分析子任务
@@ -421,7 +528,7 @@ node scripts/state.js add-subtask \
   --source=impact-analysis
 ```
 
-### 13.5 Phase Transition Rules (Flow)
+### 14.5 Phase Transition Rules (Flow)
 
 | 转换 | 条件 | 说明 |
 |------|------|------|
@@ -429,7 +536,7 @@ node scripts/state.js add-subtask \
 | review → design | **所有 Module Impact 审批通过** | Flow 专属条件 |
 | design → implementation | 设计文档完成 | 标准转换 |
 
-### 13.6 Module Impact Specification Template
+### 14.6 Module Impact Specification Template
 
 在 Flow 文档中，Section 6 (或适当位置) 添加：
 
@@ -456,7 +563,7 @@ node scripts/state.js add-subtask \
 **审批状态**：🔲 待审批 / ✅ 已审批
 ```
 
-### 13.7 Execution Checklist
+### 14.7 Execution Checklist
 
 **进入 MODULE IMPACT 阶段时**：
 - [ ] 确认 Flow 类型且 workMode=code
@@ -472,7 +579,7 @@ node scripts/state.js add-subtask \
 
 ---
 
-*Version: v8.4*
+*Version: v8.7*
 *Created: 2024-12-20*
-*Updated: 2025-12-29*
-*Changes: v8.4 §7.2 Session Start 添加重构模式检测（与 flow-refactoring.md 联动）；v8.3 添加 §3.4 Work Item Type Routing, §13 Flow Type Handling（Module Impact Specifications 流程）；v8.2 添加 Review Assistance*
+*Updated: 2025-12-30*
+*Changes: v8.7 §5 Bug Fix Flow 重构为"代码优先"流程，新增 §5.4 Post-Fix Documentation Sync（设计文档直接更新，需求文档走变更流程）；v8.6 §7 Subflow References 重构，添加执行规范列和触发条件；v8.5 新增 §5 Bug Fix Flow*

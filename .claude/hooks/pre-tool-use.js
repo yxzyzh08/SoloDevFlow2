@@ -264,6 +264,18 @@ function checkSetPhaseDone(toolName, toolInput, state) {
  */
 function makeDecision(toolName, toolInput, state) {
   const filePath = getFilePath(toolName, toolInput);
+
+  // 检测重构模式：使用 refactoring.phase 而非 activeFeature.phase
+  const refactoring = state.project?.refactoring;
+  if (refactoring?.enabled) {
+    // 重构模式下，跳过常规阶段守卫
+    // 重构阶段有自己的流程控制（通过执行规范引导）
+    // prd: 允许写 prd.md
+    // requirements: 允许写 Feature/Capability/Flow
+    // design: 允许写设计文档
+    return {};
+  }
+
   const activeFeature = getActiveFeature(state);
   const phase = activeFeature?.phase || 'pending';
   const status = activeFeature?.status;

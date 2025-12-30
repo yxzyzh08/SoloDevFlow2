@@ -6,7 +6,7 @@ status: done
 phase: done
 priority: P1
 domain: process
-version: "2.3"
+version: "2.5"
 ---
 
 # Flow: Refactoring <!-- id: flow_refactoring -->
@@ -86,8 +86,8 @@ Phase 2: PRD（PRD 重构）
     ↓ PRD 通过验证
 Phase 3: REQUIREMENTS（需求分解）
     ↓ 所有需求文档编写完成
-Phase 4: DESIGN（设计补全，可选）
-    ↓ 设计文档完成或用户跳过
+Phase 4: DESIGN（设计重构）
+    ↓ 设计文档重构完成
 Phase 5: VALIDATE（验证完成）
     ↓ 验证通过 + 用户确认
 [Exit] → 切换到 flow-workflows 正常工作流
@@ -252,37 +252,50 @@ Phase 5: VALIDATE（验证完成）
 
 ---
 
-#### Phase 4: DESIGN（设计补全，可选）
+#### Phase 4: DESIGN（设计重构）
 
-> 为复杂 Feature 补充设计文档
+> 按设计规范重构所有设计文档
 
-**目标**：为 `design_depth: required` 的 Feature 补充设计
+**目标**：按 SoloDevFlow 设计规范重构设计文档（参考原有内容，聚焦文档结构重构）
+
+**核心原则**：
+- **强制执行**：无论原项目是否有设计文档，都进入设计重构阶段
+- **结构重构优先**：聚焦文档组织和结构的标准化，不做内容的重大变更
+- **参考原有内容**：充分复用原设计文档的有效内容
 
 **AI 行为**：
 
 ```
-├─ Step 4.1: 识别需要设计的 Feature
-│   ├─ 扫描所有 Feature Spec
-│   ├─ 筛选 design_depth: required
-│   └─ 列出待补充设计的 Feature 清单
+├─ Step 4.1: 识别现有设计文档
+│   ├─ 扫描项目中的设计相关文档
+│   │   ├─ docs/ 目录下的架构/设计文档
+│   │   ├─ 文件名含 design/architecture/spec 的文档
+│   │   └─ README 中的技术架构章节
+│   └─ 列出待重构的设计文档清单
 │
-├─ Step 4.2: 逐个编写设计文档
+├─ Step 4.2: 匹配 Feature 与设计需求
+│   ├─ 扫描所有 Feature Spec
+│   ├─ 为每个 Feature 确定设计需求：
+│   │   ├─ design_depth: required → 必须有独立设计文档
+│   │   └─ design_depth: optional → 参考原有内容决定
+│   └─ 生成设计文档编写清单
+│
+├─ Step 4.3: 逐个重构设计文档
 │   ├─ 对每个需要设计的 Feature：
+│   │   ├─ 读取对应的原设计文档（如有）
 │   │   ├─ 读取 Feature Spec 理解需求
-│   │   ├─ 分析现有代码实现
-│   │   ├─ 使用 /write-design 命令
+│   │   ├─ 使用 /write-design 命令（参考原内容）
+│   │   ├─ 确保符合设计规范结构
 │   │   └─ 更新 Feature 的 Artifacts 章节
 │   └─ 向用户汇报进度
 │
-├─ Step 4.3: 用户决策
-│   └─ 用户可选择：
-│       ├─ 继续完成所有设计
-│       └─ 跳过，后续按需补充
+├─ Step 4.4: 归档原设计文档
+│   └─ 将原设计文档移至 docs/legacy/（见 §6.6）
 │
-└─ Output: 设计文档（或跳过标记）
+└─ Output: 符合规范的设计文档体系
 ```
 
-**退出条件**：所有需要设计的 Feature 都已补充设计文档，或用户选择跳过
+**退出条件**：所有需要设计的 Feature 都已完成设计文档重构
 
 ---
 
@@ -386,7 +399,7 @@ Phase 5: VALIDATE（验证完成）
 | understand | 用户确认理解准确 | prd |
 | prd | PRD 编写完成并通过验证 | requirements |
 | requirements | 所有需求文档编写完成 | design |
-| design | 设计文档完成或用户跳过 | validate |
+| design | 设计文档重构完成 | validate |
 | validate | 验证通过 + 用户确认 | completed |
 | completed | - | 退出重构模式，进入正常流程 |
 
@@ -474,6 +487,105 @@ PRD
 | 完全回滚 | 恢复到重构前状态 | `git checkout refactor-backup` |
 
 **建议**：每个阶段完成后创建标签 `refactor-phase-<n>`，便于精确回滚。
+
+### 6.6 Legacy Document Archiving
+
+> 老项目文档的识别与归档处理策略
+
+#### 归档规则
+
+| 规则 | 内容 |
+|------|------|
+| **归档目录** | `docs/legacy/` |
+| **归档时机** | 对应新文档编写完成后立即归档 |
+| **版本控制** | 归档目录纳入 Git 版本控制 |
+| **强制执行** | 重构完成前，所有识别到的老文档必须归档 |
+
+#### 老项目文档识别规则
+
+> AI 必须主动识别并归档老项目文档
+
+**识别范围**：
+
+| 文档类型 | 识别规则 | 示例 |
+|----------|----------|------|
+| **需求文档** | 文件名含 requirement/spec/需求/功能 | `requirements.md`, `功能说明.md` |
+| **设计文档** | 文件名含 design/architecture/架构/设计 | `architecture.md`, `系统设计.md` |
+| **测试文档** | 文件名含 test/测试/qa | `test-plan.md`, `测试用例.md` |
+| **API 文档** | 文件名含 api/接口 | `api.md`, `接口文档.md` |
+| **产品文档** | 文件名含 prd/product/产品 | `prd.md`, `产品说明.md` |
+
+**识别位置**：
+
+```
+项目根目录/
+├─ docs/                    # 主要扫描目录
+│   ├─ *.md                 # 所有 markdown 文件
+│   └─ */                   # 所有子目录
+├─ *.md                     # 根目录 markdown 文件
+└─ doc/                     # 备选文档目录
+```
+
+**识别排除**：
+
+| 排除项 | 原因 |
+|--------|------|
+| `docs/requirements/` | SoloDevFlow 标准目录 |
+| `docs/designs/` | SoloDevFlow 标准目录 |
+| `docs/legacy/` | 已归档目录 |
+| `.solodevflow/` | 系统目录 |
+
+#### 归档流程
+
+```
+[每完成一个新文档]
+    ↓
+[扫描并识别对应的老文档]
+    ├─ 按文档类型匹配
+    ├─ 按功能模块匹配
+    └─ 按文件内容关键词匹配
+    ↓
+[移动老文档到 docs/legacy/]
+    ├─ 保持原文件名
+    ├─ 如有冲突，添加日期后缀
+    └─ 保留目录结构（如 docs/legacy/api/）
+    ↓
+[继续下一个文档]
+```
+
+#### 阶段归档详解
+
+| 阶段 | 触发条件 | 归档内容 |
+|------|----------|----------|
+| PRD | 新 PRD 编写完成 | 老项目的产品说明、功能概述文档 |
+| REQUIREMENTS | 每个 Feature Spec 完成 | 对应功能的老需求文档 |
+| DESIGN | 每个 Design Doc 完成 | 对应模块的老架构/设计文档 |
+| VALIDATE | 全量验证通过 | **强制归档剩余所有老文档** |
+
+**VALIDATE 阶段强制归档**：
+```
+[全量验证通过]
+    ↓
+[执行最终归档扫描]
+    ├─ 扫描所有文档目录
+    ├─ 识别未归档的老文档
+    └─ 列出待归档清单
+    ↓
+[批量归档剩余老文档]
+    ↓
+[生成归档报告]
+    └─ 包含：已归档文档列表、归档前后路径映射
+```
+
+#### 不归档的文档
+
+| 文档类型 | 处理方式 |
+|----------|----------|
+| README.md | 更新而非归档（项目入口） |
+| LICENSE | 保留原位 |
+| CHANGELOG.md | 保留原位，持续更新 |
+| .gitignore 等配置 | 保留原位 |
+| 代码注释/内联文档 | 不处理 |
 
 ---
 
@@ -639,12 +751,14 @@ function detectExistingProject() {
 
 ---
 
-*Version: v2.3*
+*Version: v2.5*
 *Created: 2025-12-27*
-*Updated: 2025-12-29*
+*Updated: 2025-12-30*
 
 ## Changelog
 
+- **v2.5** (2025-12-30): Phase 4 DESIGN 从"可选"改为"强制"（无论原项目是否有设计文档，都按规范重构）；§6.6 增强老项目文档识别规则（识别范围、识别位置、排除规则、VALIDATE 阶段强制归档）
+- **v2.4** (2025-12-30): 添加 §6.6 Legacy Document Archiving，定义老项目文档归档策略（归档目录 docs/legacy/，归档时机为新文档完成后）
 - **v2.3** (2025-12-29): 添加 §10 Module Impact Specifications（Flow workMode=code 专属章节示例）
 - **v2.2** (2025-12-29): 修正 workMode: document → code（此 Flow 需要代码实现）
 - **v2.1** (2025-12-29): 添加 §6.5 Rollback 策略，明确阶段内/跨阶段/完全回滚的操作指南
