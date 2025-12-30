@@ -479,6 +479,15 @@ async function upgradeFiles(config) {
   };
   state.lastUpdated = now;
 
+  // v16.0.0: Initialize PRD field if not exists
+  if (!state.prd) {
+    state.prd = {
+      phase: null,
+      decomposingProgress: { total: 0, done: 0 }
+    };
+    log('    初始化 PRD 字段（v16.0.0 升级）', 'success');
+  }
+
   fs.writeFileSync(stateFile, JSON.stringify(state, null, 2));
   log('    .solodevflow/state.json（版本信息已更新，用户数据已保留）', 'success');
 
@@ -529,6 +538,15 @@ async function upgradeRefactoringProject(config) {
   // state.project.refactoring.progress   - 保留
   // state.project.refactoring.startedAt  - 保留
   // state.project.refactoring.completedAt - 保留
+
+  // v16.0.0: Initialize PRD field if not exists
+  if (!state.prd) {
+    state.prd = {
+      phase: null,
+      decomposingProgress: { total: 0, done: 0 }
+    };
+    log('    初始化 PRD 字段（v16.0.0 升级）', 'success');
+  }
 
   fs.writeFileSync(stateFile, JSON.stringify(state, null, 2));
 

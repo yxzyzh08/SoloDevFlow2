@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "14.0.0",
+  "schemaVersion": "16.0.0",
   "project": {
     "name": "SoloDevFlow 2.0",
     "description": "为超级个体打造的自进化人机协作开发系统",
@@ -50,10 +50,10 @@
     "lastGitCommit": "",
     "lastGitCommitMessage": "",
     "lastGitCommitAt": "",
-    "stateFileVersion": 479,
+    "stateFileVersion": 483,
     "totalStateChanges": 22
   },
-  "lastUpdated": "2025-12-30T15:07:35.816+08:00",
+  "lastUpdated": "2025-12-30T15:25:41.387+08:00",
   "subtasks": [
     {
       "id": "st_1767066580932_004",
@@ -189,5 +189,12 @@
   "solodevflow": {
     "version": "2.0.0",
     "upgradedAt": "2025-12-30T15:07:07.032+08:00"
+  },
+  "prd": {
+    "phase": null,
+    "decomposingProgress": {
+      "total": 0,
+      "done": 0
+    }
   }
 }

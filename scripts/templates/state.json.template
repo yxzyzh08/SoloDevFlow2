@@ -1,11 +1,18 @@
 {
-  "schemaVersion": "14.0.0",
+  "schemaVersion": "16.0.0",
   "project": {
     "name": "{{projectName}}",
     "description": "",
     "type": "{{projectType}}",
     "createdAt": "{{createdAt}}",
     "updatedAt": "{{createdAt}}"
+  },
+  "prd": {
+    "phase": null,
+    "decomposingProgress": {
+      "total": 0,
+      "done": 0
+    }
   },
   "flow": {
     "researchMethod": "bottom-up",

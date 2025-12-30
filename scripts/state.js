@@ -26,6 +26,136 @@ const REFACTORING_PHASES = [
   'completed'
 ];
 
+// === PRD Phase Constants (v16.0) ===
+const PRD_PHASES = [
+  'prd_draft',
+  'prd_scope_review',
+  'prd_decomposing',
+  'prd_done'
+];
+
+// === PRD Layer Functions (v16.0) ===
+
+/**
+ * Initialize PRD field in state (for migration)
+ */
+function initPrd() {
+  acquireLock();
+  try {
+    const state = readState();
+
+    if (state.prd) {
+      console.log(JSON.stringify({ success: true, message: 'PRD field already exists', prd: state.prd }));
+      return;
+    }
+
+    state.prd = {
+      phase: null,
+      decomposingProgress: {
+        total: 0,
+        done: 0
+      }
+    };
+
+    writeState(state);
+    console.log(JSON.stringify({ success: true, message: 'PRD field initialized', prd: state.prd }, null, 2));
+  } finally {
+    releaseLock();
+  }
+}
+
+/**
+ * Get PRD status
+ */
+function getPrdStatus() {
+  const state = readState();
+  const prd = state.prd || { phase: null, decomposingProgress: { total: 0, done: 0 } };
+  console.log(JSON.stringify(prd, null, 2));
+  return prd;
+}
+
+/**
+ * Set PRD phase
+ * @param {string|null} phase - Target phase or null to clear
+ */
+function setPrdPhase(phase) {
+  // Allow null to clear phase
+  if (phase !== 'null' && phase !== null && !PRD_PHASES.includes(phase)) {
+    console.error(`Invalid PRD phase: ${phase}`);
+    console.error(`Valid phases: ${PRD_PHASES.join(', ')}, null`);
+    process.exit(1);
+  }
+
+  const actualPhase = (phase === 'null' || phase === null) ? null : phase;
+
+  acquireLock();
+  try {
+    const state = readState();
+
+    // Initialize prd if not exists
+    if (!state.prd) {
+      state.prd = {
+        phase: null,
+        decomposingProgress: { total: 0, done: 0 }
+      };
+    }
+
+    state.prd.phase = actualPhase;
+
+    // Reset progress when entering prd_decomposing
+    if (actualPhase === 'prd_decomposing') {
+      // Keep existing progress, don't reset
+    }
+
+    // Clear progress when phase is null or prd_done
+    if (actualPhase === null || actualPhase === 'prd_done') {
+      state.prd.decomposingProgress = { total: 0, done: 0 };
+    }
+
+    writeState(state);
+    console.log(JSON.stringify({ success: true, phase: actualPhase }, null, 2));
+  } finally {
+    releaseLock();
+  }
+}
+
+/**
+ * Update PRD decomposing progress
+ * @param {number} done - Done count
+ * @param {number} total - Total count
+ */
+function updatePrdProgress(done, total) {
+  const doneNum = parseInt(done, 10);
+  const totalNum = parseInt(total, 10);
+
+  if (isNaN(doneNum) || isNaN(totalNum)) {
+    console.error('Usage: update-prd-progress <done> <total>');
+    process.exit(1);
+  }
+
+  acquireLock();
+  try {
+    const state = readState();
+
+    if (!state.prd) {
+      state.prd = {
+        phase: null,
+        decomposingProgress: { total: 0, done: 0 }
+      };
+    }
+
+    state.prd.decomposingProgress = { total: totalNum, done: doneNum };
+
+    writeState(state);
+    console.log(JSON.stringify({
+      success: true,
+      decomposingProgress: state.prd.decomposingProgress
+    }, null, 2));
+  } finally {
+    releaseLock();
+  }
+}
+
 function acquireLock() {
   const startTime = Date.now();
   while (fs.existsSync(LOCK_FILE)) {
@@ -493,6 +623,41 @@ function disableRefactoringMode() {
   }
 }
 
+// v16.0 Migration: Add PRD field
+function migrateV16() {
+  acquireLock();
+  try {
+    const state = readState();
+
+    // Check current version
+    if (state.schemaVersion === '16.0.0') {
+      console.log(JSON.stringify({ success: true, message: 'Already at v16.0.0' }));
+      return;
+    }
+
+    // Add PRD field if not exists
+    if (!state.prd) {
+      state.prd = {
+        phase: null,
+        decomposingProgress: { total: 0, done: 0 }
+      };
+    }
+
+    // Update schema version
+    state.schemaVersion = '16.0.0';
+
+    writeState(state);
+    console.log(JSON.stringify({
+      success: true,
+      message: 'Migrated to v16.0.0: added PRD layer support',
+      schemaVersion: '16.0.0',
+      prd: state.prd
+    }, null, 2));
+  } finally {
+    releaseLock();
+  }
+}
+
 // v14.0 Migration: Rename activeFeatures to activeWorkItems
 function migrateV14() {
   acquireLock();
@@ -541,7 +706,7 @@ function migrateV14() {
 function getSchema() {
   const schema = {
     name: "state-manager",
-    version: "15.0.0",
+    version: "16.0.0",
     commands: [
       {
         name: "summary",
@@ -868,6 +1033,79 @@ function getSchema() {
         ]
       },
       {
+        name: "init-prd",
+        category: "PRD Layer",
+        description: "初始化 PRD 字段（用于迁移）",
+        syntax: "init-prd",
+        parameters: [],
+        examples: [
+          "node scripts/state.js init-prd"
+        ]
+      },
+      {
+        name: "prd-status",
+        category: "PRD Layer",
+        description: "获取 PRD 层状态",
+        syntax: "prd-status",
+        parameters: [],
+        examples: [
+          "node scripts/state.js prd-status"
+        ]
+      },
+      {
+        name: "set-prd-phase",
+        category: "PRD Layer",
+        description: "设置 PRD 阶段",
+        syntax: "set-prd-phase <phase>",
+        parameters: [
+          {
+            name: "phase",
+            type: "enum",
+            required: true,
+            description: "PRD 阶段",
+            values: ["prd_draft", "prd_scope_review", "prd_decomposing", "prd_done", "null"]
+          }
+        ],
+        examples: [
+          "node scripts/state.js set-prd-phase prd_draft",
+          "node scripts/state.js set-prd-phase prd_decomposing",
+          "node scripts/state.js set-prd-phase null"
+        ]
+      },
+      {
+        name: "update-prd-progress",
+        category: "PRD Layer",
+        description: "更新 PRD 分解进度",
+        syntax: "update-prd-progress <done> <total>",
+        parameters: [
+          {
+            name: "done",
+            type: "number",
+            required: true,
+            description: "已完成的 Work Item 数量"
+          },
+          {
+            name: "total",
+            type: "number",
+            required: true,
+            description: "Work Item 总数"
+          }
+        ],
+        examples: [
+          "node scripts/state.js update-prd-progress 3 10"
+        ]
+      },
+      {
+        name: "migrate-v16",
+        category: "Migration",
+        description: "从 v14 迁移到 v16（添加 PRD 层支持）",
+        syntax: "migrate-v16",
+        parameters: [],
+        examples: [
+          "node scripts/state.js migrate-v16"
+        ]
+      },
+      {
         name: "migrate-v14",
         category: "Migration",
         description: "从 v13 迁移到 v14（重命名 activeFeatures 为 activeWorkItems）",
@@ -896,7 +1134,7 @@ function getSchema() {
 }
 
 function printHelp() {
-  console.log(`state.js v15.0.0 - State Management CLI
+  console.log(`state.js v16.0.0 - State Management CLI
 
 Query:
   summary                  Status summary (JSON)
@@ -920,6 +1158,14 @@ Pending Docs:
   list-pending-docs
   clear-pending-docs
 
+PRD Layer (Two-Layer Lifecycle):
+  init-prd                 Initialize PRD field in state (for migration)
+  prd-status               Get PRD layer status
+  set-prd-phase <phase>    Set PRD phase
+                           Phases: prd_draft, prd_scope_review, prd_decomposing, prd_done, null
+  update-prd-progress <done> <total>
+                           Update PRD decomposing progress
+
 Refactoring Mode:
   refactoring-status                           Get refactoring status
   enable-refactoring                           Enable refactoring mode
@@ -932,6 +1178,7 @@ Refactoring Mode:
                                                For others: done = number, total = number
 
 Migration:
+  migrate-v16              Migrate to v16.0.0 (adds PRD layer support)
   migrate-v14              Migrate to v14.0.0 (renames activeFeatures to activeWorkItems)
 
 Terminology:
@@ -966,8 +1213,14 @@ switch (args[0]) {
   case 'disable-refactoring': disableRefactoringMode(); break;
   case 'set-refactoring-phase': setRefactoringPhase(args[1]); break;
   case 'update-refactoring-progress': updateRefactoringProgress(args[1], args[2], args[3]); break;
+  // PRD Layer (v16.0)
+  case 'init-prd': initPrd(); break;
+  case 'prd-status': getPrdStatus(); break;
+  case 'set-prd-phase': setPrdPhase(args[1]); break;
+  case 'update-prd-progress': updatePrdProgress(args[1], args[2]); break;
   // Migration
+  case 'migrate-v16': migrateV16(); break;
   case 'migrate-v14': migrateV14(); break;
-  case 'migrate-v13': console.log('v13 migration no longer needed, use migrate-v14'); break;
+  case 'migrate-v13': console.log('v13 migration no longer needed, use migrate-v16'); break;
   default: console.error('Unknown: ' + args[0]); process.exit(1);
 }
