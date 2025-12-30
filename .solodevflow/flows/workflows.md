@@ -53,7 +53,6 @@
 用户输入
     ↓
 意图识别
-    ├─ 直接执行 → 立即执行，不走流程
     ├─ 产品咨询 → §3 Consulting
     ├─ Bug 修复 → 加载 bugfix.md
     ├─ 需求处理 → 加载 requirements.md
@@ -64,19 +63,7 @@
     └─ 无关想法 → 直接拒绝
 ```
 
-### 2.1 Direct Execution Criteria
-
-| 条件 | 说明 |
-|------|------|
-| ✅ 范围明确 | 单步操作可完成 |
-| ✅ 不涉及设计变更 | 无需更新文档 |
-| ✅ 可直接定位 | 问题明确（如"修复第42行空指针"） |
-
-**边界场景**：
-- "修复登录问题" → ❌ 不是直接执行（问题不明确）
-- "修复 login.js 第42行空指针" → ✅ 直接执行
-
-### 2.2 Must Follow Process Criteria
+### 2.1 Must Follow Process Criteria
 
 以下情况**必须**走需求变更流程，即使用户明确授权：
 
@@ -87,21 +74,18 @@
 | 删除现有功能 | 删除 byType、删除命令别名 | 需求 → 审核 → 实现 |
 | 添加新功能 | 新增 Hook、新增验证规则 | 需求 → 审核 → 实现 |
 
-**不需要走流程**：
+**走 Bug 修复流程**：
 | 变更类型 | 示例 |
 |----------|------|
-| Bug 修复 | 修复空指针、修复边界条件 |
-| 代码重构 | 重命名变量、提取函数（不改变行为）|
+| Bug 修复 | 修复空指针、修复边界条件 → 加载 bugfix.md |
+| 代码重构 | 重命名变量、提取函数（不改变行为）→ 加载 bugfix.md |
+
+**无需流程**：
+| 变更类型 | 示例 |
+|----------|------|
 | 文档更新 | 修复错别字、补充说明 |
 
-**关键判断**：
-```
-用户说"删除 X" → 是否改变系统行为/接口？
-  ├─ 是 → 必须走流程（即使用户明确授权）
-  └─ 否 → 可以直接执行
-```
-
-### 2.3 Phase-Based Routing
+### 2.2 Phase-Based Routing
 
 | 当前 Phase | 默认路由 |
 |------------|----------|
@@ -151,6 +135,20 @@ set-phase <id> feature_review
     ├─ 批准 → set-phase <id> 下一阶段
     ├─ 修改 → AI 修改后重新审核
     └─ 拒绝 → 返回上一阶段
+```
+
+**PRD 审核特殊处理**：
+
+```
+PRD 文档审核通过（prd.phase = prd_draft）
+    ↓
+set-prd-phase prd_scope_review
+    ↓
+用户确认 scope 无误
+    ↓
+set-prd-phase prd_decomposing
+    ↓
+进入需求分解阶段
 ```
 
 **批准语法**：
@@ -286,20 +284,19 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 ### 始终做
 
-- 每次输入 → 先分析输入类型
-- 直接执行 → 立即执行，不走流程
+- 每次输入 → 先分析输入类型，路由到对应流程
 - 进入子流程 → 加载对应执行规范
 - 状态更新 → 通过 State CLI
 - 文档变更 → 运行 index.js
-- Bug 修复 → 先进行根因分析
+- Bug 修复 → 加载 bugfix.md 进行根因分析
 
 ### 绝不做
 
-- 跳过输入分析直接执行
-- 将复杂问题错判为"直接执行"
+- 跳过输入分析
 - 跳过 review 阶段
 - 未经人类批准更新 phase
 - 直接编辑 state.json
+- 未走流程直接修改代码
 - 跳过根因分析直接修复 done 状态的代码
 
 ---
@@ -318,13 +315,20 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 ---
 
-*Version: v2.1*
-*Aligned with: flow-workflows.md v9.1, fea-state-management.md v16.0*
+*Version: v2.2*
+*Aligned with: flow-workflows.md v9.2, fea-state-management.md v16.0*
 *Updated: 2025-12-30*
 
 ---
 
 ## Changelog
+
+### v2.2 (2025-12-30)
+- **删除"直接执行"意图类型**：所有代码修改必须走流程
+- §2 Input Analysis 移除"直接执行"路由
+- §2.1 删除 Direct Execution Criteria，重构为 Must Follow Process Criteria
+- §10 Execution Principles 更新，强调"未走流程直接修改代码"为禁止行为
+- 对齐需求文档 flow-workflows.md v9.2
 
 ### v2.1 (2025-12-30)
 - §6.2 简化为 PRD Decomposing Routing（只保留路由，执行细节移至 requirements.md §5）

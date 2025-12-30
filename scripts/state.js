@@ -207,6 +207,21 @@ function listActive() {
 }
 
 function activate(id) {
+  // 验证 ID 是否存在于 index.json 中
+  const index = readIndex();
+  if (!index) {
+    const indexScriptPath = path.join(__dirname, 'index.js');
+    console.error(`index.json not found. Run: node "${indexScriptPath}"`);
+    process.exit(1);
+  }
+  const doc = index.documents?.find(d => d.id === id);
+  if (!doc) {
+    console.error(`Work item not found: ${id}`);
+    console.error(`Hint: First create the document using /write-feature, /write-capability, or /write-flow`);
+    console.error(`Then the index will be updated automatically, and you can activate the work item.`);
+    process.exit(1);
+  }
+
   acquireLock();
   try {
     const state = readState();

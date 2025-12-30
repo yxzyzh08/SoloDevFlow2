@@ -16,6 +16,11 @@ description: 编写或更新产品需求文档（PRD）
    - 存在 → 更新模式（保留未变更章节）
 3. 根据用户输入编写/更新文档
 4. 输出到 `docs/requirements/prd.md`
+5. **【重要】更新 PRD 状态**：
+   ```bash
+   # 新建 PRD 时设置为 draft 阶段
+   node scripts/state.js set-prd-phase prd_draft
+   ```
 
 ## 输出要求
 

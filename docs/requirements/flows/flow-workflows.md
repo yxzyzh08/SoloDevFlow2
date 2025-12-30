@@ -6,7 +6,7 @@ status: done
 phase: done
 priority: P0
 domain: process
-version: "9.1"
+version: "9.2"
 ---
 
 # Flow: Workflows <!-- id: flow_workflows -->
@@ -60,8 +60,8 @@ version: "9.1"
 │                                                              │
 │  ┌────────┬────────┬────────┬────────┬────────┬────────┐   │
 │  ↓        ↓        ↓        ↓        ↓        ↓        ↓   │
-│ 直接    产品    需求    设计    实现    验收    无关     │
-│ 执行    咨询    流程    流程    流程    流程    拒绝     │
+│ 产品    Bug     需求    设计    实现    验收    无关     │
+│ 咨询    修复    流程    流程    流程    流程    拒绝     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -75,7 +75,6 @@ version: "9.1"
 
 | 类型 | 识别信号 | 路由目标 |
 |------|----------|----------|
-| **直接执行** | 简单明确、单步操作 | 立即执行，不走流程 |
 | **产品咨询** | 询问功能、进度、实现 | §4 Consulting Flow |
 | **Bug 修复** | 报告问题、修复请求 | §5 Bug Fix Flow |
 | **需求处理** | 新功能、变更、规范修改 | [flow-requirements.md](flow-requirements.md) |
@@ -85,33 +84,19 @@ version: "9.1"
 | **审核批准** | 批准/通过（review 阶段） | §6 Review Approval |
 | **无关想法** | 与本产品完全无关 | 直接拒绝 |
 
-### 3.2 Direct Execution Criteria
-
-直接执行类型的判断标准：
-
-| 条件 | 说明 |
-|------|------|
-| ✅ 范围明确 | 单步操作可完成 |
-| ✅ 不涉及设计变更 | 无需更新文档 |
-| ✅ 可直接定位 | 问题明确（如"修复第42行空指针"） |
-
-**边界场景**：
-- "修复登录问题" → ❌ 不是直接执行（问题不明确）
-- "修复 login.js 第42行空指针" → ✅ 直接执行
-
-### 3.3 Phase-Based Routing
+### 3.2 Phase-Based Routing
 
 根据当前 Work Item 的 phase 自动路由：
 
 | 当前 Phase | 默认路由 |
 |------------|----------|
-| `feature_requirements` | flow-requirements.md 或 §13 Flow Type Handling |
-| `feature_review` | §5 Review Approval |
+| `feature_requirements` | flow-requirements.md 或 §16 Flow Type Handling |
+| `feature_review` | §6 Review Approval |
 | `feature_design` | flow-design.md |
 | `feature_implementation` | flow-implementation.md |
 | `feature_testing` | flow-testing.md |
 
-### 3.4 Work Item Type Routing
+### 3.3 Work Item Type Routing
 
 根据 Work Item 类型（type 字段）执行不同流程：
 
@@ -119,7 +104,7 @@ version: "9.1"
 |------|-------------------|---------------|
 | **feature** | 标准流程 | 标准流程 |
 | **capability** | 标准流程 | 标准流程 |
-| **flow** | 标准流程 | **特殊流程** → §13 Flow Type Handling |
+| **flow** | 标准流程 | **特殊流程** → §16 Flow Type Handling |
 
 **Flow 特殊性**：
 - Flow 是跨模块协作流程，依赖多个 Feature/Capability
@@ -553,19 +538,19 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 ### 始终做
 
-- 每次输入 → 先分析输入类型
-- 直接执行 → 立即执行，不走流程
+- 每次输入 → 先分析输入类型，路由到对应流程
 - 进入子流程 → 加载对应子流程文档
 - 状态更新 → 通过 State CLI
 - 文档变更 → 运行 index.js
+- Bug 修复 → 先走 Bug Fix Flow 进行根因分析
 
 ### 绝不做
 
-- 跳过输入分析直接执行
-- 将复杂问题错判为"直接执行"
+- 跳过输入分析
 - 跳过 review 阶段
 - 未经人类批准更新 phase
 - 直接编辑 state.json
+- 未走流程直接修改代码
 
 ---
 
@@ -712,7 +697,7 @@ node scripts/state.js add-subtask \
 
 ---
 
-*Version: v9.1*
+*Version: v9.2*
 *Created: 2024-12-20*
 *Updated: 2025-12-30*
-*Changes: v9.1 简化 §10 PRD Lifecycle，移除执行细节，添加路由到 flow-requirements.md §5；v9.0 新增 §9 Two-Layer Lifecycle 和 §10 PRD Lifecycle（两层状态机设计）*
+*Changes: v9.2 删除"直接执行"意图类型，所有代码修改必须走流程；v9.1 简化 §10 PRD Lifecycle，移除执行细节，添加路由到 flow-requirements.md §5；v9.0 新增 §9 Two-Layer Lifecycle 和 §10 PRD Lifecycle（两层状态机设计）*

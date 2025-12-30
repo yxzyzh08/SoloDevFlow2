@@ -1,7 +1,7 @@
 ---
 type: design
 id: design-hooks-integration
-status: in_progress
+status: done
 version: "1.6"
 inputs:
   - docs/requirements/flows/flow-workflows.md#flow_hooks

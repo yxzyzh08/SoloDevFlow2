@@ -1,21 +1,19 @@
 {
-  "generated": "2025-12-30T17:30:08.327+08:00",
+  "generated": "2025-12-30T18:24:55.910+08:00",
   "summary": {
     "total": 18,
-    "done": 16,
-    "in_progress": 2,
+    "done": 18,
+    "in_progress": 0,
     "not_started": 0
   },
-  "activeWorkItems": [
-    "hooks-integration"
-  ],
+  "activeWorkItems": [],
   "documents": [
     {
       "id": "design-hooks-integration",
       "type": "design",
       "title": "Hooks Integration Design v1.6",
       "workMode": null,
-      "status": "in_progress",
+      "status": "done",
       "phase": null,
       "priority": null,
       "domain": null,
@@ -108,8 +106,8 @@
       "type": "feature",
       "title": "Hooks Integration",
       "workMode": "code",
-      "status": "in_progress",
-      "phase": "feature_review",
+      "status": "done",
+      "phase": "done",
       "priority": "P0",
       "domain": "ai-config",
       "path": "docs/requirements/features/fea-hooks-integration.md",

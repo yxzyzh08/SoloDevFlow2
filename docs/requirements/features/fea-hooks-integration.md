@@ -2,8 +2,8 @@
 type: feature
 id: hooks-integration
 workMode: code
-status: in_progress
-phase: feature_review
+status: done
+phase: done
 priority: P0
 domain: ai-config
 version: "1.7"

@@ -317,6 +317,7 @@ set-phase <id> feature_review
 │  4. set-phase <id> feature_review                        │
 │  5. 等待人类审核                                         │
 │     ├─ 批准 → Work Item 需求阶段完成                      │
+│     │         → 【重要】update-prd-progress 更新进度     │
 │     ├─ 需要修改 PRD → §5.3 PRD 回溯修改                  │
 │     └─ 发现新 Work Item → §5.4 动态添加                  │
 │  6. 继续下一个 Work Item                                  │
@@ -358,7 +359,15 @@ set-phase <id> feature_review
 4. 决定是否立即调研新 Work Item（根据依赖关系）
 5. 继续原调研或切换到新 Work Item
 
-### 5.5 Decomposing Completion Check
+### 5.5 Decomposing Progress Tracking
+
+**每个 Work Item 需求阶段完成后**：
+```bash
+# 更新 PRD 分解进度（done = 已完成数量, total = 总数量）
+node scripts/state.js update-prd-progress <done> <total>
+```
+
+### 5.6 Decomposing Completion Check
 
 **完成条件**：
 - [ ] Feature Roadmap 中所有 Work Items 的 phase ≥ `feature_design`
@@ -403,6 +412,23 @@ node scripts/state.js set-prd-phase prd_done
 
 ---
 
-*Version: v2.1*
+*Version: v2.2*
 *Aligned with: flow-requirements.md v2.1*
 *Updated: 2025-12-30*
+
+---
+
+## Changelog
+
+### v2.2 (2025-12-30)
+- §5.2 添加 Work Item 审核通过后的进度更新指导（update-prd-progress）
+- 新增 §5.5 Decomposing Progress Tracking
+- §5.5 → §5.6 Decomposing Completion Check
+
+### v2.1 (2025-12-30)
+- §2.3 IMPACT 添加多领域检测信号
+- 新增 §3.7 Multi Work Item Decomposition 执行逻辑
+
+### v2.0 (2025-12-30)
+- 新增 §5 Flow D: PRD Decomposing（PRD 分解阶段执行流程）
+- 对齐需求文档 flow-requirements.md v2.0
