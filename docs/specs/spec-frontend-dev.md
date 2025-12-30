@@ -30,6 +30,7 @@
 | 章节 | Small | Medium | Large |
 |------|:-----:|:------:|:-----:|
 | Directory Structure | 简化版 | 标准版 | 标准版 |
+| Design Assets | 外部链接 | 专用目录 | 专用目录 |
 | Component Design (Atomic) | 1-2 层 | 3-4 层 | 完整 5 层 |
 | State Management | useState 即可 | 按需选择 | 完整方案 |
 | Styling | 单一方案 | 按需选择 | 设计系统 |
@@ -112,7 +113,8 @@ project/
 │   ├── types/                # 类型定义
 │   ├── utils/                # 工具函数
 │   ├── styles/               # 全局样式
-│   └── assets/               # 静态资源
+│   └── assets/               # 运行时静态资源（打包到产品）
+├── design-assets/            # UI 设计资产（开发参考，不打包）
 ├── tests/                    # 测试代码
 ├── public/                   # 公共资源
 ├── docs/                     # 文档
@@ -128,6 +130,69 @@ project/
 | 常量 | UPPER_SNAKE_CASE |
 | 样式文件 | 与组件名对应 |
 | 测试文件 | 与被测文件名对应 |
+
+### 2.3 Design Assets <!-- id: spec_frontend_design_assets -->
+
+UI 设计资产（原型图、设计稿、视觉规范）是开发的重要参考，与技术设计文档（`docs/designs/`）性质不同。
+
+#### 2.3.1 目录位置
+
+| 位置 | 用途 | 说明 |
+|------|------|------|
+| `design-assets/` | UI 设计资产 | 开发参考，不打包到产品 |
+| `src/assets/` | 运行时资源 | 图片、字体等，打包到产品 |
+| `docs/designs/` | 技术设计文档 | 架构、接口、数据模型（文本） |
+
+#### 2.3.2 目录结构
+
+```
+design-assets/
+├── prototypes/           # 页面原型图（按页面/模块组织）
+│   ├── home/
+│   │   ├── home-desktop.png
+│   │   └── home-mobile.png
+│   └── dashboard/
+├── components/           # 组件设计稿（可选）
+├── icons/                # 图标源文件（可选，如 SVG 源文件）
+├── style-guide/          # 视觉规范（可选）
+│   ├── colors.png
+│   └── typography.png
+└── README.md             # 设计资产索引 + 外部链接
+```
+
+#### 2.3.3 按项目规模适配
+
+| 规模 | 建议 |
+|------|------|
+| **Small** | 使用外部链接（Figma/Sketch Cloud）即可，在 README 中记录链接 |
+| **Medium** | 创建 `design-assets/` 目录，存放关键页面原型 |
+| **Large** | 完整的 `design-assets/` 结构，按模块组织，配合设计系统 |
+
+#### 2.3.4 外部设计工具集成
+
+推荐使用云端设计工具，在 `design-assets/README.md` 中记录链接：
+
+```markdown
+## Design Assets
+
+### Figma
+- [完整设计稿](https://figma.com/file/xxx)
+- [组件库](https://figma.com/file/yyy)
+
+### 本地资产
+- `prototypes/` - 导出的页面原型图
+- `icons/` - 图标 SVG 源文件
+```
+
+#### 2.3.5 Best Practices
+
+| Do | Don't |
+|-----|-------|
+| 使用云端设计工具 + 链接 | 在 Git 中存储大量设计源文件 |
+| 按页面/模块组织原型图 | 扁平存放所有设计文件 |
+| 导出 PNG/SVG 作为开发参考 | 存储 .psd/.sketch 等大型源文件 |
+| 在 README 中记录设计链接 | 假设开发者知道去哪找设计稿 |
+| 区分开发参考 vs 运行时资源 | 把原型图放在 src/assets/ |
 
 ---
 
@@ -584,7 +649,7 @@ locales/
 
 ---
 
-*Version: v2.3*
+*Version: v2.4*
 *Created: 2025-12-23*
-*Updated: 2025-12-23*
-*Changes: v2.0 技术栈无关; v2.1 新增 Routing、i18n; v2.2 E2E 测试属于测试规范; v2.3 新增项目规模分级（Small/Medium/Large），避免小项目过度设计*
+*Updated: 2025-12-30*
+*Changes: v2.4 新增 §2.3 Design Assets（UI 设计资产管理：原型图、设计稿目录规范）; v2.3 新增项目规模分级（Small/Medium/Large），避免小项目过度设计; v2.2 E2E 测试属于测试规范; v2.1 新增 Routing、i18n; v2.0 技术栈无关*

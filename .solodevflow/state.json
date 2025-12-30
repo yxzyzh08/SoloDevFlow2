@@ -48,11 +48,21 @@
     "lastGitCommit": "",
     "lastGitCommitMessage": "",
     "lastGitCommitAt": "",
-    "stateFileVersion": 397,
+    "stateFileVersion": 401,
     "totalStateChanges": 22
   },
-  "lastUpdated": "2025-12-30T09:57:46.937+08:00",
-  "subtasks": [],
+  "lastUpdated": "2025-12-30T10:31:02.091+08:00",
+  "subtasks": [
+    {
+      "id": "st_1767061768030_001",
+      "workitemId": "spec-frontend-dev-improvement",
+      "description": "更新 spec-frontend-dev.md 添加 Design Assets 章节",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-30T10:29:28.030+08:00",
+      "completedAt": "2025-12-30T10:30:53.890+08:00"
+    }
+  ],
   "solodevflow": {
     "version": "2.0.0",
     "upgradedAt": "2025-12-30T09:50:31.576+08:00"
