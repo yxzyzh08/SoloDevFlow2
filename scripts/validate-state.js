@@ -66,7 +66,8 @@ function validateState(state) {
   if (!validateRequired(state, 'schemaVersion', 'root')) return;
   if (state.schemaVersion !== EXPECTED_SCHEMA_VERSION) {
     if (state.schemaVersion === '13.0.0') {
-      warn(`Schema version mismatch: expected "${EXPECTED_SCHEMA_VERSION}", got "${state.schemaVersion}". Run: node scripts/state.js migrate-v14`);
+      const stateScriptPath = path.join(__dirname, 'state.js');
+      warn(`Schema version mismatch: expected "${EXPECTED_SCHEMA_VERSION}", got "${state.schemaVersion}". Run: node "${stateScriptPath}" migrate-v14`);
     } else {
       warn(`Schema version mismatch: expected "${EXPECTED_SCHEMA_VERSION}", got "${state.schemaVersion}"`);
     }
@@ -125,7 +126,8 @@ function validateState(state) {
 
   // v13.0: session removed (was never used in practice)
   if (state.session !== undefined) {
-    warn('session is deprecated in v13.0. Run: node scripts/state.js migrate-v14');
+    const stateScriptPath = path.join(__dirname, 'state.js');
+    warn(`session is deprecated in v13.0. Run: node "${stateScriptPath}" migrate-v14`);
   }
 
   // Domains

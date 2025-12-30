@@ -240,7 +240,8 @@ function setPhase(workitemId, phase) {
   // 查找文档路径
   const index = readIndex();
   if (!index) {
-    console.error('index.json not found. Run: node scripts/index.js');
+    const indexScriptPath = path.join(__dirname, 'index.js');
+    console.error(`index.json not found. Run: node "${indexScriptPath}"`);
     process.exit(1);
   }
   const doc = index.documents?.find(d => d.id === workitemId);
@@ -312,8 +313,9 @@ function setPhase(workitemId, phase) {
     }
   }
 
-  // 重新生成 index
-  execSync('node scripts/index.js', { cwd: PROJECT_ROOT, stdio: 'pipe' });
+  // 重新生成 index（使用动态路径，支持源项目和安装项目）
+  const indexScriptPath = path.join(__dirname, 'index.js');
+  execSync(`node "${indexScriptPath}"`, { cwd: PROJECT_ROOT, stdio: 'pipe' });
 
   console.log(JSON.stringify({ success: true, workitemId, phase, status }, null, 2));
 }
@@ -536,6 +538,363 @@ function migrateV14() {
   }
 }
 
+function getSchema() {
+  const schema = {
+    name: "state-manager",
+    version: "15.0.0",
+    commands: [
+      {
+        name: "summary",
+        category: "Query",
+        description: "获取项目状态摘要（JSON 格式）",
+        syntax: "summary",
+        parameters: [],
+        examples: [
+          "node scripts/state.js summary"
+        ]
+      },
+      {
+        name: "list-active",
+        category: "Query",
+        description: "列出所有活跃的 Work Items",
+        syntax: "list-active",
+        parameters: [],
+        examples: [
+          "node scripts/state.js list-active"
+        ]
+      },
+      {
+        name: "activate",
+        category: "Work Item Activation",
+        description: "激活工作项（Feature/Capability/Flow），添加到 activeWorkItems 列表",
+        syntax: "activate <id>",
+        parameters: [
+          {
+            name: "id",
+            type: "string",
+            required: true,
+            description: "工作项 ID，必须在 index.json 中存在"
+          }
+        ],
+        examples: [
+          "node scripts/state.js activate state-management",
+          "node scripts/state.js activate hooks-integration"
+        ]
+      },
+      {
+        name: "deactivate",
+        category: "Work Item Activation",
+        description: "停用工作项，从 activeWorkItems 列表中移除",
+        syntax: "deactivate <id>",
+        parameters: [
+          {
+            name: "id",
+            type: "string",
+            required: true,
+            description: "工作项 ID"
+          }
+        ],
+        examples: [
+          "node scripts/state.js deactivate state-management"
+        ]
+      },
+      {
+        name: "set-phase",
+        category: "Work Item Activation",
+        description: "设置工作项的开发阶段（自动更新文档 frontmatter）",
+        syntax: "set-phase <id> <phase>",
+        parameters: [
+          {
+            name: "id",
+            type: "string",
+            required: true,
+            description: "工作项 ID"
+          },
+          {
+            name: "phase",
+            type: "enum",
+            required: true,
+            description: "开发阶段",
+            values: [
+              "pending",
+              "feature_requirements",
+              "feature_review",
+              "feature_design",
+              "feature_implementation",
+              "feature_testing",
+              "done"
+            ]
+          }
+        ],
+        examples: [
+          "node scripts/state.js set-phase state-management feature_requirements",
+          "node scripts/state.js set-phase hooks-integration feature_design"
+        ]
+      },
+      {
+        name: "add-subtask",
+        category: "Subtask",
+        description: "添加子任务到指定工作项",
+        syntax: "add-subtask --workitem=<id> --desc=\"description\" [--source=ai|impact-analysis|user|interrupted] [--status=pending|in_progress]",
+        parameters: [
+          {
+            name: "workitem",
+            type: "string",
+            required: true,
+            description: "工作项 ID",
+            format: "--workitem=<value>"
+          },
+          {
+            name: "desc",
+            type: "string",
+            required: true,
+            description: "任务描述",
+            format: "--desc=\"<value>\""
+          },
+          {
+            name: "source",
+            type: "enum",
+            required: false,
+            description: "任务来源",
+            values: ["ai", "impact-analysis", "user", "interrupted"],
+            default: "user",
+            format: "--source=<value>"
+          },
+          {
+            name: "status",
+            type: "enum",
+            required: false,
+            description: "任务状态",
+            values: ["pending", "in_progress"],
+            default: "pending",
+            format: "--status=<value>"
+          }
+        ],
+        examples: [
+          "node scripts/state.js add-subtask --workitem=state-management --desc=\"实现 --schema 命令\" --source=ai --status=in_progress",
+          "node scripts/state.js add-subtask --workitem=hooks-integration --desc=\"修复 Hook 错误处理\""
+        ]
+      },
+      {
+        name: "list-subtasks",
+        category: "Subtask",
+        description: "列出所有子任务或指定工作项的子任务",
+        syntax: "list-subtasks [--workitem=<id>]",
+        parameters: [
+          {
+            name: "workitem",
+            type: "string",
+            required: false,
+            description: "工作项 ID（可选，省略则列出所有子任务）",
+            format: "--workitem=<value>"
+          }
+        ],
+        examples: [
+          "node scripts/state.js list-subtasks",
+          "node scripts/state.js list-subtasks --workitem=state-management"
+        ]
+      },
+      {
+        name: "complete-subtask",
+        category: "Subtask",
+        description: "标记子任务为已完成",
+        syntax: "complete-subtask <id>",
+        parameters: [
+          {
+            name: "id",
+            type: "string",
+            required: true,
+            description: "子任务 ID（格式：st_timestamp_序号）"
+          }
+        ],
+        examples: [
+          "node scripts/state.js complete-subtask st_1703145600000_001"
+        ]
+      },
+      {
+        name: "skip-subtask",
+        category: "Subtask",
+        description: "跳过子任务（标记为 skipped）",
+        syntax: "skip-subtask <id>",
+        parameters: [
+          {
+            name: "id",
+            type: "string",
+            required: true,
+            description: "子任务 ID"
+          }
+        ],
+        examples: [
+          "node scripts/state.js skip-subtask st_1703145600000_002"
+        ]
+      },
+      {
+        name: "add-pending-doc",
+        category: "Pending Docs",
+        description: "添加待补充的文档（文档债务）",
+        syntax: "add-pending-doc --type=<design|feature|prd> --target=\"path\" --desc=\"description\" [--reason=\"reason\"]",
+        parameters: [
+          {
+            name: "type",
+            type: "enum",
+            required: true,
+            description: "文档类型",
+            values: ["design", "feature", "prd"],
+            format: "--type=<value>"
+          },
+          {
+            name: "target",
+            type: "string",
+            required: true,
+            description: "目标文档路径",
+            format: "--target=\"<value>\""
+          },
+          {
+            name: "desc",
+            type: "string",
+            required: true,
+            description: "待补充内容的描述",
+            format: "--desc=\"<value>\""
+          },
+          {
+            name: "reason",
+            type: "string",
+            required: false,
+            description: "产生债务的原因",
+            format: "--reason=\"<value>\""
+          }
+        ],
+        examples: [
+          "node scripts/state.js add-pending-doc --type=design --target=\"docs/designs/des-xxx.md\" --desc=\"需补充接口设计\" --reason=\"实现时发现需要新增 API\""
+        ]
+      },
+      {
+        name: "list-pending-docs",
+        category: "Pending Docs",
+        description: "列出所有待补充的文档",
+        syntax: "list-pending-docs",
+        parameters: [],
+        examples: [
+          "node scripts/state.js list-pending-docs"
+        ]
+      },
+      {
+        name: "clear-pending-docs",
+        category: "Pending Docs",
+        description: "清空所有待补充文档（处理完成后调用）",
+        syntax: "clear-pending-docs",
+        parameters: [],
+        examples: [
+          "node scripts/state.js clear-pending-docs"
+        ]
+      },
+      {
+        name: "refactoring-status",
+        category: "Refactoring Mode",
+        description: "获取重构模式的状态",
+        syntax: "refactoring-status",
+        parameters: [],
+        examples: [
+          "node scripts/state.js refactoring-status"
+        ]
+      },
+      {
+        name: "enable-refactoring",
+        category: "Refactoring Mode",
+        description: "启用重构模式",
+        syntax: "enable-refactoring",
+        parameters: [],
+        examples: [
+          "node scripts/state.js enable-refactoring"
+        ]
+      },
+      {
+        name: "disable-refactoring",
+        category: "Refactoring Mode",
+        description: "禁用重构模式（退出重构）",
+        syntax: "disable-refactoring",
+        parameters: [],
+        examples: [
+          "node scripts/state.js disable-refactoring"
+        ]
+      },
+      {
+        name: "set-refactoring-phase",
+        category: "Refactoring Mode",
+        description: "设置重构阶段",
+        syntax: "set-refactoring-phase <phase>",
+        parameters: [
+          {
+            name: "phase",
+            type: "enum",
+            required: true,
+            description: "重构阶段",
+            values: ["understand", "prd", "requirements", "design", "validate", "completed"]
+          }
+        ],
+        examples: [
+          "node scripts/state.js set-refactoring-phase requirements"
+        ]
+      },
+      {
+        name: "update-refactoring-progress",
+        category: "Refactoring Mode",
+        description: "更新重构进度",
+        syntax: "update-refactoring-progress <type> <done> [total]",
+        parameters: [
+          {
+            name: "type",
+            type: "enum",
+            required: true,
+            description: "进度类型",
+            values: ["prd", "features", "capabilities", "flows", "designs"]
+          },
+          {
+            name: "done",
+            type: "string",
+            required: true,
+            description: "完成数量或状态（prd: not_started|in_progress|done，其他: 数字）"
+          },
+          {
+            name: "total",
+            type: "number",
+            required: false,
+            description: "总数（仅非 prd 类型需要）"
+          }
+        ],
+        examples: [
+          "node scripts/state.js update-refactoring-progress prd done",
+          "node scripts/state.js update-refactoring-progress features 5 10"
+        ]
+      },
+      {
+        name: "migrate-v14",
+        category: "Migration",
+        description: "从 v13 迁移到 v14（重命名 activeFeatures 为 activeWorkItems）",
+        syntax: "migrate-v14",
+        parameters: [],
+        examples: [
+          "node scripts/state.js migrate-v14"
+        ]
+      }
+    ],
+    commonErrors: [
+      {
+        error: "Unknown: create",
+        reason: "state.js 没有 create 命令",
+        solution: "工作项需先在文档中创建（使用模板），然后使用 activate <id> 激活"
+      },
+      {
+        error: "Unknown: update",
+        reason: "state.js 没有 update 命令",
+        solution: "使用 set-phase 更新阶段，或直接编辑文档 frontmatter 后运行索引脚本"
+      }
+    ]
+  };
+
+  console.log(JSON.stringify(schema, null, 2));
+}
+
 function printHelp() {
   console.log(`state.js v15.0.0 - State Management CLI
 
@@ -582,6 +941,7 @@ Terminology:
 
 const args = process.argv.slice(2);
 if (args.length === 0 || args[0] === '--help') { printHelp(); process.exit(0); }
+if (args[0] === '--schema') { getSchema(); process.exit(0); }
 
 switch (args[0]) {
   // Query

@@ -6,7 +6,7 @@ status: done
 phase: done
 priority: P0
 domain: process
-version: "14.0"
+version: "15.0"
 ---
 
 # Feature: State Management <!-- id: feat_state_management -->
@@ -23,6 +23,8 @@ version: "14.0"
 - 无法追踪 Feature 审批状态，不清楚哪些阶段已完成
 - 手动维护状态容易出错，数据不一致
 - 单任务跟踪限制，无法清晰表达并行处理的多个任务
+- **AI 不清楚工具的可用命令和参数**，容易执行错误的命令（如 `create` 不存在）
+- CLI 工具缺乏自文档化能力，AI 需要猜测命令语法
 
 ### 1.2 Value
 
@@ -31,6 +33,8 @@ version: "14.0"
 - **自动化校验**：validate-state.js 脚本保证数据一致性
 - **无冗余设计**：frontmatter 为唯一数据源，index.json 由程序派生
 - **多任务并行**：activeWorkItems 支持同时跟踪多个活跃 Work Item
+- **工具自描述**：AI 通过 `--schema` 获取所有命令定义，零猜测调用工具
+- **文档永不过期**：工具输出的 schema 即是最新文档，自动同步
 
 ---
 
@@ -62,6 +66,7 @@ version: "14.0"
 | C5 | 自动校验 | validate-state.js 脚本校验结构、枚举、引用完整性 |
 | C6 | 多任务并行 | activeWorkItems 数组支持同时跟踪多个活跃 Work Item |
 | C7 | 并发控制 | 文件锁机制防止多 Session 同时写入导致数据损坏 |
+| C8 | **CLI 自文档化** | **通过 `--schema` 输出结构化 JSON，描述所有命令、参数、示例** |
 
 ---
 
@@ -75,6 +80,8 @@ version: "14.0"
 | Work Mode | 检查 frontmatter | feature/capability/flow 有 workMode 字段 |
 | 多任务支持 | 检查 state.json | activeWorkItems 为数组，支持多个 Work Item |
 | 并发控制 | 检查 state.js | 写操作使用 acquireLock/releaseLock |
+| **CLI Schema 输出** | **`node scripts/state.js --schema`** | **输出有效的 JSON，包含所有命令定义** |
+| **Schema 完整性** | **检查 --schema 输出** | **包含：name, description, syntax, parameters, examples** |
 
 ---
 
@@ -532,7 +539,185 @@ Session A 写入:
 
 **结论**：对于低并发的本地工具场景，当前实现已足够。
 
-### 5.7 Migration History
+### 5.7 CLI Self-Documentation
+
+#### 设计目标
+
+为 state.js 添加 `--schema` 命令，输出结构化 JSON 描述所有命令，使 AI Agent 能够：
+- 无需猜测即可正确调用命令
+- 自动发现新增/修改的命令
+- 获取参数类型、枚举值、示例
+
+#### Schema 输出格式
+
+```json
+{
+  "name": "state-manager",
+  "version": "15.0.0",
+  "commands": [
+    {
+      "name": "activate",
+      "category": "Work Item Activation",
+      "description": "激活工作项（Feature/Capability/Flow），添加到 activeWorkItems 列表",
+      "syntax": "activate <id>",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true,
+          "description": "工作项 ID，必须在 index.json 中存在"
+        }
+      ],
+      "examples": [
+        "node scripts/state.js activate fea-auth",
+        "node scripts/state.js activate cap-user-management"
+      ]
+    },
+    {
+      "name": "set-phase",
+      "category": "Work Item Activation",
+      "description": "设置工作项的开发阶段",
+      "syntax": "set-phase <id> <phase>",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true,
+          "description": "工作项 ID"
+        },
+        {
+          "name": "phase",
+          "type": "enum",
+          "required": true,
+          "description": "开发阶段",
+          "values": [
+            "pending",
+            "feature_requirements",
+            "feature_review",
+            "feature_design",
+            "feature_implementation",
+            "feature_testing",
+            "done"
+          ]
+        }
+      ],
+      "examples": [
+        "node scripts/state.js set-phase fea-auth feature_requirements"
+      ]
+    },
+    {
+      "name": "add-subtask",
+      "category": "Subtask",
+      "description": "添加子任务到指定工作项",
+      "syntax": "add-subtask --workitem=<id> --desc=\"description\" [--source=ai|impact-analysis|user|interrupted] [--status=pending|in_progress]",
+      "parameters": [
+        {
+          "name": "workitem",
+          "type": "string",
+          "required": true,
+          "description": "工作项 ID",
+          "format": "--workitem=<value>"
+        },
+        {
+          "name": "desc",
+          "type": "string",
+          "required": true,
+          "description": "任务描述",
+          "format": "--desc=\"<value>\""
+        },
+        {
+          "name": "source",
+          "type": "enum",
+          "required": false,
+          "description": "任务来源",
+          "values": ["ai", "impact-analysis", "user", "interrupted"],
+          "default": "ai",
+          "format": "--source=<value>"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "required": false,
+          "description": "任务状态",
+          "values": ["pending", "in_progress"],
+          "default": "pending",
+          "format": "--status=<value>"
+        }
+      ],
+      "examples": [
+        "node scripts/state.js add-subtask --workitem=fea-auth --desc=\"实现登录接口\" --source=ai --status=in_progress"
+      ]
+    }
+  ],
+  "commonErrors": [
+    {
+      "error": "Unknown: create",
+      "reason": "state.js 没有 create 命令",
+      "solution": "使用 activate <id> 激活工作项，工作项需先在文档中创建"
+    }
+  ]
+}
+```
+
+#### Schema 字段定义
+
+**顶层字段**：
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `name` | string | 工具名称 |
+| `version` | string | 工具版本（与 state.js 版本一致） |
+| `commands` | array | 所有命令定义 |
+| `commonErrors` | array | 常见错误和解决方案 |
+
+**Command 字段**：
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `name` | string | 命令名称 |
+| `category` | string | 命令分类（如 "Query", "Work Item Activation"） |
+| `description` | string | 命令描述 |
+| `syntax` | string | 完整语法（包含必选/可选参数） |
+| `parameters` | array | 参数定义 |
+| `examples` | array | 使用示例（至少 1 个） |
+
+**Parameter 字段**：
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `name` | string | 参数名 |
+| `type` | string | 类型：string / enum / number |
+| `required` | boolean | 是否必填 |
+| `description` | string | 参数说明 |
+| `format` | string | 参数格式（如 `--name=<value>`） |
+| `values` | array | 枚举值（仅 type=enum） |
+| `default` | any | 默认值（可选） |
+
+#### 实现要求
+
+1. **命令完整性**：`--schema` 必须包含 `--help` 中的所有命令
+2. **参数准确性**：枚举值必须与代码实现一致
+3. **示例可执行**：examples 中的命令必须可直接复制执行
+4. **错误预防**：在 `commonErrors` 中记录常见误用（如本次的 `create` 错误）
+5. **版本同步**：schema 输出的 version 必须与 state.js 文件版本一致
+
+#### AI 集成方式
+
+**方式 1：SessionStart Hook 注入**（推荐）
+```bash
+# .claude/hooks/session-start.sh
+node scripts/state.js --schema > /tmp/state-schema.json
+echo "<tool-schema>"
+cat /tmp/state-schema.json
+echo "</tool-schema>"
+```
+
+**方式 2：CLAUDE.md 静态文档**（备选）
+- 在 CLAUDE.md 或 workflows.md 中嵌入 schema
+- 缺点：需要手动维护同步
+
+**方式 3：未来 MCP 标准**（长期）
+- 发布为 MCP 服务器
+- AI 自动发现和调用
+
+### 5.8 Migration History
 
 | 版本 | 主要变更 |
 |------|----------|
@@ -555,8 +740,10 @@ Session A 写入:
 | v12.3 | 新增 `feature_review` 阶段，需求完成后必须人类审核才能进入设计 |
 | v13.0 | **移除 session 结构**：session.mode/context/pendingRequirements 设计过于理想化，实际从未使用 |
 | v14.0 | **术语统一**：`activeFeatures` → `activeWorkItems`，`featureId` → `workitemId`。"Work Item" 作为 Feature/Capability/Flow 的统一术语。CLI 命令简化：`activate-feature` → `activate`，`deactivate-feature` → `deactivate` |
+| v15.0 | **CLI 自文档化**：新增 `--schema` 命令，输出结构化 JSON 描述所有命令、参数、枚举值和示例，解决 AI 调用工具时的命令猜测问题 |
 
 **Schema 升级**：
+- v15.0: 无 Schema 变更，仅新增 CLI 命令
 - v14.0: 运行 `node scripts/state.js migrate-v14` 自动迁移
 - 其他版本：由 AI 直接编辑 state.json 执行
 
@@ -588,9 +775,12 @@ Session A 写入:
 
 ### 6.2 Usage
 
-**v14.0 CLI 命令**：
+**v15.0 CLI 命令**：
 
 ```bash
+# === 工具自描述 (v15.0 新增) ===
+node scripts/state.js --schema               # 输出所有命令的 JSON Schema
+
 # === 查询操作 ===
 node scripts/state.js summary              # 状态摘要（JSON 格式）
 node scripts/state.js list-active          # 列出活跃 Work Items
@@ -730,8 +920,8 @@ version: "12.1"
 
 ---
 
-*Version: v14.0*
+*Version: v15.0*
 *Created: 2024-12-20*
-*Updated: 2025-12-28*
-*Changes: v13.0 移除 session 结构（mode/context/pendingRequirements）- 设计过于理想化，实际从未使用*
+*Updated: 2025-12-30*
+*Changes: v15.0 新增 CLI 自文档化（--schema 命令），输出结构化 JSON 描述所有命令，解决 AI 调用工具时的命令猜测问题*
 *Applies to: SoloDevFlow 2.0*

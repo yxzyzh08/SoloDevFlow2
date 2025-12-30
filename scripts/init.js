@@ -104,6 +104,8 @@ function copyFlowFiles(src, dest, isBootstrap = false) {
       content = content.replace(/\*\*需求文档\*\*：\[.*?\]\(.*?\)\n?/g, '');
       // 2. 替换脚本路径：scripts/ → .solodevflow/scripts/
       content = content.replace(/node scripts\//g, 'node .solodevflow/scripts/');
+      // 3. 删除 Changelog 部分（从 "## Changelog" 前的分隔符开始到文档末尾）
+      content = content.replace(/\n---\n+## Changelog[\s\S]*$/g, '');
       fs.writeFileSync(destPath, content);
     } else {
       copyFile(srcPath, destPath);

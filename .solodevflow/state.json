@@ -35,7 +35,9 @@
   },
   "flow": {
     "researchMethod": "bottom-up",
-    "activeWorkItems": []
+    "activeWorkItems": [
+      "hooks-integration"
+    ]
   },
   "domains": {
     "specification": "规范文档（元规范/需求/设计/开发/测试）",
@@ -48,19 +50,124 @@
     "lastGitCommit": "",
     "lastGitCommitMessage": "",
     "lastGitCommitAt": "",
-    "stateFileVersion": 401,
+    "stateFileVersion": 445,
     "totalStateChanges": 22
   },
-  "lastUpdated": "2025-12-30T10:31:02.091+08:00",
+  "lastUpdated": "2025-12-30T13:50:16.609+08:00",
   "subtasks": [
     {
-      "id": "st_1767061768030_001",
-      "workitemId": "spec-frontend-dev-improvement",
-      "description": "更新 spec-frontend-dev.md 添加 Design Assets 章节",
-      "status": "completed",
+      "id": "st_1767066580932_004",
+      "workitemId": "hooks-integration",
+      "description": "在新项目验证 PRD 创建流程",
+      "status": "pending",
       "source": "ai",
-      "createdAt": "2025-12-30T10:29:28.030+08:00",
-      "completedAt": "2025-12-30T10:30:53.890+08:00"
+      "createdAt": "2025-12-30T11:49:40.932+08:00"
+    },
+    {
+      "id": "st_1767066616774_007",
+      "workitemId": "hooks-integration",
+      "description": "更新需求文档",
+      "status": "pending",
+      "source": "ai",
+      "createdAt": "2025-12-30T11:50:16.774+08:00"
+    },
+    {
+      "id": "st_1767066692854_010",
+      "workitemId": "hooks-integration",
+      "description": "更新 fea-state-management.md 需求文档",
+      "status": "pending",
+      "source": "ai",
+      "createdAt": "2025-12-30T11:51:32.854+08:00"
+    },
+    {
+      "id": "st_1767066721366_011",
+      "workitemId": "hooks-integration",
+      "description": "更新 fea-state-management.md 需求挃（添加 CLI 自文档化功能）",
+      "status": "in_progress",
+      "source": "ai",
+      "createdAt": "2025-12-30T11:52:01.366+08:00"
+    },
+    {
+      "id": "st_1767067134786_011",
+      "workitemId": "hooks-integration",
+      "description": "Read installation script to understand current document handling",
+      "status": "in_progress",
+      "source": "ai",
+      "createdAt": "2025-12-30T11:58:54.786+08:00"
+    },
+    {
+      "id": "st_1767067134787_012",
+      "workitemId": "hooks-integration",
+      "description": "Analyze template document structure and changelog format",
+      "status": "in_progress",
+      "source": "ai",
+      "createdAt": "2025-12-30T11:58:54.787+08:00",
+      "updatedAt": "2025-12-30T12:01:08.494+08:00"
+    },
+    {
+      "id": "st_1767067134787_013",
+      "workitemId": "hooks-integration",
+      "description": "Generate requirement document for changelog removal feature",
+      "status": "in_progress",
+      "source": "ai",
+      "createdAt": "2025-12-30T11:58:54.787+08:00",
+      "updatedAt": "2025-12-30T12:01:38.116+08:00"
+    },
+    {
+      "id": "st_1767067358559_014",
+      "workitemId": "hooks-integration",
+      "description": "Implement changelog removal in copyFlowFiles function",
+      "status": "in_progress",
+      "source": "ai",
+      "createdAt": "2025-12-30T12:02:38.559+08:00"
+    },
+    {
+      "id": "st_1767067522588_014",
+      "workitemId": "hooks-integration",
+      "description": "更新文档和索引",
+      "status": "pending",
+      "source": "ai",
+      "createdAt": "2025-12-30T12:05:22.588+08:00"
+    },
+    {
+      "id": "st_1767069362313_017",
+      "workitemId": "hooks-integration",
+      "description": "Analyze error: Cannot find module scripts/index.js",
+      "status": "in_progress",
+      "source": "ai",
+      "createdAt": "2025-12-30T12:36:02.313+08:00"
+    },
+    {
+      "id": "st_1767069442832_018",
+      "workitemId": "hooks-integration",
+      "description": "Fix hardcoded scripts/index.js path in state.js",
+      "status": "in_progress",
+      "source": "ai",
+      "createdAt": "2025-12-30T12:37:22.832+08:00"
+    },
+    {
+      "id": "st_1767073325769_012",
+      "workitemId": "hooks-integration",
+      "description": "Analyze workflow issue: PRD should go to requirements phase, not design",
+      "status": "in_progress",
+      "source": "ai",
+      "createdAt": "2025-12-30T13:42:05.769+08:00"
+    },
+    {
+      "id": "st_1767073714509_013",
+      "workitemId": "hooks-integration",
+      "description": "Analyze fundamental workflow design flaw: PRD lifecycle",
+      "status": "in_progress",
+      "source": "ai",
+      "createdAt": "2025-12-30T13:48:34.509+08:00"
+    },
+    {
+      "id": "st_1767073816599_014",
+      "workitemId": "hooks-integration",
+      "description": "Design iterative PRD lifecycle: Draft → Active → Locked → Done",
+      "status": "in_progress",
+      "source": "ai",
+      "createdAt": "2025-12-30T13:50:16.599+08:00"
     }
   ],
   "solodevflow": {

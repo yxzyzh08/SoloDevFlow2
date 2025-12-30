@@ -1,8 +1,8 @@
 ---
 type: design
 id: design-hooks-integration
-status: done
-version: "1.4"
+status: in_progress
+version: "1.5"
 inputs:
   - docs/requirements/flows/flow-workflows.md#flow_hooks
   - docs/requirements/features/fea-hooks-integration.md
@@ -326,17 +326,28 @@ interface PreToolUseOutput {
 
 #### 4.3.1 Phase Guard Rules
 
-基于需求文档，阶段守卫规则如下：
+基于需求文档 v1.6，系统定义了三层文档层级：
 
-| 当前阶段 | 阻止操作 | 决策 | 原因 |
-|----------|----------|------|------|
-| `pending` | Write/Edit 任意文件（Read 除外） | block | 初始阶段，尚未开始工作 |
-| `done` | Write/Edit `src/**/*.{js,ts}`, `scripts/**/*.js`, `.claude/hooks/**/*.js` | **ask** | 软性引导：提示进行根因分析 |
-| `feature_requirements` | Write/Edit `src/**/*.{js,ts}`, `scripts/**/*.js`, `.claude/hooks/**/*.js`, `tests/**/*` | block | 需求阶段不应写代码/测试 |
-| `feature_review` | Write/Edit `docs/designs/**/*.md`, `src/**/*`, `scripts/**/*.js`, `.claude/hooks/**/*.js`, `tests/**/*` | block | 等待人工审核 |
-| `feature_design` | Write/Edit `src/**/*.{js,ts}`, `scripts/**/*.js`, `tests/**/*` | block | 设计阶段不应写代码/测试 |
-| 任意 | Edit `.solodevflow/state.json` | block | 使用 State CLI 而非直接编辑 |
+**文档层级定义**：
 
+| 层级 | 文档类型 | 路径模式 | 是否需要 Work Item |
+|------|---------|---------|-------------------|
+| **Product Level** | 产品文档 | `docs/requirements/prd.md`<br/>`docs/requirements/specs/**/*.md`<br/>`README.md`, `CONTRIBUTING.md`<br/>`docs/*.md` | ❌ 否 |
+| **Work Item Level** | 功能文档 | `docs/requirements/features/**/*.md`<br/>`docs/requirements/capabilities/**/*.md`<br/>`docs/requirements/flows/**/*.md`<br/>`docs/designs/**/*.md` | ✅ 是 |
+| **Implementation Level** | 实现产物 | `src/**/*`<br/>`scripts/**/*`<br/>`tests/**/*`<br/>`.claude/hooks/**/*` | ✅ 是 |
+
+**阶段守卫规则**：
+
+| 当前阶段 | 阻止操作 | 豁免（允许） | 决策 | 原因 |
+|----------|----------|-------------|------|------|
+| `pending` | Write/Edit Work Item Level + Implementation Level | Product Level 文档 | block | 初始阶段可创建产品文档，但不能创建功能文档或代码 |
+| `done` | Write/Edit `src/**/*.{js,ts}`, `scripts/**/*.js`, `.claude/hooks/**/*.js` | - | **ask** | 软性引导：提示进行根因分析 |
+| `feature_requirements` | Write/Edit `src/**/*.{js,ts}`, `scripts/**/*.js`, `.claude/hooks/**/*.js`, `tests/**/*` | - | block | 需求阶段不应写代码/测试 |
+| `feature_review` | Write/Edit `docs/designs/**/*.md`, `src/**/*`, `scripts/**/*.js`, `.claude/hooks/**/*.js`, `tests/**/*` | - | block | 等待人工审核 |
+| `feature_design` | Write/Edit `src/**/*.{js,ts}`, `scripts/**/*.js`, `tests/**/*` | - | block | 设计阶段不应写代码/测试 |
+| 任意 | Edit `.solodevflow/state.json` | - | block | 使用 State CLI 而非直接编辑 |
+
+**v1.5 变更**：添加文档层级定义，pending 阶段允许创建产品文档（PRD、Specs、README）。
 **v1.4 变更**：`done` 状态从 `block` 改为 `ask`，配合根因分析流程使用。
 
 #### 4.3.2 Done Status Root Cause Analysis
@@ -566,12 +577,17 @@ Based on requirements §9.10:
 
 *Version: v1.4*
 *Created: 2025-12-25*
-*Updated: 2025-12-28*
-*Author: Claude Opus 4.5*
+*Updated: 2025-12-30*
+*Author: Claude Sonnet 4.5*
 
 ---
 
 ## Changelog
+
+### v1.5 (2025-12-30)
+- 新增文档层级定义：Product Level / Work Item Level / Implementation Level
+- 更新 §4.3.1 Phase Guard Rules：pending 阶段允许创建产品文档
+- 修复新项目无法创建 PRD 的设计缺陷
 
 ### v1.4 (2025-12-28)
 - `done` 状态守卫改为软性引导（ask），配合根因分析流程

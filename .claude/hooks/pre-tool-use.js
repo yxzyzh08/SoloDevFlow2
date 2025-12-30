@@ -58,7 +58,37 @@ function matchesAny(patterns, filePath) {
 // =============================================================================
 
 /**
+ * 文档层级定义 (v1.6)
+ * 基于需求文档 fea-hooks-integration.md §3.3
+ */
+const DOCUMENT_LEVELS = {
+  // Product Level: 产品文档，不需要 Work Item
+  product: [
+    'docs/requirements/prd.md',
+    'docs/requirements/specs/**/*.md',
+    'README.md',
+    'CONTRIBUTING.md',
+    'docs/*.md'
+  ],
+  // Work Item Level: 功能文档，需要 Work Item
+  workitem: [
+    'docs/requirements/features/**/*.md',
+    'docs/requirements/capabilities/**/*.md',
+    'docs/requirements/flows/**/*.md',
+    'docs/designs/**/*.md'
+  ],
+  // Implementation Level: 实现产物，需要 Work Item
+  implementation: [
+    'src/**/*',
+    'scripts/**/*',
+    'tests/**/*',
+    '.claude/hooks/**/*'
+  ]
+};
+
+/**
  * 阶段守卫规则 (§4.3.1)
+ * v1.6: 新增文档层级，pending 阶段允许产品文档
  * v12.3: 新增 feature_review 阶段
  * v6.8: 扩展 feature_requirements 阻止 scripts/*.js
  * v6.9: 新增 done 阶段变更守卫
@@ -66,8 +96,13 @@ function matchesAny(patterns, filePath) {
 const PHASE_GUARD_RULES = {
   pending: {
     blockedTools: ['Write', 'Edit'],
-    blockedPatterns: ['**/*'],  // All files
-    reason: 'Cannot write/edit files in pending phase. Start a feature first.'
+    // v1.6: 只阻止 Work Item Level + Implementation Level
+    blockedPatterns: [
+      ...DOCUMENT_LEVELS.workitem,
+      ...DOCUMENT_LEVELS.implementation
+    ],
+    reason: 'Cannot write/edit files in pending phase. Start a feature first.\n' +
+            'Product documents (PRD, specs, README) can be edited anytime.'
   },
   // done 状态的 feature 修改代码前需要进行根因分析
   done: {
@@ -260,6 +295,29 @@ function checkSetPhaseDone(toolName, toolInput, state) {
 }
 
 /**
+ * 检查 set-phase feature_review 命令，提示验证需求文档
+ * v1.6: 进入 review 阶段前，提示验证需求文档格式
+ * @returns {{ shouldPrompt: boolean, targetPhase?: string }}
+ */
+function checkPhaseTransitionValidation(toolName, toolInput) {
+  if (toolName !== 'Bash') return { shouldPrompt: false };
+
+  const command = toolInput?.command || '';
+  // 匹配: node scripts/state.js set-phase <id> feature_review
+  const match = command.match(/set-phase\s+(\S+)\s+feature_review/i);
+
+  if (match) {
+    return {
+      shouldPrompt: true,
+      workitemId: match[1],
+      targetPhase: 'feature_review'
+    };
+  }
+
+  return { shouldPrompt: false };
+}
+
+/**
  * 主决策逻辑
  */
 function makeDecision(toolName, toolInput, state) {
@@ -288,6 +346,17 @@ function makeDecision(toolName, toolInput, state) {
       .join('\n');
     return formatAskDecision(
       `Work item "${setPhaseCheck.workitemId}" has ${setPhaseCheck.pendingCount} pending subtask(s):\n${taskList}\n\nComplete or skip these subtasks before marking the work item as done.`
+    );
+  }
+
+  // 0.5. 检查 set-phase feature_review 时提示验证需求文档（v1.6）
+  const phaseTransitionCheck = checkPhaseTransitionValidation(toolName, toolInput);
+  if (phaseTransitionCheck.shouldPrompt) {
+    return formatAskDecision(
+      `Entering feature_review phase for "${phaseTransitionCheck.workitemId}".\n\n` +
+      `Before human review, ensure requirements document passes validation:\n` +
+      `  Run: npm run validate:docs\n\n` +
+      `Continue to review phase anyway?`
     );
   }
 

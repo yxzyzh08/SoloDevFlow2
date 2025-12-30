@@ -2,11 +2,11 @@
 type: feature
 id: hooks-integration
 workMode: code
-status: done
-phase: done
+status: in_progress
+phase: feature_implementation
 priority: P0
 domain: ai-config
-version: "1.5"
+version: "1.6"
 ---
 
 # Feature: Hooks Integration <!-- id: feat_hooks_integration -->
@@ -105,16 +105,31 @@ Session Mode: {session.mode}
 
 ### 3.3 H3: PreToolUse 阶段守卫
 
+**文档层级定义**：
+
+为了支持产品文档的独立创建，系统定义三层文档层级：
+
+| 层级 | 文档类型 | 路径模式 | 是否需要 Work Item |
+|------|---------|---------|-------------------|
+| **Product Level** | 产品文档 | `docs/requirements/prd.md`<br/>`docs/requirements/specs/**/*.md`<br/>`README.md`<br/>`CONTRIBUTING.md`<br/>`docs/*.md` | ❌ 否 |
+| **Work Item Level** | 功能文档 | `docs/requirements/features/**/*.md`<br/>`docs/requirements/capabilities/**/*.md`<br/>`docs/requirements/flows/**/*.md`<br/>`docs/designs/**/*.md` | ✅ 是 |
+| **Implementation Level** | 实现产物 | `src/**/*`<br/>`scripts/**/*`<br/>`tests/**/*`<br/>`.claude/hooks/**/*` | ✅ 是 |
+
 **阶段守卫规则**：
 
-| 当前阶段 | 阻止操作 | 原因 |
-|----------|----------|------|
-| `pending` | Write/Edit 任意文件 | 初始阶段，尚未开始工作 |
-| `done` | Write/Edit `src/**/*.{js,ts}`, `scripts/**/*.js`, `.claude/hooks/**/*.js` | ask 确认 + 根因分析提示（软性引导） |
-| `feature_requirements` | Write/Edit `src/**/*.{js,ts}`, `scripts/**/*.js`, `.claude/hooks/**/*.js`, `tests/**/*` | 需求阶段不应写代码 |
-| `feature_review` | Write/Edit `docs/designs/**/*.md`, `src/**/*`, `scripts/**/*.js`, `.claude/hooks/**/*.js`, `tests/**/*` | 等待人工审核，批准后才能进入设计阶段 |
-| `feature_design` | Write/Edit `src/**/*.{js,ts}`, `scripts/**/*.js`, `tests/**/*` | 设计阶段不应写代码 |
-| 任意 | Edit `.solodevflow/state.json` | 使用 State CLI |
+| 当前阶段 | 阻止操作 | 豁免（允许） | 原因 |
+|----------|----------|-------------|------|
+| `pending` | Write/Edit Work Item Level + Implementation Level 文件 | Product Level 文档 | 初始阶段可创建产品文档，但不能创建功能文档或代码 |
+| `done` | Write/Edit `src/**/*.{js,ts}`, `scripts/**/*.js`, `.claude/hooks/**/*.js` | - | ask 确认 + 根因分析提示（软性引导） |
+| `feature_requirements` | Write/Edit `src/**/*.{js,ts}`, `scripts/**/*.js`, `.claude/hooks/**/*.js`, `tests/**/*` | - | 需求阶段不应写代码 |
+| `feature_review` | Write/Edit `docs/designs/**/*.md`, `src/**/*`, `scripts/**/*.js`, `.claude/hooks/**/*.js`, `tests/**/*` | - | 等待人工审核，批准后才能进入设计阶段 |
+| `feature_design` | Write/Edit `src/**/*.{js,ts}`, `scripts/**/*.js`, `tests/**/*` | - | 设计阶段不应写代码 |
+| 任意 | Edit `.solodevflow/state.json` | - | 使用 State CLI |
+
+**pending 阶段具体规则**：
+- **阻止**：Work Item Level 文档、Implementation Level 文件
+- **允许**：Product Level 文档（PRD、Specs、README 等）
+- **理由**：新项目启动时需要先编写 PRD，不应强制创建 Work Item
 
 **注意**：`done` 状态通过 status 字段判断，优先级高于 phase 字段。
 
@@ -289,13 +304,18 @@ Complete or skip these subtasks before marking the feature as done.
 
 ---
 
-*Version: v1.5*
+*Version: v1.6*
 *Created: 2025-12-27*
-*Updated: 2025-12-29*
+*Updated: 2025-12-30*
 
 ---
 
 ## Changelog
+
+### v1.6 (2025-12-30)
+- 新增文档层级定义：Product Level / Work Item Level / Implementation Level
+- 修复 pending phase 守卫过于严格的问题：允许创建产品文档（PRD、Specs、README）
+- 解决新项目启动时无法创建 PRD 的流程缺陷
 
 ### v1.5 (2025-12-29)
 - 重新设计 H8: 从 PreToolUse 文件名检测改为 UserPromptSubmit 意图检测
