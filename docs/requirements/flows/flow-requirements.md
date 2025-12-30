@@ -5,7 +5,7 @@ workMode: document
 status: done
 priority: P0
 domain: process
-version: "2.0"
+version: "2.1"
 ---
 
 # Flow: Requirements Processing <!-- id: flow_requirements -->
@@ -98,12 +98,14 @@ Phase 8: VERIFY（验证完整性）
 ├─ 检查是否与现有 Feature 功能重叠
 ├─ 检查是否需要现有模块提供新接口
 ├─ 如发现实际是"需求变更" → 切换到 §3 Flow B
+├─ 【关键】评估是否涉及多个独立领域 → §3.3 多 Work Item 分解
 └─ 生成影响分析报告（标准格式）
 ```
 
 **影响分析规则**：
 - **分析边界**：需求阶段只分析到设计文档，代码影响由设计阶段处理
 - **例外情况**：workMode: document 的 Feature，分析到直接关联的脚本
+- **多领域检测**：如果需求涉及多个独立可交付的功能领域，必须分解为多个 Work Item
 
 #### Phase 4: DEPENDENCY（依赖分析）
 
@@ -227,6 +229,70 @@ Phase 7b: VERIFY（验证完整性）
 ```
 └─ 验证依赖关系是否正确更新
 ```
+
+### 3.3 Multi Work Item Decomposition <!-- id: flow_multi_workitem -->
+
+> 当需求或问题涉及多个独立领域时，必须分解为多个 Work Item
+
+#### 触发条件
+
+在 IMPACT 阶段，如果发现以下情况，触发多 Work Item 分解：
+
+| 信号 | 说明 | 示例 |
+|------|------|------|
+| **跨多个 Domain** | 需求涉及不同的功能领域 | 同时涉及 workflow 和 state-management |
+| **多个独立交付物** | 可以分开独立交付和验收 | Hook 机制 + PRD 生命周期 |
+| **不同的文档类型** | 同时需要 Feature + Flow + Capability | 新 Feature + 新 Flow 定义 |
+| **需求描述中有"和"/"以及"** | 用户描述包含多个并列功能 | "添加 A 功能和 B 功能" |
+
+#### 分解流程
+
+```
+[IMPACT 阶段检测到多领域]
+    ↓
+[DECOMPOSE] 分解分析
+    ├─ 识别涉及的所有领域
+    ├─ 对每个领域：
+    │   ├─ 已存在 Work Item → 标记为"需求变更"
+    │   └─ 不存在 → 标记为"需新建"
+    ├─ 分析依赖关系
+    └─ 按依赖排序
+    ↓
+[PROPOSE] 生成分解方案（见 §6.5 格式）
+    ↓
+[HUMAN CONFIRM] 人类确认分解方案
+    ├─ 批准 → 执行分解
+    ├─ 修改 → 调整后重新确认
+    └─ 拒绝 → 作为单一 Work Item 处理
+    ↓
+[EXECUTE] 执行分解
+    ├─ 为每个"需新建"的 Work Item 调用 /write-* 创建需求文档
+    ├─ 为每个"需变更"的 Work Item 更新需求文档
+    ├─ 运行 index.js 更新索引
+    └─ 按依赖顺序激活 Work Items
+    ↓
+[TRACK] 状态追踪
+    └─ 每个 Work Item 独立走完整生命周期
+```
+
+#### Work Item vs Subtask 判断规则
+
+| 维度 | 创建新 Work Item | 添加 Subtask |
+|------|------------------|--------------|
+| **独立性** | 可独立交付和验收 | 当前 Work Item 的子步骤 |
+| **文档需求** | 需要独立的需求/设计文档 | 不需要独立文档 |
+| **领域归属** | 属于不同的功能领域 | 属于同一功能领域 |
+| **生命周期** | 有独立的 phase 流转 | 随父 Work Item 流转 |
+| **示例** | "添加 PRD 生命周期" | "实现 set-prd-phase 命令" |
+
+#### 分解原则
+
+| 原则 | 说明 |
+|------|------|
+| **单一职责** | 每个 Work Item 只负责一个清晰的功能领域 |
+| **独立可交付** | 每个 Work Item 可以独立完成并验收 |
+| **依赖最小化** | 尽量减少 Work Items 之间的依赖 |
+| **粒度适中** | 不过度拆分（避免 1 个功能拆成 10 个 Work Items） |
 
 ---
 
@@ -422,6 +488,43 @@ node scripts/state.js set-prd-phase prd_done
 | **Conditional** | If [condition], the [system] shall [action] | If session expires, the system shall redirect to login |
 | **Optional** | Where [feature], the [system] shall [action] | Where dark mode is enabled, the system shall use dark theme |
 
+### 6.5 Multi Work Item Decomposition Output Format
+
+```markdown
+## 多 Work Item 分解方案
+
+### 原始需求
+> {用户原始需求描述}
+
+### 分解结果
+
+| 序号 | 类型 | ID | 状态 | 说明 |
+|------|------|-----|------|------|
+| 1 | Feature | xxx-feature | 需新建 | {功能说明} |
+| 2 | Flow | xxx-flow | 已存在 | {变更说明} |
+| 3 | Capability | xxx-capability | 需新建 | {功能说明} |
+
+### 依赖关系
+
+```
+[1] xxx-feature (无依赖，可先开始)
+    ↓
+[2] xxx-flow (依赖 1)
+    ↓
+[3] xxx-capability (依赖 1, 2)
+```
+
+### 建议执行顺序
+1. 先完成 xxx-feature（无依赖）
+2. 再完成 xxx-flow（依赖 xxx-feature）
+3. 最后完成 xxx-capability
+
+### 请确认是否按此方案分解？
+- [ ] 批准此分解方案
+- [ ] 需要调整（请说明）
+- [ ] 拒绝分解，作为单一 Work Item 处理
+```
+
 ---
 
 ## 7. Dependencies <!-- id: flow_requirements_dependencies -->
@@ -435,7 +538,7 @@ node scripts/state.js set-prd-phase prd_done
 
 ---
 
-*Version: v2.0*
+*Version: v2.1*
 *Created: 2025-12-28*
 *Updated: 2025-12-30*
-*Changes: v2.0 新增 §5 Flow D: PRD Decomposing（PRD 分解执行流程，从 flow-workflows.md 迁移）；v1.1 添加执行规范引用*
+*Changes: v2.1 新增 §3.3 Multi Work Item Decomposition（多 Work Item 分解流程）+ §6.5 分解输出格式；v2.0 新增 §5 Flow D: PRD Decomposing；v1.1 添加执行规范引用*

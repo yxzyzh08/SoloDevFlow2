@@ -67,8 +67,15 @@
     ↓
 如发现实际是"需求变更" → 切换到 §3 Flow B
     ↓
+【关键】评估是否涉及多个独立领域 → §3.7 Multi Work Item Decomposition
+    ↓
 生成影响分析报告
 ```
+
+**多领域检测信号**：
+- 需求涉及不同的功能领域（如同时涉及 workflow 和 state-management）
+- 可以分开独立交付和验收
+- 需求描述中有"和"/"以及"等并列词
 
 ### 2.4 DEPENDENCY（依赖分析）
 
@@ -177,6 +184,63 @@ set-phase <id> feature_review
     ↓
 set-phase <id> feature_review
 ```
+
+### 3.7 Multi Work Item Decomposition
+
+> 当需求涉及多个独立领域时，分解为多个 Work Item
+
+#### 触发条件
+
+| 信号 | 说明 |
+|------|------|
+| 跨多个 Domain | 需求涉及不同的功能领域 |
+| 多个独立交付物 | 可以分开独立交付和验收 |
+| 不同的文档类型 | 同时需要 Feature + Flow + Capability |
+
+#### 执行流程
+
+```
+[检测到多领域]
+    ↓
+[DECOMPOSE] 分解分析
+    ├─ 识别涉及的所有领域
+    ├─ 对每个领域判断：已存在 or 需新建
+    ├─ 分析依赖关系
+    └─ 按依赖排序
+    ↓
+[PROPOSE] 生成分解方案并展示给用户：
+
+    ## 多 Work Item 分解方案
+
+    | 序号 | 类型 | ID | 状态 | 说明 |
+    |------|------|-----|------|------|
+    | 1 | Feature | xxx | 需新建 | ... |
+    | 2 | Flow | yyy | 已存在 | ... |
+
+    依赖关系: [1] → [2]
+
+    请确认是否按此方案分解？
+
+    ↓
+[HUMAN CONFIRM] 等待用户确认
+    ├─ 批准 → 执行分解
+    ├─ 修改 → 调整后重新确认
+    └─ 拒绝 → 作为单一 Work Item 处理
+    ↓
+[EXECUTE] 执行分解
+    ├─ 为"需新建"的 Work Item 调用 /write-* 创建需求文档
+    ├─ 为"需变更"的 Work Item 更新需求文档
+    ├─ 运行 index.js 更新索引
+    └─ 按依赖顺序激活 Work Items
+```
+
+#### Work Item vs Subtask 判断
+
+| 创建新 Work Item | 添加 Subtask |
+|------------------|--------------|
+| 可独立交付和验收 | 当前 Work Item 的子步骤 |
+| 需要独立的需求/设计文档 | 不需要独立文档 |
+| 属于不同的功能领域 | 属于同一功能领域 |
 
 ---
 
@@ -339,18 +403,6 @@ node scripts/state.js set-prd-phase prd_done
 
 ---
 
-*Version: v2.0*
-*Aligned with: flow-requirements.md v2.0*
+*Version: v2.1*
+*Aligned with: flow-requirements.md v2.1*
 *Updated: 2025-12-30*
-
----
-
-## Changelog
-
-### v2.0 (2025-12-30)
-- 新增 §5 Flow D: PRD Decomposing（PRD 分解执行流程）
-- 重新编号 §5→§6 Execution Principles，§6→§7 Tools Reference
-- 对齐需求文档 flow-requirements.md v2.0
-
-### v1.0 (2025-12-28)
-- 初始版本
