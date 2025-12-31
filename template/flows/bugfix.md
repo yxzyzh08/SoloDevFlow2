@@ -137,13 +137,28 @@ Step 4: 文档同步（§4）
 
 ---
 
-*Version: v1.1*
-*Aligned with: flow-workflows.md v8.6 §5*
-*Updated: 2025-12-30*
+## 8. Tools Reference
+
+| 工具 | 用途 |
+|------|------|
+| `node scripts/state.cjs set-phase <id> <phase>` | 更新阶段 |
+| `/write-feature` | 需求变更时更新 Feature 文档 |
+| `/write-design` | 直接更新设计文档 |
+
+---
+
+*Version: v1.2*
+*Aligned with: flow-workflows.md v9.2 §5*
+*Updated: 2025-12-31*
 
 ---
 
 ## Changelog
+
+### v1.2 (2025-12-31)
+- 添加 §8 Tools Reference
+- 对齐 flow-workflows.md v9.2
+- 符合 spec-execution-flow.md v1.0 标准
 
 ### v1.1 (2025-12-30)
 - 重构为"代码优先"流程：先修复代码，再补充文档

@@ -48,10 +48,10 @@
     "lastGitCommit": "",
     "lastGitCommitMessage": "",
     "lastGitCommitAt": "",
-    "stateFileVersion": 573,
+    "stateFileVersion": 582,
     "totalStateChanges": 22
   },
-  "lastUpdated": "2025-12-31T10:08:28.396+08:00",
+  "lastUpdated": "2025-12-31T13:39:24.307+08:00",
   "subtasks": [
     {
       "id": "st_1767090831489_002",
@@ -184,11 +184,98 @@
       "status": "pending",
       "source": "ai",
       "createdAt": "2025-12-31T10:08:28.396+08:00"
+    },
+    {
+      "id": "st_1767156627933_017",
+      "workitemId": "unassigned",
+      "description": "对比分析并确定重构范围",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-31T12:50:27.933+08:00"
+    },
+    {
+      "id": "st_1767156627935_018",
+      "workitemId": "unassigned",
+      "description": "重构 workflows.md 执行规范",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-31T12:50:27.935+08:00",
+      "completedAt": "2025-12-31T12:52:06.355+08:00"
+    },
+    {
+      "id": "st_1767156627935_019",
+      "workitemId": "unassigned",
+      "description": "重构 requirements.md 执行规范",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-31T12:50:27.935+08:00",
+      "updatedAt": "2025-12-31T12:52:06.357+08:00",
+      "completedAt": "2025-12-31T12:52:47.811+08:00"
+    },
+    {
+      "id": "st_1767156627935_020",
+      "workitemId": "unassigned",
+      "description": "重构 design.md 执行规范",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-31T12:50:27.935+08:00",
+      "updatedAt": "2025-12-31T12:52:47.811+08:00",
+      "completedAt": "2025-12-31T12:53:21.621+08:00"
+    },
+    {
+      "id": "st_1767156627935_021",
+      "workitemId": "unassigned",
+      "description": "重构 implementation.md 执行规范",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-31T12:50:27.935+08:00",
+      "updatedAt": "2025-12-31T12:53:21.622+08:00",
+      "completedAt": "2025-12-31T12:53:54.029+08:00"
+    },
+    {
+      "id": "st_1767156627935_022",
+      "workitemId": "unassigned",
+      "description": "重构 testing.md 执行规范",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-31T12:50:27.935+08:00",
+      "updatedAt": "2025-12-31T12:53:54.030+08:00",
+      "completedAt": "2025-12-31T12:54:27.953+08:00"
+    },
+    {
+      "id": "st_1767156627935_023",
+      "workitemId": "unassigned",
+      "description": "重构 refactoring.md 执行规范",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-31T12:50:27.935+08:00",
+      "updatedAt": "2025-12-31T12:54:27.955+08:00",
+      "completedAt": "2025-12-31T12:55:08.586+08:00"
+    },
+    {
+      "id": "st_1767156627935_024",
+      "workitemId": "unassigned",
+      "description": "重构 bugfix.md 执行规范",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-31T12:50:27.935+08:00",
+      "updatedAt": "2025-12-31T12:55:08.587+08:00",
+      "completedAt": "2025-12-31T12:56:10.150+08:00"
+    },
+    {
+      "id": "st_1767156627935_025",
+      "workitemId": "unassigned",
+      "description": "验证所有执行规范符合 spec-execution-flow.md",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-31T12:50:27.935+08:00",
+      "updatedAt": "2025-12-31T12:56:10.151+08:00",
+      "completedAt": "2025-12-31T12:57:24.890+08:00"
     }
   ],
   "solodevflow": {
     "version": "2.0.0",
-    "upgradedAt": "2025-12-31T08:26:58.265+08:00"
+    "upgradedAt": "2025-12-31T13:39:24.307+08:00"
   },
   "prd": {
     "phase": null,

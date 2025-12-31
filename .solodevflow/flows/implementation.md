@@ -210,6 +210,6 @@ Refs: #issue-number
 
 ---
 
-*Version: v1.0*
+*Version: v1.1*
 *Aligned with: flow-implementation.md v1.5*
-*Updated: 2025-12-28*
+*Updated: 2025-12-31*

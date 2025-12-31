@@ -89,11 +89,26 @@
 
 | 当前 Phase | 默认路由 |
 |------------|----------|
-| `feature_requirements` | requirements.md |
+| `feature_requirements` | requirements.md 或 §12 Flow Type Handling |
 | `feature_review` | §4 Review Approval |
 | `feature_design` | design.md |
 | `feature_implementation` | implementation.md |
 | `feature_testing` | testing.md |
+
+### 2.3 Work Item Type Routing
+
+根据 Work Item 类型（type 字段）执行不同流程：
+
+| Type | workMode=document | workMode=code |
+|------|-------------------|---------------|
+| **feature** | 标准流程 | 标准流程 |
+| **capability** | 标准流程 | 标准流程 |
+| **flow** | 标准流程 | **特殊流程** → §12 Flow Type Handling |
+
+**Flow 特殊性**：
+- Flow 是跨模块协作流程，依赖多个 Feature/Capability
+- `workMode=code` 时，需先完成 Module Impact Specifications
+- 每个依赖模块的修改点必须明确定义并单独审批
 
 ---
 
@@ -315,13 +330,129 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 ---
 
-*Version: v2.2*
+## 12. Flow Type Handling (workMode=code)
+
+> Flow 类型 workMode=code 时的特殊处理流程
+
+### 12.1 Why Flow is Different
+
+| 维度 | Feature | Flow (workMode=code) |
+|------|---------|----------------------|
+| **边界** | 自包含，独立交付 | 跨模块，协调多方 |
+| **依赖影响** | 主要消费依赖 | 主动修改依赖模块 |
+| **需求粒度** | 单一功能需求 | 分解为多个模块需求 |
+| **审批范围** | 单一文档审批 | 多个模块影响需分别审批 |
+
+### 12.2 Flow Workflow Stages
+
+```
+[REQUIREMENTS] → [REVIEW] → [MODULE IMPACT] → [DESIGN] → [IMPLEMENTATION] → [TESTING] → [DONE]
+                              ↑
+                         Flow 专属阶段
+```
+
+**MODULE IMPACT 阶段**（Flow 专属）：
+1. 基于 Flow 需求文档，分析每个依赖模块
+2. 为每个模块编写 Module Impact Specification
+3. 每个 Module Impact 单独审批
+4. 全部审批后才能进入 DESIGN 阶段
+
+### 12.3 Module Impact Specification Process
+
+```
+[Flow 需求通过审批]
+    ↓
+[读取 dependencies 列表]
+    ↓
+[为每个 dependency 创建子任务]
+    ↓
+┌─────────────────────────────────────────┐
+│  For each dependency:                    │
+│    1. 分析该模块需要的变更               │
+│    2. 在 Flow 文档中添加 Module Impact   │
+│    3. 创建子任务追踪                      │
+│    4. 人类审批该模块的 Impact Spec       │
+└─────────────────────────────────────────┘
+    ↓
+[所有 Module Impact 审批通过]
+    ↓
+[进入 DESIGN 阶段]
+```
+
+### 12.4 子任务命名规范
+
+```bash
+# 创建 Module Impact 分析子任务
+node scripts/state.cjs add-subtask \
+  --workitem=<flow-id> \
+  --desc="[Module: <module-id>] 编写 Module Impact Specification" \
+  --source=impact-analysis
+```
+
+### 12.5 Phase Transition Rules (Flow)
+
+| 转换 | 条件 | 说明 |
+|------|------|------|
+| requirements → review | Flow 需求文档完成 | 标准转换 |
+| review → design | **所有 Module Impact 审批通过** | Flow 专属条件 |
+| design → implementation | 设计文档完成 | 标准转换 |
+
+### 12.6 Module Impact Specification Template
+
+在 Flow 文档中添加：
+
+```markdown
+## Module Impact Specifications
+
+### [Module: state-management]
+
+**变更概述**：添加子任务状态验证功能
+
+**接口变更**：
+| 变更类型 | 描述 |
+|----------|------|
+| 新增函数 | `validateSubtaskTransition(from, to): boolean` |
+
+**实现要点**：
+1. 状态机定义：pending → in_progress → completed/skipped
+2. 无效转换抛出 ValidationError
+
+**验收标准**：
+- [ ] 有效转换返回 true
+- [ ] 无效转换抛出错误并包含状态信息
+
+**审批状态**：🔲 待审批 / ✅ 已审批
+```
+
+### 12.7 Execution Checklist
+
+**进入 MODULE IMPACT 阶段时**：
+- [ ] 确认 Flow 类型且 workMode=code
+- [ ] 读取 Flow 文档的 dependencies 列表
+- [ ] 为每个 hard 依赖创建 Module Impact 子任务
+- [ ] 按优先级依次处理各模块
+
+**完成 MODULE IMPACT 阶段时**：
+- [ ] 所有 Module Impact Specification 已编写
+- [ ] 所有 Module Impact 已获人类审批（✅）
+- [ ] 所有相关子任务已完成
+- [ ] 准备进入 DESIGN 阶段
+
+---
+
+*Version: v2.3*
 *Aligned with: flow-workflows.md v9.2, fea-state-management.md v16.0*
-*Updated: 2025-12-30*
+*Updated: 2025-12-31*
 
 ---
 
 ## Changelog
+
+### v2.3 (2025-12-31)
+- **新增 §2.3 Work Item Type Routing**：按 Work Item 类型执行不同流程
+- **新增 §12 Flow Type Handling**：Flow (workMode=code) 的 MODULE IMPACT 专属阶段
+- 完整对齐 flow-workflows.md v9.2 §16 Flow Type Handling
+- 符合 spec-execution-flow.md v1.0 标准
 
 ### v2.2 (2025-12-30)
 - **删除"直接执行"意图类型**：所有代码修改必须走流程

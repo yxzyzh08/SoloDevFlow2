@@ -108,6 +108,6 @@
 
 ---
 
-*Version: v1.0*
+*Version: v1.1*
 *Aligned with: flow-design.md v1.4*
-*Updated: 2025-12-28*
+*Updated: 2025-12-31*

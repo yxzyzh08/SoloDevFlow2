@@ -406,6 +406,6 @@ node scripts/state.cjs set-prd-phase prd_done
 
 ---
 
-*Version: v2.2*
+*Version: v2.3*
 *Aligned with: flow-requirements.md v2.1*
-*Updated: 2025-12-30*
+*Updated: 2025-12-31*

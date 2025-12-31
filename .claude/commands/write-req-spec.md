@@ -47,5 +47,5 @@ version: "{version}"
 ## 注意事项
 
 - 规范文档是"规范的规范"，修改需谨慎
-- 修改后需运行影响分析：`node scripts/analyze-impact.js docs/specs/spec-requirements.md`
+- 修改后需运行影响分析：`node scripts/analyze-impact.cjs docs/specs/spec-requirements.md`
 - 更新时保留版本历史

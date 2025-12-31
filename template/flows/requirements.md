@@ -412,13 +412,17 @@ node scripts/state.cjs set-prd-phase prd_done
 
 ---
 
-*Version: v2.2*
+*Version: v2.3*
 *Aligned with: flow-requirements.md v2.1*
-*Updated: 2025-12-30*
+*Updated: 2025-12-31*
 
 ---
 
 ## Changelog
+
+### v2.3 (2025-12-31)
+- 符合 spec-execution-flow.md v1.0 标准
+- 版本对齐检查通过
 
 ### v2.2 (2025-12-30)
 - §5.2 添加 Work Item 审核通过后的进度更新指导（update-prd-progress）

@@ -468,13 +468,26 @@ Output: 验证报告 + 重构完成状态
 
 ---
 
-*Version: v1.2*
+*Version: v1.3*
 *Aligned with: flow-refactoring.md v2.5*
 *Created: 2025-12-29*
-*Updated: 2025-12-30*
+*Updated: 2025-12-31*
+
+---
 
 ## Changelog
 
-- **v1.2** (2025-12-30): §5 DESIGN 从"可选"改为"强制"；§10 增强老项目文档识别规则（识别范围、识别位置、排除规则、VALIDATE 阶段强制归档）
-- **v1.1** (2025-12-30): 添加 §10 Legacy Document Archiving，同步需求文档 v2.4 的归档策略
-- **v1.0** (2025-12-29): 初始版本
+### v1.3 (2025-12-31)
+- 符合 spec-execution-flow.md v1.0 标准
+- Changelog 格式标准化
+
+### v1.2 (2025-12-30)
+- §5 DESIGN 从"可选"改为"强制"
+- §10 增强老项目文档识别规则（识别范围、识别位置、排除规则、VALIDATE 阶段强制归档）
+
+### v1.1 (2025-12-30)
+- 添加 §10 Legacy Document Archiving
+- 同步需求文档 v2.4 的归档策略
+
+### v1.0 (2025-12-29)
+- 初始版本

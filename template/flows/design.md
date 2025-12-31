@@ -114,6 +114,17 @@
 
 ---
 
-*Version: v1.0*
+*Version: v1.1*
 *Aligned with: flow-design.md v1.4*
-*Updated: 2025-12-28*
+*Updated: 2025-12-31*
+
+---
+
+## Changelog
+
+### v1.1 (2025-12-31)
+- 添加 Changelog 章节
+- 符合 spec-execution-flow.md v1.0 标准
+
+### v1.0 (2025-12-28)
+- 初始版本

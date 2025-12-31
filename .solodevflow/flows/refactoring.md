@@ -462,7 +462,7 @@ Output: 验证报告 + 重构完成状态
 
 ---
 
-*Version: v1.2*
+*Version: v1.3*
 *Aligned with: flow-refactoring.md v2.5*
 *Created: 2025-12-29*
-*Updated: 2025-12-30*
+*Updated: 2025-12-31*
