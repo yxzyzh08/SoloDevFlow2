@@ -14,6 +14,7 @@ version: "9.2"
 > 标准工作流，定义人机协作的输入处理和流程路由
 
 **执行规范**：`.solodevflow/flows/workflows.md`
+**编写规范**：[spec-execution-flow.md](../specs/spec-execution-flow.md)
 > **重要**：AI 修改执行规范时，必须修改 `template/flows/workflows.md`（模板源），而非 `.solodevflow/flows/`（项目实例）。项目实例通过 `solodevflow upgrade .` 从模板同步。
 
 ---

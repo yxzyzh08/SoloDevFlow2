@@ -15,6 +15,7 @@ version: "1.0"
 **Parent Flow**: [flow-workflows.md](flow-workflows.md) §6
 **Test Specification**: [spec-test.md](../../specs/spec-test.md)
 **执行规范**：`.solodevflow/flows/testing.md`
+**编写规范**：[spec-execution-flow.md](../specs/spec-execution-flow.md)
 > **重要**：AI 修改执行规范时，必须修改 `template/flows/testing.md`（模板源），而非 `.solodevflow/flows/`（项目实例）。项目实例通过 `solodevflow upgrade .` 从模板同步。
 
 ---

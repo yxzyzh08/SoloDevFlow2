@@ -48,10 +48,10 @@
     "lastGitCommit": "",
     "lastGitCommitMessage": "",
     "lastGitCommitAt": "",
-    "stateFileVersion": 561,
+    "stateFileVersion": 565,
     "totalStateChanges": 22
   },
-  "lastUpdated": "2025-12-31T09:00:59.605+08:00",
+  "lastUpdated": "2025-12-31T09:06:30.673+08:00",
   "subtasks": [
     {
       "id": "st_1767090831489_002",
@@ -110,6 +110,32 @@
       "status": "pending",
       "source": "ai",
       "createdAt": "2025-12-31T09:00:12.256+08:00"
+    },
+    {
+      "id": "st_1767142978026_010",
+      "workitemId": "unassigned",
+      "description": "更新现有 flow 需求文档",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-31T09:02:58.026+08:00",
+      "updatedAt": "2025-12-31T09:04:44.571+08:00",
+      "completedAt": "2025-12-31T09:06:30.673+08:00"
+    },
+    {
+      "id": "st_1767143190672_009",
+      "workitemId": "unassigned",
+      "description": "确认变更范围和方案",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-31T09:06:30.672+08:00"
+    },
+    {
+      "id": "st_1767143190672_010",
+      "workitemId": "unassigned",
+      "description": "在 spec-requirements.md 添加规则",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-31T09:06:30.673+08:00"
     }
   ],
   "solodevflow": {

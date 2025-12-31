@@ -1,4 +1,4 @@
-# Requirements Document Specification v2.12 <!-- id: spec_requirements -->
+# Requirements Document Specification v2.13 <!-- id: spec_requirements -->
 
 > 定义需求文档（PRD、Feature、Capability、Flow）的结构和编写标准
 
@@ -9,7 +9,7 @@
 - 此规范定义需求文档的**具体章节结构**
 - 元规范 `spec-meta.md` 定义文档类型和验证规则
 - 设计文档规范见 `spec-design.md`
-- **版本 v2.12**：Flow Spec 扩展 - 添加 Module Impact Specifications、Flow Workflow 阶段、子任务管理规范
+- **版本 v2.13**：§6.6 新增 Execution Spec Generation 规则（workMode=document 时遵循 spec-execution-flow.md）
 - **模板已消除**：AI 直接从本规范生成文档，不再使用 `template/requirements/` 模板
 
 ---
@@ -635,6 +635,41 @@ node scripts/state.js add-subtask \
 - 所有 Module Impact 子任务完成后，才能进入 DESIGN 阶段
 - 使用 `list-subtasks --workitem=<id>` 查看进度
 
+### 6.6 Execution Spec Generation (workMode=document) <!-- id: spec_req_flow_exec -->
+
+当 Flow 的 `workMode=document` 时，产物是**执行规范文档**（`.solodevflow/flows/*.md`）。
+
+**编写规则**：
+
+| 规则 | 说明 |
+|------|------|
+| **必须遵循规范** | 执行规范的结构和格式必须遵循 [spec-execution-flow.md](spec-execution-flow.md) |
+| **模板源优先** | 修改执行规范时，修改 `template/flows/*.md`（模板源），而非 `.solodevflow/flows/`（项目实例） |
+| **对齐版本** | 执行规范的版本应与需求文档版本保持对应关系 |
+
+**AI 生成执行规范流程**：
+
+```
+读取 Flow 需求文档
+    ↓
+加载 spec-execution-flow.md（编写规范）
+    ↓
+生成执行规范文档
+    ↓
+验证结构符合规范
+    ↓
+输出到 template/flows/{name}.md
+```
+
+**引用格式**：
+
+每个 Flow 需求文档的 Header 应包含：
+
+```markdown
+**执行规范**：`.solodevflow/flows/{name}.md`
+**编写规范**：[spec-execution-flow.md](../specs/spec-execution-flow.md)
+```
+
 ---
 
 ## 7. Acceptance Criteria Guide <!-- id: spec_req_acceptance -->
@@ -718,7 +753,7 @@ minor: 内容更新（修改描述）
 
 ---
 
-*Version: v2.12*
+*Version: v2.13*
 *Created: 2024-12-20 (v1.0)*
-*Updated: 2025-12-29 (v2.12)*
-*Changes: v2.12 Flow Spec 扩展（Module Impact Specs, Flow Workflow, 子任务管理）；v2.11 Feature 章节重命名；v2.10 消除冗余*
+*Updated: 2025-12-31 (v2.13)*
+*Changes: v2.13 §6.6 新增 Execution Spec Generation 规则（workMode=document 时遵循 spec-execution-flow.md）；v2.12 Flow Spec 扩展；v2.11 Feature 章节重命名*
