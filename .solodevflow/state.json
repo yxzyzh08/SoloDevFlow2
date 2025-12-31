@@ -48,10 +48,10 @@
     "lastGitCommit": "",
     "lastGitCommitMessage": "",
     "lastGitCommitAt": "",
-    "stateFileVersion": 582,
+    "stateFileVersion": 600,
     "totalStateChanges": 22
   },
-  "lastUpdated": "2025-12-31T13:39:24.307+08:00",
+  "lastUpdated": "2025-12-31T17:40:22.284+08:00",
   "subtasks": [
     {
       "id": "st_1767090831489_002",
@@ -112,48 +112,6 @@
       "createdAt": "2025-12-31T09:00:12.256+08:00"
     },
     {
-      "id": "st_1767144076079_015",
-      "workitemId": "unassigned",
-      "description": "测试脚本是否正常运行",
-      "status": "completed",
-      "source": "ai",
-      "createdAt": "2025-12-31T09:21:16.079+08:00",
-      "updatedAt": "2025-12-31T09:27:24.469+08:00",
-      "completedAt": "2025-12-31T09:28:31.995+08:00"
-    },
-    {
-      "id": "st_1767144511991_009",
-      "workitemId": "unassigned",
-      "description": "分析所有需要重命名的脚本文件",
-      "status": "completed",
-      "source": "ai",
-      "createdAt": "2025-12-31T09:28:31.992+08:00"
-    },
-    {
-      "id": "st_1767144511995_010",
-      "workitemId": "unassigned",
-      "description": "重命名所有 scripts/*.js 为 *.cjs",
-      "status": "completed",
-      "source": "ai",
-      "createdAt": "2025-12-31T09:28:31.995+08:00"
-    },
-    {
-      "id": "st_1767144511995_011",
-      "workitemId": "unassigned",
-      "description": "更新 package.json 中的 scripts 配置",
-      "status": "completed",
-      "source": "ai",
-      "createdAt": "2025-12-31T09:28:31.995+08:00"
-    },
-    {
-      "id": "st_1767144511995_012",
-      "workitemId": "unassigned",
-      "description": "更新脚本间的相互引用路径",
-      "status": "completed",
-      "source": "ai",
-      "createdAt": "2025-12-31T09:28:31.995+08:00"
-    },
-    {
       "id": "st_1767146908374_013",
       "workitemId": "unassigned",
       "description": "重命名 src/hooks 和 .claude/hooks 中的所有 .js 为 .cjs",
@@ -186,91 +144,148 @@
       "createdAt": "2025-12-31T10:08:28.396+08:00"
     },
     {
-      "id": "st_1767156627933_017",
+      "id": "st_1767170598512_012",
       "workitemId": "unassigned",
-      "description": "对比分析并确定重构范围",
+      "description": "生成 AI 执行规范评审报告",
       "status": "completed",
       "source": "ai",
-      "createdAt": "2025-12-31T12:50:27.933+08:00"
+      "createdAt": "2025-12-31T16:43:18.513+08:00",
+      "completedAt": "2025-12-31T16:43:45.436+08:00"
     },
     {
-      "id": "st_1767156627935_018",
+      "id": "st_1767170598517_013",
       "workitemId": "unassigned",
-      "description": "重构 workflows.md 执行规范",
+      "description": "保存评审报告到 reviews 目录",
       "status": "completed",
       "source": "ai",
-      "createdAt": "2025-12-31T12:50:27.935+08:00",
-      "completedAt": "2025-12-31T12:52:06.355+08:00"
+      "createdAt": "2025-12-31T16:43:18.517+08:00",
+      "completedAt": "2025-12-31T16:43:45.441+08:00"
     },
     {
-      "id": "st_1767156627935_019",
+      "id": "st_1767170864096_014",
       "workitemId": "unassigned",
-      "description": "重构 requirements.md 执行规范",
+      "description": "分析 spec-requirements.md 变更的影响",
       "status": "completed",
       "source": "ai",
-      "createdAt": "2025-12-31T12:50:27.935+08:00",
-      "updatedAt": "2025-12-31T12:52:06.357+08:00",
-      "completedAt": "2025-12-31T12:52:47.811+08:00"
+      "createdAt": "2025-12-31T16:47:44.096+08:00",
+      "completedAt": "2025-12-31T16:51:32.250+08:00"
     },
     {
-      "id": "st_1767156627935_020",
+      "id": "st_1767170864106_015",
       "workitemId": "unassigned",
-      "description": "重构 design.md 执行规范",
+      "description": "评估 validate-docs.cjs 是否需要更新",
       "status": "completed",
       "source": "ai",
-      "createdAt": "2025-12-31T12:50:27.935+08:00",
-      "updatedAt": "2025-12-31T12:52:47.811+08:00",
-      "completedAt": "2025-12-31T12:53:21.621+08:00"
+      "createdAt": "2025-12-31T16:47:44.106+08:00",
+      "completedAt": "2025-12-31T16:51:32.255+08:00"
     },
     {
-      "id": "st_1767156627935_021",
+      "id": "st_1767170864106_016",
       "workitemId": "unassigned",
-      "description": "重构 implementation.md 执行规范",
+      "description": "评估其他文档是否需要更新",
       "status": "completed",
       "source": "ai",
-      "createdAt": "2025-12-31T12:50:27.935+08:00",
-      "updatedAt": "2025-12-31T12:53:21.622+08:00",
-      "completedAt": "2025-12-31T12:53:54.029+08:00"
+      "createdAt": "2025-12-31T16:47:44.106+08:00",
+      "updatedAt": "2025-12-31T16:51:32.255+08:00",
+      "completedAt": "2025-12-31T16:52:08.113+08:00"
     },
     {
-      "id": "st_1767156627935_022",
+      "id": "st_1767170864106_017",
       "workitemId": "unassigned",
-      "description": "重构 testing.md 执行规范",
+      "description": "生成影响分析报告",
       "status": "completed",
       "source": "ai",
-      "createdAt": "2025-12-31T12:50:27.935+08:00",
-      "updatedAt": "2025-12-31T12:53:54.030+08:00",
-      "completedAt": "2025-12-31T12:54:27.953+08:00"
+      "createdAt": "2025-12-31T16:47:44.106+08:00",
+      "updatedAt": "2025-12-31T16:52:08.116+08:00",
+      "completedAt": "2025-12-31T16:54:25.499+08:00"
     },
     {
-      "id": "st_1767156627935_023",
+      "id": "st_1767172097466_018",
       "workitemId": "unassigned",
-      "description": "重构 refactoring.md 执行规范",
+      "description": "更新 validate-docs.cjs 版本号 v2.10 → v2.14",
       "status": "completed",
       "source": "ai",
-      "createdAt": "2025-12-31T12:50:27.935+08:00",
-      "updatedAt": "2025-12-31T12:54:27.955+08:00",
-      "completedAt": "2025-12-31T12:55:08.586+08:00"
+      "createdAt": "2025-12-31T17:08:17.466+08:00",
+      "updatedAt": "2025-12-31T17:09:01.173+08:00",
+      "completedAt": "2025-12-31T17:09:33.974+08:00"
     },
     {
-      "id": "st_1767156627935_024",
+      "id": "st_1767172097469_019",
       "workitemId": "unassigned",
-      "description": "重构 bugfix.md 执行规范",
+      "description": "parseSpecDefinitions 函数：解析 Condition 列",
       "status": "completed",
       "source": "ai",
-      "createdAt": "2025-12-31T12:50:27.935+08:00",
-      "updatedAt": "2025-12-31T12:55:08.587+08:00",
-      "completedAt": "2025-12-31T12:56:10.150+08:00"
+      "createdAt": "2025-12-31T17:08:17.469+08:00",
+      "updatedAt": "2025-12-31T17:10:11.922+08:00",
+      "completedAt": "2025-12-31T17:11:11.049+08:00"
     },
     {
-      "id": "st_1767156627935_025",
+      "id": "st_1767172097469_020",
       "workitemId": "unassigned",
-      "description": "验证所有执行规范符合 spec-execution-flow.md",
+      "description": "新增 shouldValidateSection 条件验证函数",
       "status": "completed",
       "source": "ai",
-      "createdAt": "2025-12-31T12:50:27.935+08:00",
-      "updatedAt": "2025-12-31T12:56:10.151+08:00",
-      "completedAt": "2025-12-31T12:57:24.890+08:00"
+      "createdAt": "2025-12-31T17:08:17.469+08:00",
+      "updatedAt": "2025-12-31T17:11:11.054+08:00",
+      "completedAt": "2025-12-31T17:11:56.331+08:00"
+    },
+    {
+      "id": "st_1767172097469_021",
+      "workitemId": "unassigned",
+      "description": "validateDocument 函数：应用条件验证逻辑",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-31T17:08:17.469+08:00",
+      "updatedAt": "2025-12-31T17:11:56.336+08:00",
+      "completedAt": "2025-12-31T17:12:55.724+08:00"
+    },
+    {
+      "id": "st_1767172097469_022",
+      "workitemId": "unassigned",
+      "description": "META_SPEC 配置：定义 validProjectTypes",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-31T17:08:17.469+08:00",
+      "updatedAt": "2025-12-31T17:09:33.983+08:00",
+      "completedAt": "2025-12-31T17:10:11.929+08:00"
+    },
+    {
+      "id": "st_1767172097469_023",
+      "workitemId": "unassigned",
+      "description": "运行验证测试确保向后兼容",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-31T17:08:17.469+08:00",
+      "updatedAt": "2025-12-31T17:12:55.726+08:00",
+      "completedAt": "2025-12-31T17:26:42.018+08:00"
+    },
+    {
+      "id": "st_1767173492876_024",
+      "workitemId": "unassigned",
+      "description": "修复锚点检测过于宽松的bug",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-31T17:31:32.876+08:00",
+      "completedAt": "2025-12-31T17:32:43.152+08:00"
+    },
+    {
+      "id": "st_1767173492880_025",
+      "workitemId": "unassigned",
+      "description": "修复章节检测包含注释的bug",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-31T17:31:32.880+08:00",
+      "completedAt": "2025-12-31T17:32:43.162+08:00"
+    },
+    {
+      "id": "st_1767173492880_026",
+      "workitemId": "unassigned",
+      "description": "验证bug修复效果",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-31T17:31:32.880+08:00",
+      "updatedAt": "2025-12-31T17:32:43.162+08:00",
+      "completedAt": "2025-12-31T17:40:22.281+08:00"
     }
   ],
   "solodevflow": {

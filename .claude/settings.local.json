@@ -35,7 +35,8 @@
       "Bash(do git mv \"$f\" \"$f%.js.cjs\")",
       "Bash(find:*)",
       "Bash(while read f)",
-      "Bash(do mv \"$f\" \"$f%.js.cjs\")"
+      "Bash(do mv \"$f\" \"$f%.js.cjs\")",
+      "WebFetch(domain:www.anthropic.com)"
     ]
   },
   "hooks": {

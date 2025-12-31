@@ -6,7 +6,7 @@
  *
  * Version: 1.4
  * Implements: cap-document-validation v1.1
- * Based on: spec-meta.md v2.7, spec-requirements.md v2.10, spec-design.md v2.6, spec-test.md v1.2
+ * Based on: spec-meta.md v2.7, spec-requirements.md v2.14, spec-design.md v2.6, spec-test.md v1.2
  *
  * Features:
  *   - Frontmatter validation (type, version, inputs with array support)
@@ -64,6 +64,9 @@ const META_SPEC = {
 
   // 2.6 workMode values (v12.1.0)
   validWorkModes: ['code', 'document'],
+
+  // 2.7 projectType values (v2.14)
+  validProjectTypes: ['demo', 'web-app', 'library', 'tool', 'cli-tool', 'api-service', 'mobile-app'],
 
   // 3. Anchor Format (Section 6)
   anchor: {
@@ -368,18 +371,21 @@ function parseSpecDefinitions(specContent) {
         const sectionIdx = tableHeaders.findIndex(h => h.includes('section') || h.includes('章节'));
         const anchorIdx = tableHeaders.findIndex(h => h.includes('anchor') || h.includes('锚点'));
         const requiredIdx = tableHeaders.findIndex(h => h.includes('required') || h.includes('必填'));
+        const conditionIdx = tableHeaders.findIndex(h => h.includes('condition') || h.includes('条件'));
 
         if (sectionIdx >= 0 && cells[sectionIdx]) {
           const sectionName = cells[sectionIdx].replace(/\*\*/g, '').trim();
           let anchor = cells[anchorIdx]?.replace(/`/g, '').trim() || '';
           const requiredText = cells[requiredIdx]?.toLowerCase() || '';
           const required = requiredText.includes('yes') || requiredText.includes('是');
+          const condition = conditionIdx >= 0 ? cells[conditionIdx]?.trim() || null : null;
 
           if (sectionName && !sectionName.includes('---')) {
             definitions.get(currentDefines).sections.push({
               name: sectionName,
               anchor: anchor,
-              required: required
+              required: required,
+              condition: condition
             });
           }
         }
@@ -498,6 +504,59 @@ function isSpecDocument(filePath) {
   }
 
   return false;
+}
+
+/**
+ * Determine if a section should be validated based on its condition and document metadata
+ * Supports condition syntax from spec-requirements.md v2.14:
+ * - "可省略：demoProject: true" - skip validation for demo projects
+ * - "推荐：demoProject: true" - warn (not error) for demo projects
+ * - "projectType: web-app" - only validate for web-app projects
+ *
+ * @param {Object} section - Section definition with { name, anchor, required, condition }
+ * @param {Object} frontmatter - Document frontmatter with projectType field
+ * @returns {Object} { shouldValidate: boolean, level: 'error'|'warning'|'skip' }
+ */
+function shouldValidateSection(section, frontmatter) {
+  // If no condition specified, always validate normally
+  if (!section.condition) {
+    return {
+      shouldValidate: true,
+      level: section.required ? 'error' : 'skip'
+    };
+  }
+
+  const condition = section.condition;
+  const projectType = frontmatter.projectType || null;
+
+  // Parse condition: "可省略：demoProject: true"
+  if (condition.includes('可省略') && condition.includes('demoProject')) {
+    if (projectType === 'demo') {
+      return { shouldValidate: false, level: 'skip' }; // Skip validation for demo projects
+    }
+  }
+
+  // Parse condition: "推荐：demoProject: true"
+  if (condition.includes('推荐') && condition.includes('demoProject')) {
+    if (projectType === 'demo') {
+      return { shouldValidate: true, level: 'warning' }; // Warn instead of error
+    }
+  }
+
+  // Parse condition: "projectType: xxx"
+  const match = condition.match(/projectType:\s*([a-z-]+)/);
+  if (match) {
+    const requiredType = match[1];
+    if (projectType !== requiredType) {
+      return { shouldValidate: false, level: 'skip' }; // Skip for non-matching project types
+    }
+  }
+
+  // Default: validate normally
+  return {
+    shouldValidate: true,
+    level: section.required ? 'error' : 'skip'
+  };
 }
 
 /**
@@ -623,26 +682,36 @@ function validateDocument(filePath, specDefinitions) {
   const docAnchorIds = new Set(docAnchors.map(a => a.id));
   const docName = getDocName(filePath);
 
-  // 8. Validate required sections by checking anchors
+  // 8. Validate required sections by checking anchors (with conditional validation support v2.14)
   for (const section of specDef.sections) {
     if (!section.anchor) continue;
 
     // Substitute {name} variable
     const expectedAnchor = section.anchor.replace('{name}', docName);
 
-    if (section.required) {
-      // Check if anchor exists
-      const hasAnchor = docAnchorIds.has(expectedAnchor) ||
-                        // Also check with different name derivations
-                        Array.from(docAnchorIds).some(a => a.startsWith(expectedAnchor.split('_')[0] + '_'));
+    // Determine if and how this section should be validated based on conditions
+    const validation = shouldValidateSection(section, frontmatter);
 
-      if (!hasAnchor && !content.includes(section.name)) {
-        results.errors.push(`Missing required section: ${section.name} (anchor: ${expectedAnchor})`);
+    // Check if anchor exists (exact match only)
+    const hasAnchor = docAnchorIds.has(expectedAnchor);
+
+    // Check if section exists by looking for heading with the section name
+    // Only match actual headings (lines starting with ##), not comments or inline mentions
+    const headingPattern = new RegExp(`^##+ .* ${section.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'm');
+    const hasSectionHeading = headingPattern.test(content);
+
+    if (validation.shouldValidate) {
+      if (!hasAnchor && !hasSectionHeading) {
+        if (validation.level === 'error') {
+          results.errors.push(`Missing required section: ${section.name} (anchor: ${expectedAnchor})`);
+        } else if (validation.level === 'warning') {
+          results.warnings.push(`Recommended section not present: ${section.name} (anchor: ${expectedAnchor})`);
+        }
       }
     } else {
-      // Optional section - just info
-      if (!docAnchorIds.has(expectedAnchor) && !content.includes(section.name)) {
-        results.info.push(`Optional section not present: ${section.name}`);
+      // Section skipped due to condition - just info
+      if (!hasAnchor && !hasSectionHeading && section.condition) {
+        results.info.push(`Optional section not present (condition: ${section.condition}): ${section.name}`);
       }
     }
   }

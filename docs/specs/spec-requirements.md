@@ -1,4 +1,4 @@
-# Requirements Document Specification v2.13 <!-- id: spec_requirements -->
+# Requirements Document Specification v2.14 <!-- id: spec_requirements -->
 
 > 定义需求文档（PRD、Feature、Capability、Flow）的结构和编写标准
 
@@ -9,7 +9,7 @@
 - 此规范定义需求文档的**具体章节结构**
 - 元规范 `spec-meta.md` 定义文档类型和验证规则
 - 设计文档规范见 `spec-design.md`
-- **版本 v2.13**：§6.6 新增 Execution Spec Generation 规则（workMode=document 时遵循 spec-execution-flow.md）
+- **版本 v2.14**：§1.6 新增 Frontend Demo Projects 适配规则，§4.4 新增 User Scenarios 章节定义
 - **模板已消除**：AI 直接从本规范生成文档，不再使用 `template/requirements/` 模板
 
 ---
@@ -124,6 +124,59 @@ PRD (1个，必须)
 
 摘要提取结果：`项目状态的唯一真实来源，定义 state.json 的结构、校验规则、使用指南`
 
+### 1.6 Project Type Adaptations <!-- id: spec_req_project_types -->
+
+不同类型的项目对需求文档的要求有所不同。
+
+#### 1.6.1 Frontend Demo Projects
+
+**适用场景**：演示性质的前端项目（如组件库示例、交互原型、技术验证）
+
+**特殊规则**：
+
+| 规则 | 说明 | 理由 |
+|------|------|------|
+| **无需 Flow 文档** | 不创建 `flow-*.md` 文档 | Demo 项目通常是单一场景展示，无复杂跨域协作流程 |
+| **简化 Non-Functional Requirements** | PRD 和 Feature 可省略 NFR 章节 | Demo 项目重点在功能演示，性能/安全等非功能性需求优先级低 |
+| **以场景为核心** | Feature 文档以用户场景（Scenario）为主 | 前端 Demo 的价值在于可视化交互，场景描述更直观 |
+
+**Feature 文档结构调整**：
+
+```markdown
+## User Scenarios <!-- id: feat_{name}_scenarios -->
+
+### Scenario 1: {场景名称}
+
+**场景描述**：用户想要...
+
+**前置条件**：
+- 条件 1
+- 条件 2
+
+**操作步骤**：
+1. 用户点击...
+2. 系统显示...
+3. 用户输入...
+
+**预期结果**：
+- 界面显示...
+- 数据变化...
+
+**交互设计要点**：
+- 动画效果：...
+- 响应式行为：...
+```
+
+**PRD 结构调整**：
+- ✅ 保留：Product Vision, Target Users, Feature Roadmap
+- ❌ 可省略：Non-Functional Requirements, Core Flows（如无跨 Feature 流程）
+- ✅ 增强：User Scenarios（在 Feature Roadmap 中以场景列举）
+
+**判断标准**：
+- 项目主要目的是演示/展示
+- 不涉及后端服务或数据持久化（或仅有模拟数据）
+- 用户体验和视觉效果是核心价值
+
 ---
 
 ## 2. Frontmatter <!-- id: spec_req_frontmatter -->
@@ -173,18 +226,18 @@ domain: process        # 可选：所属 Domain
 
 ## 3. PRD Structure <!-- id: spec_req_prd --> <!-- defines: prd -->
 
-| Section | Required | Anchor | Description |
-|---------|----------|--------|-------------|
-| Product Vision | Yes | `prod_vision` | 一句话定义 + 核心价值 |
-| Target Users | Yes | `prod_users` | 用户画像、痛点 |
-| Product Description | Yes | `prod_description` | High Level 功能概述 |
-| Feature Roadmap | Yes | `prod_roadmap` | 按 Domain 分组的 Feature 列表 |
-| Success Criteria | Yes | `prod_success` | 可验证的成功指标 |
-| Non-Goals | No | `prod_non_goals` | 明确排除的范围 |
-| Constraints & Assumptions | No | `prod_constraints` | 技术/业务/法规约束，前提假设 |
-| Non-Functional Requirements | No | `prod_nfr` | 性能、安全、可用性等质量属性 |
-| Core Flow | No | `prod_flow` | 有复杂业务流程时 |
-| Appendix | No | `prod_appendix` | 速查表、术语表 |
+| Section | Required | Anchor | Description | Condition |
+|---------|----------|--------|-------------|-----------|
+| Product Vision | Yes | `prod_vision` | 一句话定义 + 核心价值 | - |
+| Target Users | Yes | `prod_users` | 用户画像、痛点 | - |
+| Product Description | Yes | `prod_description` | High Level 功能概述 | - |
+| Feature Roadmap | Yes | `prod_roadmap` | 按 Domain 分组的 Feature 列表 | - |
+| Success Criteria | Yes | `prod_success` | 可验证的成功指标 | - |
+| Non-Goals | No | `prod_non_goals` | 明确排除的范围 | - |
+| Constraints & Assumptions | No | `prod_constraints` | 技术/业务/法规约束，前提假设 | - |
+| Non-Functional Requirements | No | `prod_nfr` | 性能、安全、可用性等质量属性 | **可省略**：demoProject: true |
+| Core Flow | No | `prod_flow` | 有复杂业务流程时 | **可省略**：demoProject: true |
+| Appendix | No | `prod_appendix` | 速查表、术语表 | - |
 
 ### 3.1 Feature Roadmap Structure
 
@@ -293,10 +346,11 @@ Feature Roadmap 按 Domain 组织，每个 Feature 以子章节形式呈现：
 | Acceptance Criteria | Yes | `feat_{name}_acceptance` | 可验证的完成条件 | - |
 | Artifacts | code 类型必填 | `feat_{name}_artifacts` | 产物记录（设计/代码/测试路径） | - |
 | UI Components | Yes | `feat_{name}_ui_components` | 涉及的 UI 组件（复用/新建） | projectType: web-app |
+| User Scenarios | No | `feat_{name}_scenarios` | 用户场景详细描述（操作步骤、预期结果、交互设计） | **推荐**：demoProject: true |
 | User Stories | No | `feat_{name}_stories` | 需要详细描述用户场景 | - |
 | Boundaries | No | `feat_{name}_boundaries` | 需要明确排除项 | - |
 | Dependencies | No | `feat_{name}_dependencies` | 有前置依赖 | - |
-| Non-Functional Requirements | No | `feat_{name}_nfr` | 性能、安全等质量属性（Feature 级） | - |
+| Non-Functional Requirements | No | `feat_{name}_nfr` | 性能、安全等质量属性（Feature 级） | **可省略**：demoProject: true |
 
 ### 4.0 Condition Column
 
@@ -363,6 +417,57 @@ Artifacts 章节记录 Feature 的产出物位置：
 - Feature 有比 PRD 更严格的性能要求
 - Feature 涉及敏感数据，有额外安全要求
 - Feature 是核心链路，需要高可用保障
+
+### 4.4 User Scenarios Section (Optional, Recommended for Demo Projects)
+
+> 此章节特别推荐用于前端 Demo 演示项目（参见 §1.6.1）
+
+以场景为中心描述用户如何使用 Feature，包括操作步骤、预期结果、交互设计要点：
+
+```markdown
+## User Scenarios <!-- id: feat_{name}_scenarios -->
+
+### Scenario 1: {场景名称}
+
+**场景描述**：{用户想要完成什么任务，在什么情境下}
+
+**前置条件**：
+- 条件 1（如：用户已登录）
+- 条件 2（如：已有待办事项）
+
+**操作步骤**：
+1. 用户 {操作}
+2. 系统 {响应}
+3. 用户 {操作}
+4. 系统 {最终状态}
+
+**预期结果**：
+- UI 变化：{界面显示什么}
+- 数据变化：{数据状态如何改变}
+- 反馈信息：{用户收到什么提示}
+
+**交互设计要点**（可选）：
+- 动画效果：{过渡动画、加载动画}
+- 响应式行为：{不同屏幕尺寸的表现}
+- 异常处理：{错误情况下的界面反馈}
+
+### Scenario 2: {另一个场景}
+...
+```
+
+**与 User Stories 的区别**：
+
+| 维度 | User Scenarios | User Stories |
+|------|---------------|--------------|
+| **粒度** | 详细操作步骤 | 高层需求描述 |
+| **格式** | 场景化叙述 | "As a... I want... So that..." |
+| **重点** | 交互细节、UI 行为 | 业务价值 |
+| **适用** | Demo 项目、前端交互重 | 敏捷开发、需求拆分 |
+
+**使用建议**：
+- Frontend Demo 项目：优先使用 User Scenarios（更直观）
+- 复杂业务系统：User Stories + Acceptance Criteria
+- 可同时使用：先 User Stories 概述，再 User Scenarios 细化
 
 ### 4.5 UI Components Section (web-app only)
 
@@ -753,7 +858,7 @@ minor: 内容更新（修改描述）
 
 ---
 
-*Version: v2.13*
+*Version: v2.14*
 *Created: 2024-12-20 (v1.0)*
-*Updated: 2025-12-31 (v2.13)*
-*Changes: v2.13 §6.6 新增 Execution Spec Generation 规则（workMode=document 时遵循 spec-execution-flow.md）；v2.12 Flow Spec 扩展；v2.11 Feature 章节重命名*
+*Updated: 2025-12-31 (v2.14)*
+*Changes: v2.14 §1.6 新增 Frontend Demo Projects 适配规则（无需 Flow/NFR，以场景为主）+ §4.4 User Scenarios 章节定义；v2.13 §6.6 新增 Execution Spec Generation 规则；v2.12 Flow Spec 扩展；v2.11 Feature 章节重命名*
