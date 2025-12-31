@@ -1,9 +1,3 @@
-<!--
-  Template Source File
-  修改此文件后，需要通过升级脚本同步到项目的 .solodevflow/flows/
-  请勿直接修改 .solodevflow/flows/ 中的文件
--->
-
 # Workflows - Execution Spec
 
 > AI 执行规范：主工作流的执行流程
@@ -318,50 +312,3 @@ pending → feature_requirements → feature_review → feature_design → featu
 *Version: v2.2*
 *Aligned with: flow-workflows.md v9.2, fea-state-management.md v16.0*
 *Updated: 2025-12-30*
-
----
-
-## Changelog
-
-### v2.2 (2025-12-30)
-- **删除"直接执行"意图类型**：所有代码修改必须走流程
-- §2 Input Analysis 移除"直接执行"路由
-- §2.1 删除 Direct Execution Criteria，重构为 Must Follow Process Criteria
-- §10 Execution Principles 更新，强调"未走流程直接修改代码"为禁止行为
-- 对齐需求文档 flow-workflows.md v9.2
-
-### v2.1 (2025-12-30)
-- §6.2 简化为 PRD Decomposing Routing（只保留路由，执行细节移至 requirements.md §5）
-- 对齐需求文档 flow-workflows.md v9.1
-
-### v2.0 (2025-12-30)
-- **重大更新**：两层状态机设计（PRD 层 + Work Item 层）
-- 新增 §5 Two-Layer Lifecycle：区分 PRD 层和 Work Item 层生命周期
-- 新增 §6 PRD Lifecycle：PRD 阶段流转、路由规则、关闭条件
-- §1 Session Start 添加 PRD 层状态检测
-- §11 Tools Reference 添加 PRD 相关命令
-- 对齐需求文档 flow-workflows.md v9.0
-
-### v1.4 (2025-12-30)
-- §2 Input Analysis 添加 Bug 修复路由（加载 bugfix.md）
-- §7 重构为 Subflow References：Bug Fix Flow 独立为 bugfix.md
-- 对齐需求文档 flow-workflows.md v8.5
-
-### v1.3 (2025-12-29)
-- §1 Session Start 添加重构模式检测：检查 project.refactoring.enabled，自动加载 refactoring.md
-
-### v1.2.1 (2025-12-29)
-- 对齐 fea-hooks-integration v1.5：意图检测机制通过 UserPromptSubmit Hook 实现
-- §2.2 定义"什么需要走流程"，H8 实现"如何检测"
-
-### v1.2 (2025-12-29)
-- 新增 §2.2 Must Follow Process Criteria：明确定义必须走流程的变更类型
-- 修复工作流设计缺陷：防止 AI 在用户明确授权时跳过需求流程
-
-### v1.1 (2025-12-28)
-- 新增 §7 Bug Fix Flow：根因分析流程
-- 更新 §6 Phase Guards：添加 done 状态守卫
-- 更新 §8 Execution Principles：添加根因分析相关原则
-
-### v1.0 (2025-12-28)
-- 初始版本

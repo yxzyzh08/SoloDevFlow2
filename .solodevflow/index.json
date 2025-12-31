@@ -1,9 +1,9 @@
 {
-  "generated": "2025-12-30T18:24:55.910+08:00",
+  "generated": "2025-12-31T09:00:59.760+08:00",
   "summary": {
-    "total": 18,
+    "total": 19,
     "done": 18,
-    "in_progress": 0,
+    "in_progress": 1,
     "not_started": 0
   },
   "activeWorkItems": [],
@@ -174,7 +174,7 @@
       "title": "Review Assistant",
       "workMode": null,
       "status": "done",
-      "phase": null,
+      "phase": "done",
       "priority": "P0",
       "domain": "ai-config",
       "path": "docs/requirements/features/fea-review-assistant.md",
@@ -415,6 +415,17 @@
       "priority": null,
       "domain": null,
       "path": "docs/requirements/prd.md"
+    },
+    {
+      "id": "spec_execution_flow",
+      "type": "execution-flow-spec",
+      "title": "Execution Flow Spec v1.0",
+      "workMode": null,
+      "status": "in_progress",
+      "phase": null,
+      "priority": null,
+      "domain": null,
+      "path": "docs/specs/spec-execution-flow.md"
     }
   ]
 }

@@ -48,20 +48,11 @@
     "lastGitCommit": "",
     "lastGitCommitMessage": "",
     "lastGitCommitAt": "",
-    "stateFileVersion": 514,
+    "stateFileVersion": 561,
     "totalStateChanges": 22
   },
-  "lastUpdated": "2025-12-30T18:54:48.367+08:00",
+  "lastUpdated": "2025-12-31T09:00:59.605+08:00",
   "subtasks": [
-    {
-      "id": "st_1767090831488_001",
-      "workitemId": "unassigned",
-      "description": "修复 activate 添加 ID 验证",
-      "status": "completed",
-      "source": "ai",
-      "createdAt": "2025-12-30T18:33:51.488+08:00",
-      "completedAt": "2025-12-30T18:34:17.646+08:00"
-    },
     {
       "id": "st_1767090831489_002",
       "workitemId": "unassigned",
@@ -80,38 +71,50 @@
       "createdAt": "2025-12-30T18:33:51.489+08:00"
     },
     {
-      "id": "st_1767091463521_004",
+      "id": "st_1767139951190_006",
       "workitemId": "unassigned",
-      "description": "更新需求文档 flow-workflows.md 删除直接执行",
-      "status": "completed",
+      "description": "提交审核",
+      "status": "in_progress",
       "source": "ai",
-      "createdAt": "2025-12-30T18:44:23.521+08:00",
-      "completedAt": "2025-12-30T18:47:56.888+08:00"
+      "createdAt": "2025-12-31T08:12:31.190+08:00",
+      "updatedAt": "2025-12-31T08:27:37.282+08:00"
     },
     {
-      "id": "st_1767091463522_005",
+      "id": "st_1767140527067_011",
       "workitemId": "unassigned",
-      "description": "更新执行规范 template/flows/workflows.md",
-      "status": "completed",
+      "description": "确认是否先更新 PRD",
+      "status": "in_progress",
       "source": "ai",
-      "createdAt": "2025-12-30T18:44:23.522+08:00",
-      "updatedAt": "2025-12-30T18:47:56.889+08:00",
-      "completedAt": "2025-12-30T18:50:18.317+08:00"
+      "createdAt": "2025-12-31T08:22:07.067+08:00"
     },
     {
-      "id": "st_1767091463522_006",
+      "id": "st_1767142812254_010",
       "workitemId": "unassigned",
-      "description": "同步 .solodevflow/flows/workflows.md",
-      "status": "completed",
+      "description": "确认变更范围",
+      "status": "in_progress",
       "source": "ai",
-      "createdAt": "2025-12-30T18:44:23.522+08:00",
-      "updatedAt": "2025-12-30T18:50:18.318+08:00",
-      "completedAt": "2025-12-30T18:54:48.367+08:00"
+      "createdAt": "2025-12-31T09:00:12.255+08:00"
+    },
+    {
+      "id": "st_1767142812256_011",
+      "workitemId": "unassigned",
+      "description": "明确变更内容",
+      "status": "pending",
+      "source": "ai",
+      "createdAt": "2025-12-31T09:00:12.256+08:00"
+    },
+    {
+      "id": "st_1767142812256_012",
+      "workitemId": "unassigned",
+      "description": "批量更新文档",
+      "status": "pending",
+      "source": "ai",
+      "createdAt": "2025-12-31T09:00:12.256+08:00"
     }
   ],
   "solodevflow": {
     "version": "2.0.0",
-    "upgradedAt": "2025-12-30T18:54:09.809+08:00"
+    "upgradedAt": "2025-12-31T08:26:58.265+08:00"
   },
   "prd": {
     "phase": null,

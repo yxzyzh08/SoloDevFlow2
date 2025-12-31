@@ -1,9 +1,3 @@
-<!--
-  Template Source File
-  修改此文件后，需要通过升级脚本同步到项目的 .solodevflow/flows/
-  请勿直接修改 .solodevflow/flows/ 中的文件
--->
-
 # Requirements Flow - Execution Spec
 
 > AI 执行规范：需求处理阶段的执行流程
@@ -415,20 +409,3 @@ node scripts/state.js set-prd-phase prd_done
 *Version: v2.2*
 *Aligned with: flow-requirements.md v2.1*
 *Updated: 2025-12-30*
-
----
-
-## Changelog
-
-### v2.2 (2025-12-30)
-- §5.2 添加 Work Item 审核通过后的进度更新指导（update-prd-progress）
-- 新增 §5.5 Decomposing Progress Tracking
-- §5.5 → §5.6 Decomposing Completion Check
-
-### v2.1 (2025-12-30)
-- §2.3 IMPACT 添加多领域检测信号
-- 新增 §3.7 Multi Work Item Decomposition 执行逻辑
-
-### v2.0 (2025-12-30)
-- 新增 §5 Flow D: PRD Decomposing（PRD 分解阶段执行流程）
-- 对齐需求文档 flow-requirements.md v2.0

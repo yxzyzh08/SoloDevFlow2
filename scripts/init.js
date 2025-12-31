@@ -11,7 +11,7 @@
  *   solodevflow --help                   显示帮助
  *
  * Options:
- *   --type, -t      项目类型 (backend|web-app|mobile-app)
+ *   --type, -t      项目类型 (backend|web-app|mobile-app|frontend-demo)
  *   --force, -f     强制覆盖已存在文件
  *   --skip-scripts  不复制 scripts/
  */
@@ -28,7 +28,7 @@ const { toBeijingISOString } = require('./lib/datetime');
 const SOLODEVFLOW_ROOT = path.resolve(__dirname, '..');
 const VERSION = require(path.join(SOLODEVFLOW_ROOT, 'package.json')).version;
 
-const PROJECT_TYPES = ['backend', 'web-app', 'mobile-app'];
+const PROJECT_TYPES = ['backend', 'web-app', 'mobile-app', 'frontend-demo'];
 
 // Note: Template layer has been eliminated (v2.4)
 // AI commands now generate documents directly from spec-requirements.md
@@ -37,7 +37,16 @@ const PROJECT_TYPES = ['backend', 'web-app', 'mobile-app'];
 const CLAUDE_RULES = {
   'web-app': null,  // Rules now embedded in spec-requirements.md
   'mobile-app': null,
-  'backend': null
+  'backend': null,
+  'frontend-demo': null
+};
+
+// Project type to spec files mapping
+const PROJECT_SPECS = {
+  'backend': ['spec-requirements.md', 'spec-design.md', 'spec-test.md', 'spec-backend-dev.md'],
+  'web-app': ['spec-requirements.md', 'spec-design.md', 'spec-test.md', 'spec-backend-dev.md', 'spec-frontend-dev.md'],
+  'mobile-app': ['spec-requirements.md', 'spec-design.md', 'spec-test.md', 'spec-backend-dev.md', 'spec-frontend-dev.md'],
+  'frontend-demo': ['spec-requirements.md', 'spec-design.md', 'spec-test.md', 'spec-frontend-dev.md']
 };
 
 // ============================================================================
@@ -97,15 +106,21 @@ function copyFlowFiles(src, dest, isBootstrap = false) {
 
     if (entry.isDirectory()) {
       copyFlowFiles(srcPath, destPath, isBootstrap);
-    } else if (entry.name.endsWith('.md') && !isBootstrap) {
-      // 非自举模式：处理 markdown 文件
+    } else if (entry.name.endsWith('.md')) {
+      // 处理 markdown 文件
       let content = fs.readFileSync(srcPath, 'utf-8');
-      // 1. 删除需求文档引用（目标项目没有这些文档）
-      content = content.replace(/\*\*需求文档\*\*：\[.*?\]\(.*?\)\n?/g, '');
-      // 2. 替换脚本路径：scripts/ → .solodevflow/scripts/
-      content = content.replace(/node scripts\//g, 'node .solodevflow/scripts/');
-      // 3. 删除 Changelog 部分（从 "## Changelog" 前的分隔符开始到文档末尾）
-      content = content.replace(/\n---\n+## Changelog[\s\S]*$/g, '');
+      // 1. 移除头部模板注释（适用于所有模式）
+      content = content.replace(/^<!--\s*\n\s*Template Source File[\s\S]*?-->\s*\n+/m, '');
+      // 2. 删除 Changelog 部分（适用于所有模式，兼容 CRLF 和 LF，可选 --- 分隔符）
+      content = content.replace(/(\r?\n)+(---(\r?\n)+)?## Changelog[\s\S]*$/g, '');
+
+      if (!isBootstrap) {
+        // 以下处理仅适用于非自举模式
+        // 3. 删除需求文档引用（目标项目没有这些文档）
+        content = content.replace(/\*\*需求文档\*\*：\[.*?\]\(.*?\)\n?/g, '');
+        // 4. 替换脚本路径：scripts/ → .solodevflow/scripts/
+        content = content.replace(/node scripts\//g, 'node .solodevflow/scripts/');
+      }
       fs.writeFileSync(destPath, content);
     } else {
       copyFile(srcPath, destPath);
@@ -657,8 +672,8 @@ async function copyToolFiles(config) {
       log('    docs/specs/spec-meta.md（从模板生成）', 'success');
     }
 
-    // 4.2 Copy other spec files
-    const specFiles = ['spec-requirements.md', 'spec-design.md', 'spec-test.md', 'spec-backend-dev.md', 'spec-frontend-dev.md'];
+    // 4.2 Copy spec files based on project type
+    const specFiles = PROJECT_SPECS[config.projectType] || PROJECT_SPECS['backend'];
     for (const specFile of specFiles) {
       const srcPath = path.join(specsSrc, specFile);
       const destPath = path.join(specsDest, specFile);
@@ -667,6 +682,7 @@ async function copyToolFiles(config) {
         log(`    docs/specs/${specFile}`, 'success');
       }
     }
+    log(`    （${config.projectType} 类型，已跳过不相关规范）`, 'info');
   }
 
   // Note: Template layer eliminated (v2.4)
@@ -708,6 +724,17 @@ async function copyToolFiles(config) {
   if (fs.existsSync(hooksSrc)) {
     copyDir(hooksSrc, hooksDest);
     log('    .claude/hooks/', 'success');
+  }
+
+  // 5.1 Copy template/agents/ to .claude/agents/ (if exists)
+  log('  复制 .claude/agents/...');
+  const agentsSrc = path.join(SOLODEVFLOW_ROOT, 'template', 'agents');
+  const agentsDest = path.join(targetPath, '.claude', 'agents');
+  if (fs.existsSync(agentsSrc)) {
+    copyDir(agentsSrc, agentsDest);
+    log('    .claude/agents/', 'success');
+  } else {
+    log('    template/agents/ 不存在，跳过', 'info');
   }
 
   // 6. Generate .claude/settings.local.json (non-bootstrap mode only)
@@ -817,6 +844,7 @@ function finalize(config) {
   ✅ .solodevflow/flows/    ← template/flows/
   ✅ .claude/commands/      ← template/commands/
   ✅ .claude/hooks/         ← src/hooks/
+  ✅ .claude/agents/        ← template/agents/
 
 已跳过（使用源码）:
   ⏭️  .solodevflow/scripts/ （使用 scripts/ 源码）
@@ -853,6 +881,7 @@ function finalize(config) {
   ✅ .solodevflow/scripts/（运行时脚本）
   ✅ .claude/commands/（命令文件）
   ✅ .claude/hooks/（Hook 脚本）
+  ✅ .claude/agents/（AI 代理）
   ✅ .claude/settings.local.json（Hook 配置）
   ✅ docs/specs/（规范文档）
   ✅ CLAUDE.md（流程控制器）
@@ -883,6 +912,7 @@ function finalize(config) {
   - .solodevflow/scripts/（运行时脚本）
   - .claude/commands/（命令文件）
   - .claude/hooks/（Hook 脚本）
+  - .claude/agents/（AI 代理）
   - .claude/settings.local.json（Hook 配置）
   - docs/specs/（规范文档）
   - CLAUDE.md（流程控制器）
@@ -992,7 +1022,7 @@ Commands:
   upgrade <path>      升级已有项目（保留项目数据）
 
 Options:
-  --type, -t <type>   项目类型 (backend|web-app|mobile-app)
+  --type, -t <type>   项目类型 (backend|web-app|mobile-app|frontend-demo)
   --force, -f         强制覆盖已存在文件
   --skip-scripts      不复制 scripts/
   --help, -h          显示帮助
@@ -1015,11 +1045,12 @@ Examples:
 
 async function selectProjectType(rl) {
   console.log('\n请选择项目类型:');
-  console.log('  1. backend     - 纯后端系统');
-  console.log('  2. web-app     - Web 应用（前端+后端）');
-  console.log('  3. mobile-app  - 移动应用');
+  console.log('  1. backend       - 纯后端系统');
+  console.log('  2. web-app       - Web 应用（前端+后端）');
+  console.log('  3. mobile-app    - 移动应用');
+  console.log('  4. frontend-demo - 前端演示项目（无后端）');
 
-  const answer = await question(rl, '\n请输入选项 (1-3): ');
+  const answer = await question(rl, '\n请输入选项 (1-4): ');
   const index = parseInt(answer) - 1;
 
   if (index >= 0 && index < PROJECT_TYPES.length) {

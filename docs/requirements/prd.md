@@ -1,7 +1,7 @@
 ---
 type: prd
 status: done
-version: "4.2"
+version: "4.3"
 ---
 
 # SoloDevFlow 2.0 <!-- id: prod_solodevflow -->
@@ -155,7 +155,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 
 | Domain | 说明 | Feature 数量 |
 |--------|------|--------------|
-| **specification** | 规范文档（元规范/需求/设计/开发/测试） | 5 |
+| **specification** | 规范文档（元规范/需求/设计/开发/测试/执行流程） | 6 |
 | **process** | 协作流程（核心流程/状态管理/输入捕获/影响追踪/文档验证/项目重构） | 6 |
 | **tooling** | 独立工具（项目初始化） | 1 |
 | **ai-config** | AI 协作配置（Hooks/CLAUDE.md/命令/审核/架构演进） | 4 |
@@ -214,6 +214,15 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 - **Priority**: P1
 - **Type**: document
 - **Feature**: [spec-test.md](../specs/spec-test.md)
+
+#### execution-flow <!-- id: feat_ref_execution_flow -->
+
+工作流执行规范，定义 `.solodevflow/flows/*.md` 执行规范文档的编写标准。基于 Claude Code 最佳实践，规范化 AI 执行规范的结构、格式、指令编写原则。
+
+**元信息**：
+- **Priority**: P1
+- **Type**: document
+- **Feature**: [spec-execution-flow.md](../specs/spec-execution-flow.md)
 
 ### 4.2 Domain: process <!-- id: domain_process -->
 
@@ -398,7 +407,7 @@ AI 行为入口，解决 AI 对话启动时缺乏上下文和导航的问题。�
 
 ---
 
-*Version: v4.2*
+*Version: v4.3*
 *Created: 2024-12-16*
-*Updated: 2025-12-28*
-*Changes: v4.2 删除废弃条目（knowledge-base, requirements-expert, agent-architecture）保持 PRD 简洁*
+*Updated: 2025-12-31*
+*Changes: v4.3 Domain: specification 新增 execution-flow（工作流执行规范）*

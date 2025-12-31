@@ -1,8 +1,9 @@
 ---
 type: feature
-version: "1.0"
+version: "1.1"
 id: review-assistant
 status: done
+phase: done
 priority: P0
 domain: ai-config
 ---
@@ -154,13 +155,20 @@ domain: ai-config
 
 | Type | Path | Description |
 |------|------|-------------|
-| Agent | .claude/agents/review-assistant/AGENT.md | Subagent 定义 |
+| Agent（源码） | template/agents/review-assistant/AGENT.md | Subagent 定义（模板源文件） |
+| Agent（运行时） | .claude/agents/review-assistant/AGENT.md | 通过 init/upgrade 安装 |
 | Output | .solodevflow/reviews/*.md | 审核报告输出目录 |
 
 **Design Depth**: None（使用 Claude CLI Subagent 机制，无需额外设计）
 
+**安装说明**：
+- 源文件存放在 `template/agents/`，与 commands 模式一致
+- 通过 `solodevflow init/upgrade` 安装到目标项目的 `.claude/agents/`
+- 自举模式下同步源文件到运行时目录
+
 ---
 
-*Version: v1.0*
+*Version: v1.1*
 *Created: 2025-12-28*
-*Updated: 2025-12-28*
+*Updated: 2025-12-31*
+*Changes: v1.1 产物路径改为 template/agents/，通过 init/upgrade 安装到 .claude/agents/*

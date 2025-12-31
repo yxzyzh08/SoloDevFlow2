@@ -6,7 +6,7 @@ status: done
 phase: done
 priority: P0
 domain: tooling
-version: "1.8"
+version: "2.3"
 ---
 
 # Feature: Project Init <!-- id: feat_project_init -->
@@ -74,6 +74,7 @@ version: "1.8"
 | C8 | 配置生成 | 生成 `CLAUDE.md` 和更新 `package.json` |
 | C9 | 版本记录 | 记录安装的 SoloDevFlow 版本 |
 | C10 | 操作模式 | 区分 init/upgrade/bootstrap 三种模式 |
+| C11 | Agents 安装 | 安装 `.claude/agents/` AI 代理 |
 
 > **已消除**：模板复制能力（v2.4）。AI 命令现在直接从 `spec-requirements.md` 生成文档。
 
@@ -134,6 +135,12 @@ target-project/
 **规则**：
 - 覆盖已存在的文件
 - 工作流文件是运行时实例，可被升级更新
+- **复制时移除头部模板注释**：删除文件开头的 `<!-- Template Source File ... -->` HTML 注释块
+  - 原因：该注释提示"请勿直接修改 .solodevflow/flows/ 中的文件"，仅对模板源文件有意义
+  - 适用于所有模式（包括自举模式）
+- **复制时移除 Changelog**：删除 `## Changelog` 及其后的所有内容
+  - 原因：Changelog 是源文件的变更历史，对运行时实例没有意义
+  - 适用于所有模式（包括自举模式）
 - **复制时清理无效引用**（仅非自举模式）：删除 `**需求文档**：[...](...)`
   - 原因：该引用指向 SoloDevFlow 源项目的需求文档，在目标项目中无效
   - **自举模式例外**：保留引用（SoloDevFlow 自身有这些需求文档，引用有效）
@@ -191,6 +198,26 @@ target-project/
 - 覆盖已存在的文件（升级场景）
 - Hooks 是工作流自动化的核心，必须安装
 
+#### C11: Agents 安装
+
+从 `template/agents/` 复制 AI 代理到 `.claude/agents/` 目录。
+
+**输出**：
+```
+target-project/
+└── .claude/
+    └── agents/
+        └── review-assistant/
+            └── AGENT.md    # Review Assistant 代理定义
+```
+
+**源路径**：`SoloDevFlow/template/agents/` → 目标项目 `.claude/agents/`
+
+**规则**：
+- 完整复制所有代理目录和文件
+- 覆盖已存在的文件（升级场景）
+- 如果 `template/agents/` 不存在则跳过（向后兼容）
+
 #### C6: 规范复制（非自举模式）
 
 复制规范文档到目标项目，作为项目的规范定义。
@@ -203,16 +230,26 @@ target-project/
         ├── spec-meta.md
         ├── spec-requirements.md
         ├── spec-design.md
-        ├── spec-backend-dev.md
+        ├── spec-backend-dev.md    # 仅 backend/web-app/mobile-app
+        ├── spec-frontend-dev.md   # 仅 web-app/mobile-app/frontend-demo
         └── spec-test.md
 ```
 
 **源路径**：`SoloDevFlow/docs/specs/` → 目标项目 `docs/specs/`
 
+**项目类型与规范映射**：
+
+| 项目类型 | 说明 | 包含规范 |
+|----------|------|----------|
+| `backend` | 纯后端系统 | meta, requirements, design, test, **backend-dev** |
+| `web-app` | Web 应用（前端+后端） | meta, requirements, design, test, backend-dev, frontend-dev |
+| `mobile-app` | 移动应用 | meta, requirements, design, test, backend-dev, frontend-dev |
+| `frontend-demo` | 前端演示项目 | meta, requirements, design, test, **frontend-dev** |
+
 **规则**：
 - **仅在非自举模式下复制**（其他项目需要规范文档）
 - 自举模式跳过（SoloDevFlow 自身已有规范）
-- 完整复制所有规范文件
+- 根据项目类型选择性复制规范文件
 
 #### C7: 脚本安装（非自举模式）
 
@@ -306,6 +343,7 @@ target-project/
 | `.solodevflow/scripts/` | **创建** | 从 `scripts/` 复制运行时脚本（6个 + lib/） |
 | `.claude/commands/` | **创建** | 从 `template/commands/` 复制 |
 | `.claude/hooks/` | **创建** | 从 `src/hooks/` 复制（含 lib/） |
+| `.claude/agents/` | **创建** | 从 `template/agents/` 复制（如存在） |
 | `docs/specs/` | **创建** | 从 `docs/specs/` 复制（完整规范文档） |
 | `CLAUDE.md` | **创建** | 从模板生成 |
 
@@ -322,6 +360,7 @@ target-project/
 | `.solodevflow/scripts/` | **覆盖** | 从 `scripts/` 更新运行时脚本 |
 | `.claude/commands/` | **覆盖** | 从 `template/commands/` 更新 |
 | `.claude/hooks/` | **覆盖** | 从 `src/hooks/` 更新 |
+| `.claude/agents/` | **覆盖** | 从 `template/agents/` 更新（如存在） |
 | `docs/specs/` | **覆盖** | 从 `docs/specs/` 更新（规范可能有变化） |
 | `CLAUDE.md` | **覆盖** | 从模板重新生成 |
 
@@ -349,6 +388,7 @@ state.solodevflow.upgradedAt = new Date().toISOString();
 | `.solodevflow/scripts/` | **不创建** | 使用根目录 `scripts/` 源码 |
 | `.claude/commands/` | **覆盖** | 从 `template/commands/` 同步 |
 | `.claude/hooks/` | **覆盖** | 从 `src/hooks/` 同步（Claude Code 只识别此目录） |
+| `.claude/agents/` | **覆盖** | 从 `template/agents/` 同步（如存在） |
 | `docs/specs/` | **跳过** | 源码已存在，不复制给自己 |
 | `scripts/` | **跳过** | 源码已存在，不覆盖 |
 | `CLAUDE.md` | **跳过** | 保留项目自身的配置 |
@@ -366,14 +406,16 @@ SoloDevFlow/
 ├── scripts/              # 源码（直接使用，不复制）
 ├── template/
 │   ├── flows/            # 源码
-│   └── commands/         # 源码
+│   ├── commands/         # 源码
+│   └── agents/           # 源码
 ├── .solodevflow/
 │   ├── flows/            # ✅ 从 template/flows/ 同步
 │   │   └── workflows.md
 │   ├── state.json        # ✅ 保留项目数据
 │   └── [无 scripts/]     # ❌ 不创建
 └── .claude/
-    └── commands/         # ✅ 从 template/commands/ 同步
+    ├── commands/         # ✅ 从 template/commands/ 同步
+    └── agents/           # ✅ 从 template/agents/ 同步
 ```
 
 ##### 模式4：重构项目升级（`solodevflow upgrade/init <path>` 当 `refactoring.enabled = true`）
@@ -407,6 +449,7 @@ solodevflow upgrade <path>  # 重构状态 → 执行重构升级
 | `.solodevflow/scripts/` | **覆盖** | 使用新版本脚本 |
 | `.claude/commands/` | **覆盖** | 使用新版本命令 |
 | `.claude/hooks/` | **覆盖** | 使用新版本钩子 |
+| `.claude/agents/` | **覆盖** | 使用新版本代理（如存在） |
 | `docs/specs/` | **覆盖** | 使用新版本规范 |
 | `docs/requirements/*` | **保留** | 用户已编写的需求文档不动 |
 | `docs/designs/*` | **保留** | 用户已编写的设计文档不动 |
@@ -443,6 +486,7 @@ state.solodevflow.upgradedAt = new Date().toISOString();
 | `.solodevflow/scripts/` | ✅ 创建 | ✅ 覆盖 | ❌ 不创建 | ✅ 覆盖 |
 | `.claude/commands/` | ✅ 创建 | ✅ 覆盖 | ✅ 同步 | ✅ 覆盖 |
 | `.claude/hooks/` | ✅ 创建 | ✅ 覆盖 | ✅ 同步 | ✅ 覆盖 |
+| `.claude/agents/` | ✅ 创建 | ✅ 覆盖 | ✅ 同步 | ✅ 覆盖 |
 | `docs/specs/` | ✅ 复制 | ✅ 覆盖 | ❌ 跳过 | ✅ 覆盖 |
 | `docs/requirements/*` | - | - | - | ✅ 保留 |
 | `docs/designs/*` | - | - | - | ✅ 保留 |
@@ -462,11 +506,14 @@ state.solodevflow.upgradedAt = new Date().toISOString();
 |------|--------------|---------------|
 | 运行时目录 | 检查目标项目 | `.solodevflow/` 目录和初始文件存在 |
 | 工作流安装 | 检查目标项目 | `.solodevflow/flows/` 包含 6 个执行规范文件 |
+| 头部注释移除 | 检查 flows/*.md | 不包含 `<!-- Template Source File` 头部注释 |
+| Changelog 移除 | 检查 flows/*.md | 不包含 `## Changelog` 部分 |
 | 引用清理 | 检查 flows/*.md | 不包含 `**需求文档**：` 行（仅常规项目） |
 | 脚本路径替换 | 检查 flows/*.md | `node scripts/` 已替换为 `node .solodevflow/scripts/`（仅常规项目） |
 | 脚本安装 | 检查目标项目 | `.solodevflow/scripts/` 包含 6 个运行时脚本 + lib/ |
 | 命令安装 | 检查目标项目 | `.claude/commands/` 包含 7 个 write-*.md |
 | Hooks 安装 | 检查目标项目 | `.claude/hooks/` 包含 4 个钩子文件 + lib/ |
+| Agents 安装 | 检查目标项目 | `.claude/agents/` 包含代理文件（如 template/agents/ 存在） |
 | 规范复制 | 检查目标项目 | `docs/specs/` 包含规范文件 |
 | CLAUDE.md | 检查目标项目 | 文件存在且包含项目信息 |
 | package.json | 检查目标项目 | scripts 字段包含状态管理命令（指向 .solodevflow/scripts/） |
@@ -481,9 +528,12 @@ state.solodevflow.upgradedAt = new Date().toISOString();
 | 自身检测 | 运行 `solodevflow init .` | 识别为自举模式，打印提示信息 |
 | init/upgrade 等效 | 分别运行两条命令 | 行为一致，都执行 bootstrap |
 | 工作流更新 | 检查 `.solodevflow/flows/` | 从 `template/flows/` 同步 |
+| 头部注释移除 | 检查 flows/*.md | 不包含 `<!-- Template Source File` 头部注释 |
+| Changelog 移除 | 检查 flows/*.md | 不包含 `## Changelog` 部分 |
 | 引用保留 | 检查 flows/*.md | 保留 `**需求文档**：` 行（自举模式不清理） |
 | 脚本路径保留 | 检查 flows/*.md | 保留 `node scripts/`（自举模式不替换） |
 | 命令更新 | 检查 `.claude/commands/` | 从 `template/commands/` 同步 |
+| Agents 更新 | 检查 `.claude/agents/` | 从 `template/agents/` 同步（如存在） |
 | 规范不复制 | 检查 `docs/specs/` | 保持不变（源码不复制给自己） |
 | 脚本不复制 | 检查根目录 `scripts/` | 保持不变（源码不覆盖） |
 | 运行时脚本不创建 | 检查 `.solodevflow/scripts/` | 目录不存在（使用根目录源码） |
@@ -559,7 +609,7 @@ state.solodevflow.upgradedAt = new Date().toISOString();
 
 ---
 
-*Version: v1.9*
+*Version: v2.3*
 *Created: 2025-12-21*
-*Updated: 2025-12-30*
-*Changes: v1.9 修复自举模式 hooks 同步：`.claude/hooks/` 从"跳过"改为"同步"（Claude Code 只识别此目录）；v1.8 新增模式4：重构项目升级（保留重构状态和用户文档）；v1.7 C3 添加脚本路径替换规则（自举模式例外）；v1.6 C3 添加复制时清理无效引用规则（自举模式例外）、更新 flows 文件列表（6个）；v1.5 添加 C5 Hooks 安装、移除 sourcePath、更新脚本列表（6个+lib/）、修复 Boundaries；v1.4 澄清自举模式；v1.3 函数编号修正*
+*Updated: 2025-12-31*
+*Changes: v2.3 新增 frontend-demo 项目类型，C6 规范复制改为按项目类型选择性复制；v2.2 新增 C11 Agents 安装功能（从 template/agents/ 安装到 .claude/agents/）；v2.1 C3 添加"复制时移除 Changelog"规则（适用于所有模式）；v2.0 C3 添加"复制时移除头部模板注释"规则（适用于所有模式）；v1.9 修复自举模式 hooks 同步：`.claude/hooks/` 从"跳过"改为"同步"（Claude Code 只识别此目录）；v1.8 新增模式4：重构项目升级（保留重构状态和用户文档）；v1.7 C3 添加脚本路径替换规则（自举模式例外）；v1.6 C3 添加复制时清理无效引用规则（自举模式例外）、更新 flows 文件列表（6个）；v1.5 添加 C5 Hooks 安装、移除 sourcePath、更新脚本列表（6个+lib/）、修复 Boundaries；v1.4 澄清自举模式；v1.3 函数编号修正*

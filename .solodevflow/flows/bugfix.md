@@ -1,9 +1,3 @@
-<!--
-  Template Source File
-  修改此文件后，需要通过升级脚本同步到项目的 .solodevflow/flows/
-  请勿直接修改 .solodevflow/flows/ 中的文件
--->
-
 # Bug Fix Flow - Execution Spec
 
 > AI 执行规范：Bug 修复流程（代码优先，后补文档）
@@ -140,16 +134,3 @@ Step 4: 文档同步（§4）
 *Version: v1.1*
 *Aligned with: flow-workflows.md v8.6 §5*
 *Updated: 2025-12-30*
-
----
-
-## Changelog
-
-### v1.1 (2025-12-30)
-- 重构为"代码优先"流程：先修复代码，再补充文档
-- §3 改为 Code-First Fix Flow
-- 新增 §4 Post-Fix Documentation Sync：定义文档同步决策流程
-- 设计文档：直接更新；需求文档：走需求变更流程
-
-### v1.0 (2025-12-30)
-- 初始版本
