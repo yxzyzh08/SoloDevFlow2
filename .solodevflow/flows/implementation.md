@@ -204,9 +204,9 @@ Refs: #issue-number
 
 | 工具 | 用途 |
 |------|------|
-| `node scripts/state.js add-subtask <id> <description>` | 添加子任务 |
-| `node scripts/state.js complete-subtask <id> <index>` | 完成子任务 |
-| `node scripts/state.js set-phase <id> feature_testing` | 进入测试阶段 |
+| `node scripts/state.cjs add-subtask <id> <description>` | 添加子任务 |
+| `node scripts/state.cjs complete-subtask <id> <index>` | 完成子任务 |
+| `node scripts/state.cjs set-phase <id> feature_testing` | 进入测试阶段 |
 
 ---
 

@@ -80,7 +80,7 @@
 当 Design Depth = None 时：
 
 1. 在需求文档 Artifacts 章节记录 `Design Depth: None`
-2. 执行 `node scripts/state.js set-phase <id> feature_implementation`
+2. 执行 `node scripts/state.cjs set-phase <id> feature_implementation`
 3. 加载 implementation.md 流程
 
 ---
@@ -109,7 +109,7 @@
 | 工具 | 用途 |
 |------|------|
 | `/write-design` | 生成设计文档 |
-| `node scripts/state.js set-phase <id> <phase>` | 更新阶段 |
+| `node scripts/state.cjs set-phase <id> <phase>` | 更新阶段 |
 | `spec-design.md` | 设计文档规范 |
 
 ---

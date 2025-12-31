@@ -80,7 +80,7 @@ version: "16.0"
 | Work Mode | 检查 frontmatter | feature/capability/flow 有 workMode 字段 |
 | 多任务支持 | 检查 state.json | activeWorkItems 为数组，支持多个 Work Item |
 | 并发控制 | 检查 state.js | 写操作使用 acquireLock/releaseLock |
-| **CLI Schema 输出** | **`node scripts/state.js --schema`** | **输出有效的 JSON，包含所有命令定义** |
+| **CLI Schema 输出** | **`node scripts/state.cjs --schema`** | **输出有效的 JSON，包含所有命令定义** |
 | **Schema 完整性** | **检查 --schema 输出** | **包含：name, description, syntax, parameters, examples** |
 
 ---
@@ -109,12 +109,12 @@ version: "16.0"
 - `subtasks.{}.featureId` 重命名为 `subtasks.{}.workitemId`
 - "Work Item" 作为 Feature/Capability/Flow 的统一术语
 - CLI 命令更新：`activate-feature` → `activate`，`deactivate-feature` → `deactivate`
-- 运行 `node scripts/state.js migrate-v14` 自动迁移
+- 运行 `node scripts/state.cjs migrate-v14` 自动迁移
 
 **v12.0 重大架构变更**：
 - `features` 对象从 state.json 中**完全移除**
 - Feature 状态（id, status, phase, priority, domain）存储在各文档的 **YAML frontmatter** 中
-- `scripts/index.js` 扫描 docs/ 目录，提取 frontmatter，生成 `.solodevflow/index.json`
+- `scripts/index.cjs` 扫描 docs/ 目录，提取 frontmatter，生成 `.solodevflow/index.json`
 - 新增 `subtasks` 顶层字段，集中管理跨 Feature 的子任务
 
 ### 5.2 Work Mode（工作模式）
@@ -185,7 +185,7 @@ version: "16.0"
 - ~~`session`~~：v13.0 移除（设计过于理想化，实际未使用）
 
 **Feature 状态获取**：
-- 通过 `scripts/index.js` 扫描文档 frontmatter 生成 `.solodevflow/index.json`
+- 通过 `scripts/index.cjs` 扫描文档 frontmatter 生成 `.solodevflow/index.json`
 - Hooks 和 CLI 读取 index.json 获取 Feature 信息
 
 ### 5.4 Field Definitions
@@ -224,7 +224,7 @@ version: "16.0"
 **v14.0 术语说明**：
 - "Work Item" 是 Feature/Capability/Flow 的统一术语
 - `activeWorkItems` 替代了 `activeFeatures`（v14.0 重命名）
-- CLI 命令：`node scripts/state.js activate <id>` / `deactivate <id>`
+- CLI 命令：`node scripts/state.cjs activate <id>` / `deactivate <id>`
 
 **设计说明**：
 - 支持多任务并行跟踪（可同时激活多个 Work Item）
@@ -288,8 +288,8 @@ version: "16.0"
 
 **CLI 命令**：
 ```bash
-node scripts/state.js set-prd-phase <phase>     # 设置 PRD 阶段
-node scripts/state.js get-prd-progress          # 获取 PRD 分解进度
+node scripts/state.cjs set-prd-phase <phase>     # 设置 PRD 阶段
+node scripts/state.cjs get-prd-progress          # 获取 PRD 分解进度
 ```
 
 **PRD 关闭条件**（详见 flow-workflows.md §10.5）：
@@ -332,7 +332,7 @@ version: "12.1"        # 文档版本
 
 **index.json 生成**：
 
-`scripts/index.js` 扫描 docs/ 目录，提取 frontmatter，生成 `.solodevflow/index.json`：
+`scripts/index.cjs` 扫描 docs/ 目录，提取 frontmatter，生成 `.solodevflow/index.json`：
 
 ```json
 {
@@ -618,8 +618,8 @@ Session A 写入:
         }
       ],
       "examples": [
-        "node scripts/state.js activate fea-auth",
-        "node scripts/state.js activate cap-user-management"
+        "node scripts/state.cjs activate fea-auth",
+        "node scripts/state.cjs activate cap-user-management"
       ]
     },
     {
@@ -651,7 +651,7 @@ Session A 写入:
         }
       ],
       "examples": [
-        "node scripts/state.js set-phase fea-auth feature_requirements"
+        "node scripts/state.cjs set-phase fea-auth feature_requirements"
       ]
     },
     {
@@ -694,7 +694,7 @@ Session A 写入:
         }
       ],
       "examples": [
-        "node scripts/state.js add-subtask --workitem=fea-auth --desc=\"实现登录接口\" --source=ai --status=in_progress"
+        "node scripts/state.cjs add-subtask --workitem=fea-auth --desc=\"实现登录接口\" --source=ai --status=in_progress"
       ]
     }
   ],
@@ -752,7 +752,7 @@ Session A 写入:
 **方式 1：SessionStart Hook 注入**（推荐）
 ```bash
 # .claude/hooks/session-start.sh
-node scripts/state.js --schema > /tmp/state-schema.json
+node scripts/state.cjs --schema > /tmp/state-schema.json
 echo "<tool-schema>"
 cat /tmp/state-schema.json
 echo "</tool-schema>"
@@ -783,7 +783,7 @@ echo "</tool-schema>"
 | v9.0 | 新增 designDepth 和 artifacts 字段（code 类型产物追踪，支持代码文件级别影响分析） |
 | v10.0 | 简化 designDepth 为 2 级（none/required），移除 L0-L3 |
 | v11.0 | 新增 session 字段（会话状态：mode + context + pendingRequirements） |
-| v12.0 | **重大重构**：移除 features 对象，状态迁移到文档 frontmatter。新增 index.json 由 scripts/index.js 自动生成 |
+| v12.0 | **重大重构**：移除 features 对象，状态迁移到文档 frontmatter。新增 index.json 由 scripts/index.cjs 自动生成 |
 | v12.1 | 新增 `workMode` 字段（code/document），明确需求文档的工作模式 |
 | v12.2 | 新增 `pendingDocs` CLI 命令；补充并发控制（文件锁）文档 |
 | v12.3 | 新增 `feature_review` 阶段，需求完成后必须人类审核才能进入设计 |
@@ -794,13 +794,13 @@ echo "</tool-schema>"
 
 **Schema 升级**：
 - v16.0: 新增 `prd` 字段，需手动添加到 state.json
-- v14.0: 运行 `node scripts/state.js migrate-v14` 自动迁移
+- v14.0: 运行 `node scripts/state.cjs migrate-v14` 自动迁移
 - 其他版本：由 AI 直接编辑 state.json 执行
 
 **v12.0.0 架构变更**：
 - `features` 对象从 state.json 中完全移除
 - Feature 状态（id, status, phase）存储在各文档的 YAML frontmatter 中
-- `scripts/index.js` 扫描 docs/ 目录，提取 frontmatter，生成 `.solodevflow/index.json`
+- `scripts/index.cjs` 扫描 docs/ 目录，提取 frontmatter，生成 `.solodevflow/index.json`
 - Hooks 通过读取 index.json 获取 feature 信息
 
 **v12.1.0 变更**：
@@ -818,10 +818,10 @@ echo "</tool-schema>"
 |------|------|
 | `.solodevflow/state.json` | 运行时状态（session、subtasks、pendingDocs） |
 | `.solodevflow/index.json` | Feature 索引（由 index.js 生成） |
-| `scripts/state.js` | 状态 CLI（查询/更新接口） |
-| `scripts/index.js` | 索引生成脚本（扫描 frontmatter） |
-| `scripts/validate-state.js` | Schema 校验脚本 |
-| `scripts/status.js` | 状态摘要脚本 |
+| `scripts/state.cjs` | 状态 CLI（查询/更新接口） |
+| `scripts/index.cjs` | 索引生成脚本（扫描 frontmatter） |
+| `scripts/validate-state.cjs` | Schema 校验脚本 |
+| `scripts/status.cjs` | 状态摘要脚本 |
 
 ### 6.2 Usage
 
@@ -829,32 +829,32 @@ echo "</tool-schema>"
 
 ```bash
 # === 工具自描述 (v15.0 新增) ===
-node scripts/state.js --schema               # 输出所有命令的 JSON Schema
+node scripts/state.cjs --schema               # 输出所有命令的 JSON Schema
 
 # === 查询操作 ===
-node scripts/state.js summary              # 状态摘要（JSON 格式）
-node scripts/state.js list-active          # 列出活跃 Work Items
+node scripts/state.cjs summary              # 状态摘要（JSON 格式）
+node scripts/state.cjs list-active          # 列出活跃 Work Items
 
 # === Work Item 激活操作 (v14.0 更新) ===
-node scripts/state.js activate <id>        # 激活 Work Item（添加到 activeWorkItems）
-node scripts/state.js deactivate <id>      # 停用 Work Item（从 activeWorkItems 移除）
-node scripts/state.js set-phase <id> <phase>  # 设置 Work Item 阶段
+node scripts/state.cjs activate <id>        # 激活 Work Item（添加到 activeWorkItems）
+node scripts/state.cjs deactivate <id>      # 停用 Work Item（从 activeWorkItems 移除）
+node scripts/state.cjs set-phase <id> <phase>  # 设置 Work Item 阶段
 
 # === Subtask 操作 (v14.0 使用 workitem 代替 feature) ===
-node scripts/state.js add-subtask --workitem=<id> --desc="描述" --source=ai
-node scripts/state.js list-subtasks             # 列出所有子任务
-node scripts/state.js list-subtasks --workitem=<id>  # 列出指定 Work Item 的子任务
-node scripts/state.js complete-subtask <subtaskId>
-node scripts/state.js skip-subtask <subtaskId>
+node scripts/state.cjs add-subtask --workitem=<id> --desc="描述" --source=ai
+node scripts/state.cjs list-subtasks             # 列出所有子任务
+node scripts/state.cjs list-subtasks --workitem=<id>  # 列出指定 Work Item 的子任务
+node scripts/state.cjs complete-subtask <subtaskId>
+node scripts/state.cjs skip-subtask <subtaskId>
 
 # === Pending Docs 操作 ===
-node scripts/state.js add-pending-doc --type=<design|feature|prd> --target="path" --desc="描述" [--reason="原因"]
-node scripts/state.js list-pending-docs        # 列出文档债务
-node scripts/state.js clear-pending-docs       # 清空文档债务（处理完成后）
+node scripts/state.cjs add-pending-doc --type=<design|feature|prd> --target="path" --desc="描述" [--reason="原因"]
+node scripts/state.cjs list-pending-docs        # 列出文档债务
+node scripts/state.cjs clear-pending-docs       # 清空文档债务（处理完成后）
 
 # === 索引 & 迁移操作 ===
-node scripts/index.js                      # 重新生成 index.json
-node scripts/state.js migrate-v14          # 从 v13 迁移到 v14
+node scripts/index.cjs                      # 重新生成 index.json
+node scripts/state.cjs migrate-v14          # 从 v13 迁移到 v14
 ```
 
 **Feature 状态更新**：
@@ -870,7 +870,7 @@ phase: done           # 修改这里
 ---
 ```
 
-然后运行 `node scripts/index.js` 更新索引。
+然后运行 `node scripts/index.cjs` 更新索引。
 
 **运行校验**：
 ```bash
@@ -945,7 +945,7 @@ version: "12.1"
 ...
 ```
 
-### index.json（由 scripts/index.js 生成）
+### index.json（由 scripts/index.cjs 生成）
 
 ```json
 {

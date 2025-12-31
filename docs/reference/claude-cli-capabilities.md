@@ -376,14 +376,14 @@ mcp__*__write*     # 所有 write 工具
       "matcher": "Bash|Edit|Write",
       "hooks": [{
         "type": "command",
-        "command": "node .claude/hooks/pre-tool-use.js",
+        "command": "node .claude/hooks/pre-tool-use.cjs",
         "timeout": 30
       }]
     }],
     "UserPromptSubmit": [{
       "hooks": [{
         "type": "command",
-        "command": "node .claude/hooks/user-prompt-submit.js"
+        "command": "node .claude/hooks/user-prompt-submit.cjs"
       }]
     }],
     "SessionStart": [{

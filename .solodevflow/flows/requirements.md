@@ -259,7 +259,7 @@ set-phase <id> feature_review
 ### 4.3 IMPACT（影响分析）
 
 ```
-运行 node scripts/analyze-impact.js <spec-file>
+运行 node scripts/analyze-impact.cjs <spec-file>
     ↓
 获取所有受影响的文档列表
     ↓
@@ -349,7 +349,7 @@ set-phase <id> feature_review
 **发现新 Work Item 时**：
 1. 暂停当前调研
 2. 修改 PRD，添加新 Feature/Capability/Flow 到 Feature Roadmap
-3. 运行 `node scripts/index.js` 更新索引
+3. 运行 `node scripts/index.cjs` 更新索引
 4. 决定是否立即调研新 Work Item（根据依赖关系）
 5. 继续原调研或切换到新 Work Item
 
@@ -358,7 +358,7 @@ set-phase <id> feature_review
 **每个 Work Item 需求阶段完成后**：
 ```bash
 # 更新 PRD 分解进度（done = 已完成数量, total = 总数量）
-node scripts/state.js update-prd-progress <done> <total>
+node scripts/state.cjs update-prd-progress <done> <total>
 ```
 
 ### 5.6 Decomposing Completion Check
@@ -370,7 +370,7 @@ node scripts/state.js update-prd-progress <done> <total>
 
 **完成后**：
 ```bash
-node scripts/state.js set-prd-phase prd_done
+node scripts/state.cjs set-prd-phase prd_done
 ```
 
 ---
@@ -401,8 +401,8 @@ node scripts/state.js set-prd-phase prd_done
 | `/write-feature` | 生成 Feature 需求文档 |
 | `/write-capability` | 生成 Capability 需求文档 |
 | `/write-flow` | 生成 Flow 需求文档 |
-| `node scripts/analyze-impact.js <file>` | 分析变更影响 |
-| `node scripts/state.js set-phase <id> feature_review` | 进入审核阶段 |
+| `node scripts/analyze-impact.cjs <file>` | 分析变更影响 |
+| `node scripts/state.cjs set-phase <id> feature_review` | 进入审核阶段 |
 
 ---
 

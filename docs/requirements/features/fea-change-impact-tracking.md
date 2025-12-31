@@ -126,10 +126,10 @@ version: "2.3"
 **命令**：
 ```bash
 # 仅输出分析结果（默认）
-node scripts/analyze-impact.js docs/specs/spec-requirements.md
+node scripts/analyze-impact.cjs docs/specs/spec-requirements.md
 
 # 输出并写入 state.json
-node scripts/analyze-impact.js docs/specs/spec-requirements.md --write
+node scripts/analyze-impact.cjs docs/specs/spec-requirements.md --write
 ```
 
 **写入规则**：
@@ -168,7 +168,7 @@ node scripts/analyze-impact.js docs/specs/spec-requirements.md --write
 if (toolName === 'Write' || toolName === 'Edit') {
   if (matchesSpecPattern(filePath)) {
     // 自动运行影响分析
-    const result = exec(`node scripts/analyze-impact.js "${filePath}"`);
+    const result = exec(`node scripts/analyze-impact.cjs "${filePath}"`);
     // 将分析结果作为 additionalContext 返回给 Claude
     return {
       hookSpecificOutput: {
@@ -187,10 +187,10 @@ if (toolName === 'Write' || toolName === 'Edit') {
 
 | Item | Verification | Pass Criteria |
 |------|--------------|---------------|
-| 影响分析脚本 | `node scripts/analyze-impact.js docs/specs/spec-requirements.md` | 输出标准格式报告 |
+| 影响分析脚本 | `node scripts/analyze-impact.cjs docs/specs/spec-requirements.md` | 输出标准格式报告 |
 | 依赖图构建 | 脚本输出 | 正确识别 Feature Dependencies |
 | 子任务输出 | 脚本输出 | 输出建议子任务列表 |
-| --write 参数 | `node scripts/analyze-impact.js <file> --write` | subtasks 写入 state.json |
+| --write 参数 | `node scripts/analyze-impact.cjs <file> --write` | subtasks 写入 state.json |
 | 重复检测 | 多次运行 --write | 相同 target 不重复添加 |
 | Hook 自动触发 | 修改 docs/specs/*.md | PostToolUse 返回影响分析结果 |
 
@@ -309,8 +309,8 @@ Feature 名称出现在 PRD Feature Roadmap 表格中
 
 | 文件 | 用途 |
 |------|------|
-| `scripts/analyze-impact.js` | 影响分析脚本（需实现 --write 参数） |
-| `src/hooks/post-tool-use.js` | PostToolUse Hook（需添加影响分析触发） |
+| `scripts/analyze-impact.cjs` | 影响分析脚本（需实现 --write 参数） |
+| `src/hooks/post-tool-use.cjs` | PostToolUse Hook（需添加影响分析触发） |
 | `docs/specs/spec-meta.md` | 元规范文档（锚点和引用系统） |
 | `docs/requirements/features/fea-state-management.md` | state.json Schema 文档 |
 
@@ -318,13 +318,13 @@ Feature 名称出现在 PRD Feature Roadmap 表格中
 
 ```bash
 # 分析规范文档变更的影响（仅输出）
-node scripts/analyze-impact.js docs/specs/spec-requirements.md
+node scripts/analyze-impact.cjs docs/specs/spec-requirements.md
 
 # 分析并写入 state.json
-node scripts/analyze-impact.js docs/specs/spec-requirements.md --write
+node scripts/analyze-impact.cjs docs/specs/spec-requirements.md --write
 
 # 输出 JSON 格式（用于程序调用）
-node scripts/analyze-impact.js docs/specs/spec-requirements.md --json
+node scripts/analyze-impact.cjs docs/specs/spec-requirements.md --json
 ```
 
 ### 6.3 自动化流程
@@ -351,8 +351,8 @@ Claude 根据结果决定下一步操作
 
 | Type | Path | Description |
 |------|------|-------------|
-| Script | scripts/analyze-impact.js | 影响分析脚本（需实现 --write） |
-| Hook | src/hooks/post-tool-use.js | PostToolUse Hook（需添加影响分析触发） |
+| Script | scripts/analyze-impact.cjs | 影响分析脚本（需实现 --write） |
+| Hook | src/hooks/post-tool-use.cjs | PostToolUse Hook（需添加影响分析触发） |
 
 **Design Depth**: None（增量实现，无需独立设计文档）
 

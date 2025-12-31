@@ -337,7 +337,7 @@ Output: 验证报告 + 重构完成状态
 
 | 工具 | 用途 |
 |------|------|
-| `node scripts/state.js summary` | 获取状态摘要 |
+| `node scripts/state.cjs summary` | 获取状态摘要 |
 | `/write-prd` | 编写 PRD |
 | `/write-feature <name>` | 编写 Feature Spec |
 | `/write-capability <name>` | 编写 Capability Spec |

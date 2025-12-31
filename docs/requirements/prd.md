@@ -254,7 +254,7 @@ SoloDevFlow 2.0 是一套**规范 + 工具**的组合：
 - **Priority**: P0
 - **Type**: code
 - **Feature**: [fea-change-impact-tracking.md](features/fea-change-impact-tracking.md)
-- **Artifact**: [scripts/analyze-impact.js](../../scripts/analyze-impact.js)
+- **Artifact**: [scripts/analyze-impact.cjs](../../scripts/analyze-impact.cjs)
 
 #### input-capture <!-- id: feat_ref_input_capture -->
 

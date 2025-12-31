@@ -180,7 +180,7 @@ FOR each markdown link [text](path) or [text](path#anchor):
 
 | Type | Path | Description |
 |------|------|-------------|
-| Code | scripts/validate-docs.js | 文档验证 CLI（v1.2） |
+| Code | scripts/validate-docs.cjs | 文档验证 CLI（v1.2） |
 
 ---
 

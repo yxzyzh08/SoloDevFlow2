@@ -282,8 +282,8 @@ target-project/
 - **跳过脚本复制**：SoloDevFlow 自身直接使用源码 `scripts/`
 - **不创建 `.solodevflow/scripts/`**：避免源码与副本混淆
 - **package.json 差异**：
-  - 常规项目：`"status": "node .solodevflow/scripts/status.js"`
-  - SoloDevFlow：`"status": "node scripts/status.js"`（使用源码）
+  - 常规项目：`"status": "node .solodevflow/scripts/status.cjs"`
+  - SoloDevFlow：`"status": "node scripts/status.cjs"`（使用源码）
 
 #### C8: 配置生成
 
@@ -298,10 +298,10 @@ target-project/
 ```json
 {
   "scripts": {
-    "status": "node .solodevflow/scripts/status.js",
-    "validate": "node .solodevflow/scripts/validate-state.js",
-    "validate:state": "node .solodevflow/scripts/validate-state.js",
-    "validate:docs": "node .solodevflow/scripts/validate-docs.js"
+    "status": "node .solodevflow/scripts/status.cjs",
+    "validate": "node .solodevflow/scripts/validate-state.cjs",
+    "validate:state": "node .solodevflow/scripts/validate-state.cjs",
+    "validate:docs": "node .solodevflow/scripts/validate-docs.cjs"
   }
 }
 ```
@@ -573,7 +573,7 @@ state.solodevflow.upgradedAt = new Date().toISOString();
 | Type | Path | Required | Description |
 |------|------|----------|-------------|
 | Design | null | none | 无需设计文档 |
-| Code | scripts/init.js | Yes | 初始化脚本 |
+| Code | scripts/init.cjs | Yes | 初始化脚本 |
 | E2E Test | tests/e2e/project-init.test.js | Yes | E2E 测试 |
 
 **Design Depth**: none

@@ -452,7 +452,7 @@ prd_draft → prd_scope_review → prd_decomposing → prd_done
 
 **关闭命令**：
 ```bash
-node scripts/state.js set-prd-phase prd_done
+node scripts/state.cjs set-prd-phase prd_done
 ```
 
 ### 10.5 PRD State Fields
@@ -635,13 +635,13 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 ```bash
 # 创建 Module Impact 分析子任务
-node scripts/state.js add-subtask \
+node scripts/state.cjs add-subtask \
   --workitem=<flow-id> \
   --desc="[Module: <module-id>] 编写 Module Impact Specification" \
   --source=impact-analysis
 
 # 示例
-node scripts/state.js add-subtask \
+node scripts/state.cjs add-subtask \
   --workitem=refactoring \
   --desc="[Module: state-management] 添加 validateSubtask 函数" \
   --source=impact-analysis

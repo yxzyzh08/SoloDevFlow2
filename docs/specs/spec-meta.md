@@ -7,7 +7,7 @@
 **重要声明**：
 
 - 此文档是验证系统的"根"，**不被程序验证**
-- 变更此文档需同步更新 `scripts/validate-docs.js`
+- 变更此文档需同步更新 `scripts/validate-docs.cjs`
 - 变更历史通过 Git 追踪
 
 ---
@@ -520,7 +520,7 @@ docs/specs/
 1. 在 `.solodevflow/input-log.md` 记录变更原因
 2. 评估对整个文档系统的影响
 3. 更新 `spec-meta.md`（递增主版本号）
-4. 同步更新 `scripts/validate-docs.js`
+4. 同步更新 `scripts/validate-docs.cjs`
 5. 更新所有受影响的规范文档（`*-spec.md`）
 6. 更新所有受影响的业务文档
 7. 人类审核确认
@@ -550,14 +550,14 @@ docs/specs/
 
 | 文件 | 用途 |
 |------|------|
-| `scripts/validate-docs.js` | 文档结构验证器（遵循本规范） |
+| `scripts/validate-docs.cjs` | 文档结构验证器（遵循本规范） |
 | `scripts/validate-refs.js` | 文档引用完整性检查 |
 
 ---
 
 ## Appendix A: Document Index Schema <!-- id: meta_index_schema -->
 
-文档索引（`.solodevflow/index.json`）由 `scripts/index.js` 自动生成。
+文档索引（`.solodevflow/index.json`）由 `scripts/index.cjs` 自动生成。
 
 ### A.1 Index Structure
 
@@ -608,7 +608,7 @@ index.js 从文档 frontmatter 提取以下字段：
 
 ```bash
 # 生成/更新索引
-node scripts/index.js
+node scripts/index.cjs
 
 # 验证 index.json
 npm run validate:state
@@ -616,7 +616,7 @@ npm run validate:state
 
 **自动触发**：
 - Claude CLI Hook 在对话开始时读取 index.json
-- 手动运行 `node scripts/index.js` 可强制刷新
+- 手动运行 `node scripts/index.cjs` 可强制刷新
 
 ---
 

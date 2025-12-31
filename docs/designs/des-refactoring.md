@@ -89,9 +89,9 @@ inputs:
 
 | 模块 | 变更类型 | 说明 |
 |------|----------|------|
-| scripts/init.js | 扩展 | 添加现有项目检测和重构模式初始化 |
-| scripts/state.js | 扩展 | 添加重构状态管理命令 |
-| src/hooks/session-start.js | 扩展 | 检测并显示重构模式上下文 |
+| scripts/init.cjs | 扩展 | 添加现有项目检测和重构模式初始化 |
+| scripts/state.cjs | 扩展 | 添加重构状态管理命令 |
+| src/hooks/session-start.cjs | 扩展 | 检测并显示重构模式上下文 |
 | scripts/templates/state.json.template | 更新 | 添加 project.refactoring 字段 |
 
 ---
@@ -270,21 +270,21 @@ function getRefactoringStatus() {
 
 ```bash
 # 设置重构阶段
-node scripts/state.js set-refactoring-phase <phase>
+node scripts/state.cjs set-refactoring-phase <phase>
 
 # 更新重构进度
-node scripts/state.js update-refactoring-progress <type> <done> [total]
+node scripts/state.cjs update-refactoring-progress <type> <done> [total]
 
 # 示例
-node scripts/state.js set-refactoring-phase prd
-node scripts/state.js update-refactoring-progress prd in_progress
-node scripts/state.js update-refactoring-progress features 3 10
+node scripts/state.cjs set-refactoring-phase prd
+node scripts/state.cjs update-refactoring-progress prd in_progress
+node scripts/state.cjs update-refactoring-progress features 3 10
 ```
 
 ### 4.3 SessionStart Hook 扩展
 
 ```javascript
-// src/hooks/session-start.js
+// src/hooks/session-start.cjs
 
 function generateRefactoringContext(state) {
   const refactoring = state.project?.refactoring;
@@ -361,28 +361,28 @@ Started: ${refactoring.startedAt}
 
 | Step | Task | File |
 |------|------|------|
-| 1.1 | 添加 REFACTORING_PHASES 常量 | scripts/state.js |
-| 1.2 | 实现 setRefactoringPhase 函数 | scripts/state.js |
-| 1.3 | 实现 updateRefactoringProgress 函数 | scripts/state.js |
-| 1.4 | 实现 getRefactoringStatus 函数 | scripts/state.js |
-| 1.5 | 添加 CLI 命令解析 | scripts/state.js |
+| 1.1 | 添加 REFACTORING_PHASES 常量 | scripts/state.cjs |
+| 1.2 | 实现 setRefactoringPhase 函数 | scripts/state.cjs |
+| 1.3 | 实现 updateRefactoringProgress 函数 | scripts/state.cjs |
+| 1.4 | 实现 getRefactoringStatus 函数 | scripts/state.cjs |
+| 1.5 | 添加 CLI 命令解析 | scripts/state.cjs |
 | 1.6 | 更新 state.json.template | scripts/templates/ |
 
 ### 5.2 Phase 2: Init 扩展
 
 | Step | Task | File |
 |------|------|------|
-| 2.1 | 实现 detectExistingProject 函数 | scripts/init.js |
-| 2.2 | 实现 initRefactoringMode 函数 | scripts/init.js |
-| 2.3 | 修改 init 主流程添加重构模式分支 | scripts/init.js |
-| 2.4 | 添加用户交互提示 | scripts/init.js |
+| 2.1 | 实现 detectExistingProject 函数 | scripts/init.cjs |
+| 2.2 | 实现 initRefactoringMode 函数 | scripts/init.cjs |
+| 2.3 | 修改 init 主流程添加重构模式分支 | scripts/init.cjs |
+| 2.4 | 添加用户交互提示 | scripts/init.cjs |
 
 ### 5.3 Phase 3: Hooks 扩展
 
 | Step | Task | File |
 |------|------|------|
-| 3.1 | 实现 generateRefactoringContext 函数 | src/hooks/session-start.js |
-| 3.2 | 修改 SessionStart hook 输出逻辑 | src/hooks/session-start.js |
+| 3.1 | 实现 generateRefactoringContext 函数 | src/hooks/session-start.cjs |
+| 3.2 | 修改 SessionStart hook 输出逻辑 | src/hooks/session-start.cjs |
 | 3.3 | 同步到 .claude/hooks/ | - |
 
 ### 5.4 Phase 4: 验证与测试

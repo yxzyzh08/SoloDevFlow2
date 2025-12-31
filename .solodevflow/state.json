@@ -48,10 +48,10 @@
     "lastGitCommit": "",
     "lastGitCommitMessage": "",
     "lastGitCommitAt": "",
-    "stateFileVersion": 565,
+    "stateFileVersion": 573,
     "totalStateChanges": 22
   },
-  "lastUpdated": "2025-12-31T09:06:30.673+08:00",
+  "lastUpdated": "2025-12-31T10:08:28.396+08:00",
   "subtasks": [
     {
       "id": "st_1767090831489_002",
@@ -112,30 +112,78 @@
       "createdAt": "2025-12-31T09:00:12.256+08:00"
     },
     {
-      "id": "st_1767142978026_010",
+      "id": "st_1767144076079_015",
       "workitemId": "unassigned",
-      "description": "更新现有 flow 需求文档",
+      "description": "测试脚本是否正常运行",
       "status": "completed",
       "source": "ai",
-      "createdAt": "2025-12-31T09:02:58.026+08:00",
-      "updatedAt": "2025-12-31T09:04:44.571+08:00",
-      "completedAt": "2025-12-31T09:06:30.673+08:00"
+      "createdAt": "2025-12-31T09:21:16.079+08:00",
+      "updatedAt": "2025-12-31T09:27:24.469+08:00",
+      "completedAt": "2025-12-31T09:28:31.995+08:00"
     },
     {
-      "id": "st_1767143190672_009",
+      "id": "st_1767144511991_009",
       "workitemId": "unassigned",
-      "description": "确认变更范围和方案",
+      "description": "分析所有需要重命名的脚本文件",
       "status": "completed",
       "source": "ai",
-      "createdAt": "2025-12-31T09:06:30.672+08:00"
+      "createdAt": "2025-12-31T09:28:31.992+08:00"
     },
     {
-      "id": "st_1767143190672_010",
+      "id": "st_1767144511995_010",
       "workitemId": "unassigned",
-      "description": "在 spec-requirements.md 添加规则",
+      "description": "重命名所有 scripts/*.js 为 *.cjs",
       "status": "completed",
       "source": "ai",
-      "createdAt": "2025-12-31T09:06:30.673+08:00"
+      "createdAt": "2025-12-31T09:28:31.995+08:00"
+    },
+    {
+      "id": "st_1767144511995_011",
+      "workitemId": "unassigned",
+      "description": "更新 package.json 中的 scripts 配置",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-31T09:28:31.995+08:00"
+    },
+    {
+      "id": "st_1767144511995_012",
+      "workitemId": "unassigned",
+      "description": "更新脚本间的相互引用路径",
+      "status": "completed",
+      "source": "ai",
+      "createdAt": "2025-12-31T09:28:31.995+08:00"
+    },
+    {
+      "id": "st_1767146908374_013",
+      "workitemId": "unassigned",
+      "description": "重命名 src/hooks 和 .claude/hooks 中的所有 .js 为 .cjs",
+      "status": "in_progress",
+      "source": "ai",
+      "createdAt": "2025-12-31T10:08:28.374+08:00"
+    },
+    {
+      "id": "st_1767146908396_014",
+      "workitemId": "unassigned",
+      "description": "更新 hooks 脚本内部的 require 路径",
+      "status": "pending",
+      "source": "ai",
+      "createdAt": "2025-12-31T10:08:28.396+08:00"
+    },
+    {
+      "id": "st_1767146908396_015",
+      "workitemId": "unassigned",
+      "description": "更新 hook 命令引用为 .cjs",
+      "status": "pending",
+      "source": "ai",
+      "createdAt": "2025-12-31T10:08:28.396+08:00"
+    },
+    {
+      "id": "st_1767146908396_016",
+      "workitemId": "unassigned",
+      "description": "npm install -g . 并测试",
+      "status": "pending",
+      "source": "ai",
+      "createdAt": "2025-12-31T10:08:28.396+08:00"
     }
   ],
   "solodevflow": {

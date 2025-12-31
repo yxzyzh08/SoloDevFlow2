@@ -140,7 +140,7 @@ Session Mode: {session.mode}
 
 | 文件模式 | 行为 | 原因 |
 |----------|------|------|
-| `.solodevflow/state.json` | block | 使用 `node scripts/state.js` |
+| `.solodevflow/state.json` | block | 使用 `node scripts/state.cjs` |
 | `.env`, `*.key`, `*.pem` | block | 安全敏感文件 |
 | `docs/specs/*.md` | ask | 提示运行影响分析 |
 
@@ -167,7 +167,7 @@ Session Mode: {session.mode}
 
 ### 3.6 H7: PreToolUse set-phase 守卫
 
-**触发条件**：执行 `node scripts/state.js set-phase <id> done` 命令时
+**触发条件**：执行 `node scripts/state.cjs set-phase <id> done` 命令时
 
 **行为**：
 - 检查该 Feature 是否有未完成的 subtasks（pending 或 in_progress）
@@ -325,10 +325,10 @@ AI 修改执行规范时，直接修改 `.solodevflow/flows/*.md`（项目实例
 |------|------|
 | `src/hooks/lib/state-reader.js` | 读取 state.json + index.json |
 | `src/hooks/lib/output.js` | 输出格式化 |
-| `src/hooks/session-start.js` | SessionStart Hook |
-| `src/hooks/user-prompt-submit.js` | UserPromptSubmit Hook |
-| `src/hooks/pre-tool-use.js` | PreToolUse Hook |
-| `src/hooks/post-tool-use.js` | PostToolUse Hook |
+| `src/hooks/session-start.cjs` | SessionStart Hook |
+| `src/hooks/user-prompt-submit.cjs` | UserPromptSubmit Hook |
+| `src/hooks/pre-tool-use.cjs` | PreToolUse Hook |
+| `src/hooks/post-tool-use.cjs` | PostToolUse Hook |
 | `.claude/settings.json` | Hooks 配置 |
 
 ### 7.2 Configuration
@@ -341,7 +341,7 @@ AI 修改执行规范时，直接修改 `.solodevflow/flows/*.md`（项目实例
 |------|----------|-----------|
 | state.json 不存在 | stderr 提示初始化，继续 | 0 |
 | state.json 解析失败 | stderr 显示错误，阻止启动 | 2 |
-| index.json 不存在 | 优雅降级，运行 scripts/index.js | 0 |
+| index.json 不存在 | 优雅降级，运行 scripts/index.cjs | 0 |
 | Hook 脚本异常 | stderr 显示错误，使用默认行为 | 1 |
 
 ---

@@ -410,9 +410,9 @@ node scripts/knowledge.js search <keyword> # 搜索
 node scripts/knowledge.js sync             # 同步知识库
 
 # 状态 CLI（已有 + 扩展）
-node scripts/state.js summary              # 状态摘要
-node scripts/state.js context              # 流程控制上下文（新增）
-node scripts/state.js get-feature <id>     # Feature 详情
+node scripts/state.cjs summary              # 状态摘要
+node scripts/state.cjs context              # 流程控制上下文（新增）
+node scripts/state.cjs get-feature <id>     # Feature 详情
 ```
 
 ---

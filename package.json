@@ -3,15 +3,15 @@
   "version": "2.0.0",
   "description": "为超级个体打造的自进化人机协作开发系统",
   "bin": {
-    "solodevflow": "./scripts/init.js"
+    "solodevflow": "./scripts/init.cjs"
   },
   "scripts": {
-    "status": "node scripts/status.js",
-    "validate": "node scripts/validate.js",
-    "validate:state": "node scripts/validate-state.js",
-    "validate:docs": "node scripts/validate-docs.js",
-    "init": "node scripts/init.js",
-    "index": "node scripts/index.js",
+    "status": "node scripts/status.cjs",
+    "validate": "node scripts/validate.cjs",
+    "validate:state": "node scripts/validate-state.cjs",
+    "validate:docs": "node scripts/validate-docs.cjs",
+    "init": "node scripts/init.cjs",
+    "index": "node scripts/index.cjs",
     "test": "node --test tests/"
   },
   "keywords": [

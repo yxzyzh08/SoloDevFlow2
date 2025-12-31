@@ -19,7 +19,7 @@ description: 编写或更新产品需求文档（PRD）
 5. **【重要】更新 PRD 状态**：
    ```bash
    # 新建 PRD 时设置为 draft 阶段
-   node scripts/state.js set-prd-phase prd_draft
+   node scripts/state.cjs set-prd-phase prd_draft
    ```
 
 ## 输出要求

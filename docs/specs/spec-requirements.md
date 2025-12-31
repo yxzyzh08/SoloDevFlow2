@@ -166,7 +166,7 @@ domain: process        # 可选：所属 Domain
 
 **说明**：
 - `id` 和 `status` 是 v12.0.0 架构的核心字段，强烈推荐填写
-- 这些字段由 `scripts/index.js` 解析并生成 `.solodevflow/index.json`
+- 这些字段由 `scripts/index.cjs` 解析并生成 `.solodevflow/index.json`
 - 解析器应容错处理缺失情况
 
 ---
@@ -548,7 +548,7 @@ Flow 不仅定义流程本身，还需要明确对每个依赖模块的具体变
 ### Impact on project-init <!-- id: flow_refactoring_impact_init -->
 
 **模块**：project-init
-**变更范围**：scripts/init.js
+**变更范围**：scripts/init.cjs
 
 **需求描述**：
 1. 添加 `detectExistingProject()` 函数
@@ -568,7 +568,7 @@ Flow 不仅定义流程本身，还需要明确对每个依赖模块的具体变
 ### Impact on state-management <!-- id: flow_refactoring_impact_state -->
 
 **模块**：state-management
-**变更范围**：.solodevflow/state.json Schema, scripts/state.js
+**变更范围**：.solodevflow/state.json Schema, scripts/state.cjs
 
 **需求描述**：
 1. 添加 `project.refactoring` 字段到 Schema
@@ -622,7 +622,7 @@ Flow 工作流程:
 
 ```bash
 # 创建 Module Impact 子任务
-node scripts/state.js add-subtask \
+node scripts/state.cjs add-subtask \
   --workitem=refactoring \
   --desc="[Module: project-init] 实现现有项目检测" \
   --source=impact-analysis

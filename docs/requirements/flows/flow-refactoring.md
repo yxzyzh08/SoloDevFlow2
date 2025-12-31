@@ -745,7 +745,7 @@ function detectExistingProject() {
 | Type | Path | Required | Description |
 |------|------|----------|-------------|
 | Design | docs/designs/des-refactoring.md | Yes | 详细设计（待细化） |
-| Code | scripts/init.js | Yes | 扩展检测逻辑 |
+| Code | scripts/init.cjs | Yes | 扩展检测逻辑 |
 | Template | template/flows/refactoring.md | Yes | 执行规范模板 |
 
 **Design Depth**: required

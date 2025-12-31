@@ -229,7 +229,7 @@ prd_draft → prd_scope_review → prd_decomposing → prd_done
 
 **关闭命令**：
 ```bash
-node scripts/state.js set-prd-phase prd_done
+node scripts/state.cjs set-prd-phase prd_done
 ```
 
 ---
@@ -305,13 +305,13 @@ pending → feature_requirements → feature_review → feature_design → featu
 
 | 工具 | 用途 |
 |------|------|
-| `node scripts/state.js summary` | 获取状态摘要 |
-| `node scripts/state.js set-phase <id> <phase>` | 更新阶段 |
-| `node scripts/state.js activate <id>` | 激活 Work Item |
-| `node scripts/state.js deactivate <id>` | 取消激活 Work Item |
-| `node scripts/state.js set-prd-phase <phase>` | 设置 PRD 阶段 |
-| `node scripts/state.js get-prd-progress` | 获取 PRD 分解进度 |
-| `node scripts/index.js` | 更新索引 |
+| `node scripts/state.cjs summary` | 获取状态摘要 |
+| `node scripts/state.cjs set-phase <id> <phase>` | 更新阶段 |
+| `node scripts/state.cjs activate <id>` | 激活 Work Item |
+| `node scripts/state.cjs deactivate <id>` | 取消激活 Work Item |
+| `node scripts/state.cjs set-prd-phase <phase>` | 设置 PRD 阶段 |
+| `node scripts/state.cjs get-prd-progress` | 获取 PRD 分解进度 |
+| `node scripts/index.cjs` | 更新索引 |
 
 ---
 

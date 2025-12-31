@@ -11,6 +11,10 @@
     {
       "name": "book_app",
       "path": "../book_app"
+    },
+    {
+      "name": "demo-project",
+      "path": "../demo-project"
     }
   ],
   "settings": {}

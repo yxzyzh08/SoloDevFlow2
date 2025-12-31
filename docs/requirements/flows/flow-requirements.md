@@ -333,7 +333,7 @@ Phase 4c: CONFIRM & EXECUTE（确认并执行）
 #### Phase 3c: IMPACT（影响分析）
 
 ```
-├─ 运行 node scripts/analyze-impact.js <spec-file>
+├─ 运行 node scripts/analyze-impact.cjs <spec-file>
 ├─ 获取所有受影响的文档列表
 └─ 生成处理清单（subtasks）
 ```
@@ -418,7 +418,7 @@ Phase 4c: CONFIRM & EXECUTE（确认并执行）
 **发现新 Work Item 时**：
 1. 暂停当前调研
 2. 修改 PRD，添加新 Feature/Capability/Flow 到 Feature Roadmap
-3. 运行 `node scripts/index.js` 更新索引
+3. 运行 `node scripts/index.cjs` 更新索引
 4. 决定是否立即调研新 Work Item（根据依赖关系）
 5. 继续原调研或切换到新 Work Item
 
@@ -431,7 +431,7 @@ Phase 4c: CONFIRM & EXECUTE（确认并执行）
 
 **完成后**：
 ```bash
-node scripts/state.js set-prd-phase prd_done
+node scripts/state.cjs set-prd-phase prd_done
 ```
 
 ---

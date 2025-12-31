@@ -8,7 +8,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/session-start.js"
+            "command": "node .claude/hooks/session-start.cjs"
           }
         ]
       }
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/user-prompt-submit.js"
+            "command": "node .claude/hooks/user-prompt-submit.cjs"
           }
         ]
       }
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/pre-tool-use.js"
+            "command": "node .claude/hooks/pre-tool-use.cjs"
           }
         ]
       }
@@ -40,7 +40,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/post-tool-use.js"
+            "command": "node .claude/hooks/post-tool-use.cjs"
           }
         ]
       }

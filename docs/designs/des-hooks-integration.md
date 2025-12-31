@@ -108,10 +108,10 @@ src/hooks/
 
 ### 3.2 Deployment via Project Init
 
-Hook 部署通过现有的 `scripts/init.js` 安装机制完成，扩展 `copyToolFiles()` 函数：
+Hook 部署通过现有的 `scripts/init.cjs` 安装机制完成，扩展 `copyToolFiles()` 函数：
 
 ```javascript
-// scripts/init.js - copyToolFiles() 函数扩展
+// scripts/init.cjs - copyToolFiles() 函数扩展
 
 async function copyToolFiles(config) {
   // ... 现有代码 ...
@@ -366,7 +366,7 @@ Confirm you have analyzed the root cause?
 
 #### 4.3.3 Set-Phase Done Guard
 
-执行 `node scripts/state.js set-phase <id> done` 命令时，检查是否有未完成的 subtasks：
+执行 `node scripts/state.cjs set-phase <id> done` 命令时，检查是否有未完成的 subtasks：
 - 如有未完成任务 → 返回 `ask` 决策，列出所有未完成任务
 - 用户确认后允许执行
 
@@ -374,7 +374,7 @@ Confirm you have analyzed the root cause?
 
 | 文件模式 | 保护行为 | 原因 |
 |----------|----------|------|
-| `.solodevflow/state.json` | block | 使用 `node scripts/state.js` 管理 |
+| `.solodevflow/state.json` | block | 使用 `node scripts/state.cjs` 管理 |
 | `.env`, `*.key`, `*.pem` | block | 安全敏感文件 |
 | `docs/specs/*.md` | ask | 触发警告，提示运行影响分析 |
 
@@ -478,7 +478,7 @@ Validation result message or sync status, injected as context.
 | Decision | Options | Choice | Rationale |
 |----------|---------|--------|-----------|
 | 源代码目录 | `.claude/hooks/` / `src/hooks/` | `src/hooks/` | 统一管理，与其他模块（cli, lib）一致，便于版本控制和维护 |
-| 运行时部署 | 独立脚本 / 扩展现有 init | 扩展 `scripts/init.js` | 复用现有 copyToolFiles() 机制，与 commands/skills/scripts 部署方式一致 |
+| 运行时部署 | 独立脚本 / 扩展现有 init | 扩展 `scripts/init.cjs` | 复用现有 copyToolFiles() 机制，与 commands/skills/scripts 部署方式一致 |
 | 文档索引方式 | SQLite 知识库 / JSON 索引 | JSON (index.json) | v12.0.0 决策：利用 Claude CLI 原生 Glob/Grep，零外部依赖 |
 | PreToolUse matcher | Write\|Edit / Write\|Edit\|Bash | +Bash | 危险 shell 命令（rm -rf, git push --force）也需要阶段守卫保护 |
 | input-log.md | 同步实现 / 延后实现 | 延后 (Phase 2) | 依赖 input-capture feature (soft dependency) |
@@ -496,9 +496,9 @@ Validation result message or sync status, injected as context.
 |------|-------------|
 | 1.1 | Create `src/hooks/lib/state-reader.js` |
 | 1.2 | Create `src/hooks/lib/output.js` |
-| 1.3 | Implement `src/hooks/session-start.js` |
-| 1.4 | Implement `src/hooks/pre-tool-use.js` (含详细规则) |
-| 1.5 | Extend `scripts/init.js` copyToolFiles() to copy hooks |
+| 1.3 | Implement `src/hooks/session-start.cjs` |
+| 1.4 | Implement `src/hooks/pre-tool-use.cjs` (含详细规则) |
+| 1.5 | Extend `scripts/init.cjs` copyToolFiles() to copy hooks |
 | 1.6 | Update `.claude/settings.json` with hooks config |
 | 1.7 | Test Phase 1 Hooks |
 
@@ -507,7 +507,7 @@ Validation result message or sync status, injected as context.
 | Task | Description |
 |------|-------------|
 | 2.1 | Extend state-reader.js to read index.json |
-| 2.2 | Implement `src/hooks/user-prompt-submit.js` (含文档状态上下文) |
+| 2.2 | Implement `src/hooks/user-prompt-submit.cjs` (含文档状态上下文) |
 | 2.3 | Implement input-log.md recording (依赖 input-capture) |
 | 2.4 | Test index.json integration |
 
@@ -515,7 +515,7 @@ Validation result message or sync status, injected as context.
 
 | Task | Description |
 |------|-------------|
-| 3.1 | Implement `src/hooks/post-tool-use.js` (含验证规则) |
+| 3.1 | Implement `src/hooks/post-tool-use.cjs` (含验证规则) |
 | 3.2 | Integration testing |
 
 ---
@@ -538,7 +538,7 @@ Based on requirements §9.10:
 |----------|----------|-----------|
 | state.json not found | stderr hint to initialize, continue | 0 |
 | state.json parse error | stderr show error, block startup | 2 |
-| index.json not found | Graceful degradation, run scripts/index.js | 0 |
+| index.json not found | Graceful degradation, run scripts/index.cjs | 0 |
 | Validation script failed | Log to stderr, don't block | 0 |
 | Hook script exception | stderr show error, use default | 1 |
 
@@ -558,7 +558,7 @@ Based on requirements §9.10:
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/session-start.js"
+            "command": "node .claude/hooks/session-start.cjs"
           }
         ]
       }
@@ -568,7 +568,7 @@ Based on requirements §9.10:
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/user-prompt-submit.js"
+            "command": "node .claude/hooks/user-prompt-submit.cjs"
           }
         ]
       }
@@ -579,7 +579,7 @@ Based on requirements §9.10:
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/pre-tool-use.js"
+            "command": "node .claude/hooks/pre-tool-use.cjs"
           }
         ]
       }
@@ -590,7 +590,7 @@ Based on requirements §9.10:
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/post-tool-use.js"
+            "command": "node .claude/hooks/post-tool-use.cjs"
           }
         ]
       }

@@ -370,8 +370,8 @@ Claude 4.x 模型对明确指令响应最佳。不要假设 Claude 会推断隐�
 
 | 工具 | 用途 |
 |------|------|
-| `node scripts/state.js summary` | 获取状态摘要 |
-| `node scripts/state.js set-phase <id> <phase>` | 更新阶段 |
+| `node scripts/state.cjs summary` | 获取状态摘要 |
+| `node scripts/state.cjs set-phase <id> <phase>` | 更新阶段 |
 | `/write-feature` | 生成 Feature 需求文档 |
 ```
 

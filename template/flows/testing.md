@@ -248,9 +248,9 @@ Feature 完成
 
 | 工具 | 用途 |
 |------|------|
-| `node scripts/state.js set-phase <id> done` | 标记完成 |
-| `node scripts/state.js deactivate-feature <id>` | 取消激活 Feature |
-| `node scripts/index.js` | 更新索引 |
+| `node scripts/state.cjs set-phase <id> done` | 标记完成 |
+| `node scripts/state.cjs deactivate-feature <id>` | 取消激活 Feature |
+| `node scripts/index.cjs` | 更新索引 |
 
 ---
 
