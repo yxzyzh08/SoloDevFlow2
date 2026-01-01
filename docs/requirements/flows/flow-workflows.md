@@ -42,7 +42,7 @@ version: "9.2"
 |------|------|
 | User | 提供输入（咨询/需求/混合） |
 | AI | 分析输入、路由流程、执行交付 |
-| state.json | 唯一状态源，保持跨对话上下文 |
+| `.solodevflow/state.json` | 唯一状态源，保持跨对话上下文 |
 
 ---
 
@@ -51,7 +51,7 @@ version: "9.2"
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                     Session Start                            │
-│  读取 state.json / index.json → 汇报状态 → 等待用户指示      │
+│  读取 .solodevflow/state.json → 汇报状态 → 等待用户指示       │
 └─────────────────────────────────────────────────────────────┘
                            ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -332,14 +332,14 @@ Step 4: 文档同步（§5.4）
 
 | 状态 | 存储位置 | 说明 |
 |------|----------|------|
-| activeFeatures | state.json | 当前活跃的 Feature 列表 |
-| subtasks | state.json | 进行中的任务列表 |
+| activeFeatures | `.solodevflow/state.json` | 当前活跃的 Feature 列表 |
+| subtasks | `.solodevflow/state.json` | 进行中的任务列表 |
 | phase | 文档 frontmatter | Feature 的当前阶段 |
 
 ### 8.2 Session Start
 
 每次对话开始：
-1. 读取 `state.json`
+1. 读取 `.solodevflow/state.json`
 2. **检查重构模式**：如果 `project.refactoring.enabled = true`，切换到 `refactoring.md` 执行规范
 3. 正常模式下继续：
    - 显示活跃 Feature 和 phase
@@ -347,7 +347,7 @@ Step 4: 文档同步（§5.4）
    - 等待用户指示
 
 **重构模式自动切换**：
-- 重构模式通过 `state.json` 的 `project.refactoring.enabled` 标志控制
+- 重构模式通过 `.solodevflow/state.json` 的 `project.refactoring.enabled` 标志控制
 - AI 在 Session Start 检测此标志，自动加载对应的执行规范
 - 重构完成后（`enabled = false`），自动回到正常工作流
 
@@ -382,7 +382,7 @@ Step 4: 文档同步（§5.4）
 
 | 层级 | 职责 | 状态存储 |
 |------|------|----------|
-| **PRD Layer** | 产品 scope 管理、需求分解协调 | `state.json → prd.phase` |
+| **PRD Layer** | 产品 scope 管理、需求分解协调 | `.solodevflow/state.json → prd.phase` |
 | **Work Item Layer** | 单个功能的完整生命周期 | 文档 frontmatter `phase` |
 
 ### 9.2 Layer Interaction
@@ -457,7 +457,7 @@ node scripts/state.cjs set-prd-phase prd_done
 
 ### 10.5 PRD State Fields
 
-> 存储在 `state.json` 中
+> 存储在 `.solodevflow/state.json` 中
 
 ```json
 {
@@ -550,7 +550,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 - 跳过输入分析
 - 跳过 review 阶段
 - 未经人类批准更新 phase
-- 直接编辑 state.json
+- 直接编辑 `.solodevflow/state.json`
 - 未走流程直接修改代码
 
 ---

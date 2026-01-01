@@ -2,7 +2,24 @@
 
 > AI 执行规范：主工作流的执行流程
 
-**需求文档**：[flow-workflows.md](../../docs/requirements/flows/flow-workflows.md)
+
+
+---
+
+## Quick Reference
+
+| 你想做什么 | 跳转到 |
+|-----------|--------|
+| 理解工作流全貌 | §1 Session Start |
+| 判断输入类型 | §2 Input Analysis |
+| 处理咨询问题 | §3 Consulting Flow |
+| 审批文档 | §4 Review Approval |
+| 了解 PRD 生命周期 | §6 PRD Lifecycle |
+| 了解 Work Item 阶段 | §7 Work Item Phase |
+| 查看子流程 | §9 Subflow References |
+| 查看执行原则 | §10 Execution Principles |
+| 查看工具命令 | §11 Tools Reference |
+| Flow 类型特殊处理 | §12 Flow Type Handling |
 
 ---
 
@@ -11,7 +28,7 @@
 **每次对话开始**：
 
 ```
-读取 state.json
+读取 .solodevflow/state.json
     ↓
 检查 project.refactoring.enabled
     ├─ true → 加载 refactoring.md（重构模式）
@@ -63,7 +80,7 @@
 
 | 变更类型 | 示例 | 流程 |
 |----------|------|------|
-| 数据结构变更 | 修改 state.json/index.json schema | 需求 → 审核 → 实现 |
+| 数据结构变更 | 修改 .solodevflow/state.json schema | 需求 → 审核 → 实现 |
 | API/命令接口变更 | 添加/删除/修改命令行参数 | 需求 → 审核 → 实现 |
 | 删除现有功能 | 删除 byType、删除命令别名 | 需求 → 审核 → 实现 |
 | 添加新功能 | 新增 Hook、新增验证规则 | 需求 → 审核 → 实现 |
@@ -201,7 +218,7 @@ set-prd-phase prd_decomposing
 
 | 层级 | 职责 | 状态存储 |
 |------|------|----------|
-| **PRD Layer** | 产品 scope 管理、需求分解协调 | `state.json → prd.phase` |
+| **PRD Layer** | 产品 scope 管理、需求分解协调 | `.solodevflow/state.json → prd.phase` |
 | **Work Item Layer** | 单个功能的完整生命周期 | 文档 frontmatter `phase` |
 
 ---
@@ -304,7 +321,7 @@ pending → feature_requirements → feature_review → feature_design → featu
 - 跳过输入分析
 - 跳过 review 阶段
 - 未经人类批准更新 phase
-- 直接编辑 state.json
+- 直接编辑 .solodevflow/state.json
 - 未走流程直接修改代码
 - 跳过根因分析直接修复 done 状态的代码
 
@@ -434,6 +451,6 @@ node scripts/state.cjs add-subtask \
 
 ---
 
-*Version: v2.3*
+*Version: v2.4*
 *Aligned with: flow-workflows.md v9.2, fea-state-management.md v16.0*
 *Updated: 2025-12-31*

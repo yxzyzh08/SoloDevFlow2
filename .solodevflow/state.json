@@ -48,249 +48,83 @@
     "lastGitCommit": "",
     "lastGitCommitMessage": "",
     "lastGitCommitAt": "",
-    "stateFileVersion": 600,
+    "stateFileVersion": 622,
     "totalStateChanges": 22
   },
-  "lastUpdated": "2025-12-31T17:40:22.284+08:00",
+  "lastUpdated": "2025-12-31T18:47:19.877+08:00",
   "subtasks": [
     {
-      "id": "st_1767090831489_002",
+      "id": "st_1767177381645_001",
       "workitemId": "unassigned",
-      "description": "新增 create-workitem 命令",
-      "status": "in_progress",
-      "source": "ai",
-      "createdAt": "2025-12-30T18:33:51.489+08:00",
-      "updatedAt": "2025-12-30T18:34:17.647+08:00"
-    },
-    {
-      "id": "st_1767090831489_003",
-      "workitemId": "unassigned",
-      "description": "更新 help 和 schema",
-      "status": "pending",
-      "source": "ai",
-      "createdAt": "2025-12-30T18:33:51.489+08:00"
-    },
-    {
-      "id": "st_1767139951190_006",
-      "workitemId": "unassigned",
-      "description": "提交审核",
-      "status": "in_progress",
-      "source": "ai",
-      "createdAt": "2025-12-31T08:12:31.190+08:00",
-      "updatedAt": "2025-12-31T08:27:37.282+08:00"
-    },
-    {
-      "id": "st_1767140527067_011",
-      "workitemId": "unassigned",
-      "description": "确认是否先更新 PRD",
-      "status": "in_progress",
-      "source": "ai",
-      "createdAt": "2025-12-31T08:22:07.067+08:00"
-    },
-    {
-      "id": "st_1767142812254_010",
-      "workitemId": "unassigned",
-      "description": "确认变更范围",
-      "status": "in_progress",
-      "source": "ai",
-      "createdAt": "2025-12-31T09:00:12.255+08:00"
-    },
-    {
-      "id": "st_1767142812256_011",
-      "workitemId": "unassigned",
-      "description": "明确变更内容",
-      "status": "pending",
-      "source": "ai",
-      "createdAt": "2025-12-31T09:00:12.256+08:00"
-    },
-    {
-      "id": "st_1767142812256_012",
-      "workitemId": "unassigned",
-      "description": "批量更新文档",
-      "status": "pending",
-      "source": "ai",
-      "createdAt": "2025-12-31T09:00:12.256+08:00"
-    },
-    {
-      "id": "st_1767146908374_013",
-      "workitemId": "unassigned",
-      "description": "重命名 src/hooks 和 .claude/hooks 中的所有 .js 为 .cjs",
-      "status": "in_progress",
-      "source": "ai",
-      "createdAt": "2025-12-31T10:08:28.374+08:00"
-    },
-    {
-      "id": "st_1767146908396_014",
-      "workitemId": "unassigned",
-      "description": "更新 hooks 脚本内部的 require 路径",
-      "status": "pending",
-      "source": "ai",
-      "createdAt": "2025-12-31T10:08:28.396+08:00"
-    },
-    {
-      "id": "st_1767146908396_015",
-      "workitemId": "unassigned",
-      "description": "更新 hook 命令引用为 .cjs",
-      "status": "pending",
-      "source": "ai",
-      "createdAt": "2025-12-31T10:08:28.396+08:00"
-    },
-    {
-      "id": "st_1767146908396_016",
-      "workitemId": "unassigned",
-      "description": "npm install -g . 并测试",
-      "status": "pending",
-      "source": "ai",
-      "createdAt": "2025-12-31T10:08:28.396+08:00"
-    },
-    {
-      "id": "st_1767170598512_012",
-      "workitemId": "unassigned",
-      "description": "生成 AI 执行规范评审报告",
+      "description": "重写 CLAUDE.md（23 → 95 行）",
       "status": "completed",
       "source": "ai",
-      "createdAt": "2025-12-31T16:43:18.513+08:00",
-      "completedAt": "2025-12-31T16:43:45.436+08:00"
+      "createdAt": "2025-12-31T18:36:21.645+08:00",
+      "completedAt": "2025-12-31T18:37:18.224+08:00"
     },
     {
-      "id": "st_1767170598517_013",
+      "id": "st_1767177381646_002",
       "workitemId": "unassigned",
-      "description": "保存评审报告到 reviews 目录",
+      "description": "修改 workflows.md - 插入 Quick Reference",
       "status": "completed",
       "source": "ai",
-      "createdAt": "2025-12-31T16:43:18.517+08:00",
-      "completedAt": "2025-12-31T16:43:45.441+08:00"
+      "createdAt": "2025-12-31T18:36:21.646+08:00",
+      "updatedAt": "2025-12-31T18:37:18.225+08:00",
+      "completedAt": "2025-12-31T18:37:55.719+08:00"
     },
     {
-      "id": "st_1767170864096_014",
+      "id": "st_1767177381647_003",
       "workitemId": "unassigned",
-      "description": "分析 spec-requirements.md 变更的影响",
+      "description": "修改 requirements.md - 插入 TL;DR",
       "status": "completed",
       "source": "ai",
-      "createdAt": "2025-12-31T16:47:44.096+08:00",
-      "completedAt": "2025-12-31T16:51:32.250+08:00"
+      "createdAt": "2025-12-31T18:36:21.647+08:00",
+      "updatedAt": "2025-12-31T18:37:55.720+08:00",
+      "completedAt": "2025-12-31T18:38:37.678+08:00"
     },
     {
-      "id": "st_1767170864106_015",
+      "id": "st_1767177381647_004",
       "workitemId": "unassigned",
-      "description": "评估 validate-docs.cjs 是否需要更新",
+      "description": "修改 refactoring.md - 插入 TL;DR",
       "status": "completed",
       "source": "ai",
-      "createdAt": "2025-12-31T16:47:44.106+08:00",
-      "completedAt": "2025-12-31T16:51:32.255+08:00"
+      "createdAt": "2025-12-31T18:36:21.647+08:00",
+      "updatedAt": "2025-12-31T18:38:37.679+08:00",
+      "completedAt": "2025-12-31T18:39:26.894+08:00"
     },
     {
-      "id": "st_1767170864106_016",
+      "id": "st_1767177381647_005",
       "workitemId": "unassigned",
-      "description": "评估其他文档是否需要更新",
+      "description": "修改 design.md - 插入 Mermaid 引用",
       "status": "completed",
       "source": "ai",
-      "createdAt": "2025-12-31T16:47:44.106+08:00",
-      "updatedAt": "2025-12-31T16:51:32.255+08:00",
-      "completedAt": "2025-12-31T16:52:08.113+08:00"
+      "createdAt": "2025-12-31T18:36:21.647+08:00",
+      "updatedAt": "2025-12-31T18:39:26.895+08:00",
+      "completedAt": "2025-12-31T18:40:02.003+08:00"
     },
     {
-      "id": "st_1767170864106_017",
+      "id": "st_1767177381647_006",
       "workitemId": "unassigned",
-      "description": "生成影响分析报告",
+      "description": "修改 implementation.md - 插入风险评估清单",
       "status": "completed",
       "source": "ai",
-      "createdAt": "2025-12-31T16:47:44.106+08:00",
-      "updatedAt": "2025-12-31T16:52:08.116+08:00",
-      "completedAt": "2025-12-31T16:54:25.499+08:00"
+      "createdAt": "2025-12-31T18:36:21.647+08:00",
+      "updatedAt": "2025-12-31T18:40:02.004+08:00",
+      "completedAt": "2025-12-31T18:40:51.596+08:00"
     },
     {
-      "id": "st_1767172097466_018",
+      "id": "st_1767177787803_007",
       "workitemId": "unassigned",
-      "description": "更新 validate-docs.cjs 版本号 v2.10 → v2.14",
+      "description": "同步修改到 template/flows/ 模板文件",
       "status": "completed",
       "source": "ai",
-      "createdAt": "2025-12-31T17:08:17.466+08:00",
-      "updatedAt": "2025-12-31T17:09:01.173+08:00",
-      "completedAt": "2025-12-31T17:09:33.974+08:00"
-    },
-    {
-      "id": "st_1767172097469_019",
-      "workitemId": "unassigned",
-      "description": "parseSpecDefinitions 函数：解析 Condition 列",
-      "status": "completed",
-      "source": "ai",
-      "createdAt": "2025-12-31T17:08:17.469+08:00",
-      "updatedAt": "2025-12-31T17:10:11.922+08:00",
-      "completedAt": "2025-12-31T17:11:11.049+08:00"
-    },
-    {
-      "id": "st_1767172097469_020",
-      "workitemId": "unassigned",
-      "description": "新增 shouldValidateSection 条件验证函数",
-      "status": "completed",
-      "source": "ai",
-      "createdAt": "2025-12-31T17:08:17.469+08:00",
-      "updatedAt": "2025-12-31T17:11:11.054+08:00",
-      "completedAt": "2025-12-31T17:11:56.331+08:00"
-    },
-    {
-      "id": "st_1767172097469_021",
-      "workitemId": "unassigned",
-      "description": "validateDocument 函数：应用条件验证逻辑",
-      "status": "completed",
-      "source": "ai",
-      "createdAt": "2025-12-31T17:08:17.469+08:00",
-      "updatedAt": "2025-12-31T17:11:56.336+08:00",
-      "completedAt": "2025-12-31T17:12:55.724+08:00"
-    },
-    {
-      "id": "st_1767172097469_022",
-      "workitemId": "unassigned",
-      "description": "META_SPEC 配置：定义 validProjectTypes",
-      "status": "completed",
-      "source": "ai",
-      "createdAt": "2025-12-31T17:08:17.469+08:00",
-      "updatedAt": "2025-12-31T17:09:33.983+08:00",
-      "completedAt": "2025-12-31T17:10:11.929+08:00"
-    },
-    {
-      "id": "st_1767172097469_023",
-      "workitemId": "unassigned",
-      "description": "运行验证测试确保向后兼容",
-      "status": "completed",
-      "source": "ai",
-      "createdAt": "2025-12-31T17:08:17.469+08:00",
-      "updatedAt": "2025-12-31T17:12:55.726+08:00",
-      "completedAt": "2025-12-31T17:26:42.018+08:00"
-    },
-    {
-      "id": "st_1767173492876_024",
-      "workitemId": "unassigned",
-      "description": "修复锚点检测过于宽松的bug",
-      "status": "completed",
-      "source": "ai",
-      "createdAt": "2025-12-31T17:31:32.876+08:00",
-      "completedAt": "2025-12-31T17:32:43.152+08:00"
-    },
-    {
-      "id": "st_1767173492880_025",
-      "workitemId": "unassigned",
-      "description": "修复章节检测包含注释的bug",
-      "status": "completed",
-      "source": "ai",
-      "createdAt": "2025-12-31T17:31:32.880+08:00",
-      "completedAt": "2025-12-31T17:32:43.162+08:00"
-    },
-    {
-      "id": "st_1767173492880_026",
-      "workitemId": "unassigned",
-      "description": "验证bug修复效果",
-      "status": "completed",
-      "source": "ai",
-      "createdAt": "2025-12-31T17:31:32.880+08:00",
-      "updatedAt": "2025-12-31T17:32:43.162+08:00",
-      "completedAt": "2025-12-31T17:40:22.281+08:00"
+      "createdAt": "2025-12-31T18:43:07.803+08:00",
+      "completedAt": "2025-12-31T18:47:19.876+08:00"
     }
   ],
   "solodevflow": {
     "version": "2.0.0",
-    "upgradedAt": "2025-12-31T13:39:24.307+08:00"
+    "upgradedAt": "2025-12-31T18:23:23.554+08:00"
   },
   "prd": {
     "phase": null,

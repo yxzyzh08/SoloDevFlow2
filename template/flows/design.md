@@ -58,6 +58,11 @@
 - 数据模型
 - 实现策略
 
+**架构图要求**：
+- 使用 Mermaid 格式（语法详见 spec-design.md）
+- 至少包含模块关系图或数据流图
+- 复杂系统需包含时序图
+
 ### 2.4 REVIEW（设计审核）
 
 ```
@@ -114,7 +119,7 @@
 
 ---
 
-*Version: v1.1*
+*Version: v1.2*
 *Aligned with: flow-design.md v1.4*
 *Updated: 2025-12-31*
 

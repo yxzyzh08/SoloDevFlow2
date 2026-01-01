@@ -2,7 +2,7 @@
 
 > AI 执行规范：测试阶段的执行流程
 
-**需求文档**：[flow-testing.md](../../docs/requirements/flows/flow-testing.md)
+
 
 ---
 

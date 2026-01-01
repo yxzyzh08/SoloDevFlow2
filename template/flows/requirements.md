@@ -12,6 +12,28 @@
 
 ---
 
+## TL;DR
+
+**需求阶段核心步骤**：
+
+| 步骤 | 动作 | 产出 |
+|------|------|------|
+| **1. GATHER** | 读取 state.json + PRD + index.json | 上下文 |
+| **2. CLARIFY** | 3-5 轮对话（问题→方案→验证） | 需求理解 |
+| **3. IMPACT** | 检查是否影响现有 Feature | 影响分析 |
+| **4. CLASSIFY** | 判断 Feature/Capability/Flow | 类型决策 |
+| **5. STRUCTURE** | 使用 EARS 格式编写需求 | 结构化需求 |
+| **6. GENERATE** | 调用 /write-* 命令 | 需求文档 |
+| **7. REVIEW** | set-phase feature_review | 等待批准 |
+
+**流程选择**：
+- **新功能** → §2 Flow A
+- **修改功能** → §3 Flow B
+- **修改规范** → §4 Flow C
+- **PRD 分解** → §5 Flow D
+
+---
+
 ## 1. Flow Selection
 
 **进入需求处理时，先判断流程类型**：
@@ -412,7 +434,7 @@ node scripts/state.cjs set-prd-phase prd_done
 
 ---
 
-*Version: v2.3*
+*Version: v2.4*
 *Aligned with: flow-requirements.md v2.1*
 *Updated: 2025-12-31*
 

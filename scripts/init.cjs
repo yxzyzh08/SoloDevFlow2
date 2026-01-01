@@ -113,11 +113,11 @@ function copyFlowFiles(src, dest, isBootstrap = false) {
       content = content.replace(/^<!--\s*\n\s*Template Source File[\s\S]*?-->\s*\n+/m, '');
       // 2. 删除 Changelog 部分（适用于所有模式，兼容 CRLF 和 LF，可选 --- 分隔符）
       content = content.replace(/(\r?\n)+(---(\r?\n)+)?## Changelog[\s\S]*$/g, '');
+      // 3. 删除需求文档引用（适用于所有模式，运行时实例不需要）
+      content = content.replace(/\*\*需求文档\*\*：\[.*?\]\(.*?\)\n?/g, '');
 
       if (!isBootstrap) {
         // 以下处理仅适用于非自举模式
-        // 3. 删除需求文档引用（目标项目没有这些文档）
-        content = content.replace(/\*\*需求文档\*\*：\[.*?\]\(.*?\)\n?/g, '');
         // 4. 替换脚本路径：scripts/ → .solodevflow/scripts/
         content = content.replace(/node scripts\//g, 'node .solodevflow/scripts/');
       }

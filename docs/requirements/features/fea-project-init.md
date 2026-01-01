@@ -141,9 +141,9 @@ target-project/
 - **复制时移除 Changelog**：删除 `## Changelog` 及其后的所有内容
   - 原因：Changelog 是源文件的变更历史，对运行时实例没有意义
   - 适用于所有模式（包括自举模式）
-- **复制时清理无效引用**（仅非自举模式）：删除 `**需求文档**：[...](...)`
-  - 原因：该引用指向 SoloDevFlow 源项目的需求文档，在目标项目中无效
-  - **自举模式例外**：保留引用（SoloDevFlow 自身有这些需求文档，引用有效）
+- **复制时删除需求文档引用**：删除 `**需求文档**：[...](...)`
+  - 原因：运行时实例是给 AI 执行用的，需求文档引用仅对开发者调试有意义
+  - 适用于所有模式（包括自举模式）
 - **复制时替换脚本路径**（仅非自举模式）：`node scripts/` → `node .solodevflow/scripts/`
   - 原因：SoloDevFlow 源项目使用 `scripts/`，目标项目使用 `.solodevflow/scripts/`
   - **自举模式例外**：保留原路径（SoloDevFlow 自身使用源码目录 `scripts/`）
@@ -508,7 +508,7 @@ state.solodevflow.upgradedAt = new Date().toISOString();
 | 工作流安装 | 检查目标项目 | `.solodevflow/flows/` 包含 6 个执行规范文件 |
 | 头部注释移除 | 检查 flows/*.md | 不包含 `<!-- Template Source File` 头部注释 |
 | Changelog 移除 | 检查 flows/*.md | 不包含 `## Changelog` 部分 |
-| 引用清理 | 检查 flows/*.md | 不包含 `**需求文档**：` 行（仅常规项目） |
+| 引用清理 | 检查 flows/*.md | 不包含 `**需求文档**：` 行 |
 | 脚本路径替换 | 检查 flows/*.md | `node scripts/` 已替换为 `node .solodevflow/scripts/`（仅常规项目） |
 | 脚本安装 | 检查目标项目 | `.solodevflow/scripts/` 包含 6 个运行时脚本 + lib/ |
 | 命令安装 | 检查目标项目 | `.claude/commands/` 包含 7 个 write-*.md |
@@ -530,7 +530,7 @@ state.solodevflow.upgradedAt = new Date().toISOString();
 | 工作流更新 | 检查 `.solodevflow/flows/` | 从 `template/flows/` 同步 |
 | 头部注释移除 | 检查 flows/*.md | 不包含 `<!-- Template Source File` 头部注释 |
 | Changelog 移除 | 检查 flows/*.md | 不包含 `## Changelog` 部分 |
-| 引用保留 | 检查 flows/*.md | 保留 `**需求文档**：` 行（自举模式不清理） |
+| 引用清理 | 检查 flows/*.md | 不包含 `**需求文档**：` 行（与常规模式一致） |
 | 脚本路径保留 | 检查 flows/*.md | 保留 `node scripts/`（自举模式不替换） |
 | 命令更新 | 检查 `.claude/commands/` | 从 `template/commands/` 同步 |
 | Agents 更新 | 检查 `.claude/agents/` | 从 `template/agents/` 同步（如存在） |

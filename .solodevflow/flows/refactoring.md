@@ -2,7 +2,25 @@
 
 > AI 执行规范：重构模式的执行流程
 
-**需求文档**：[flow-refactoring.md](../../docs/requirements/flows/flow-refactoring.md)
+
+
+---
+
+## TL;DR
+
+**重构模式 5 阶段**：
+
+| 阶段 | 核心任务 | 退出条件 |
+|------|----------|----------|
+| **1. UNDERSTAND** | 扫描代码、收集文档、分析依赖 | 用户确认理解准确 |
+| **2. PRD** | 定义愿景、划分 Domains、编写 PRD | PRD 审核通过 |
+| **3. REQUIREMENTS** | 逐个编写 Feature/Capability/Flow | 所有文档完成 |
+| **4. DESIGN** | 重构设计文档、归档老文档 | 设计完成 |
+| **5. VALIDATE** | 全量验证、生成报告 | 验证通过 + 用户确认 |
+
+**状态汇报**：每次对话开始时汇报当前阶段和进度
+
+**Phase Guards**：每阶段有明确的允许/禁止操作
 
 ---
 
@@ -462,7 +480,7 @@ Output: 验证报告 + 重构完成状态
 
 ---
 
-*Version: v1.3*
+*Version: v1.4*
 *Aligned with: flow-refactoring.md v2.5*
 *Created: 2025-12-29*
 *Updated: 2025-12-31*

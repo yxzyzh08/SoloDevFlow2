@@ -2,7 +2,7 @@
 
 > AI 执行规范：设计阶段的执行流程
 
-**需求文档**：[flow-design.md](../../docs/requirements/flows/flow-design.md)
+
 
 ---
 
@@ -51,6 +51,11 @@
 - 接口设计（API/模块接口）
 - 数据模型
 - 实现策略
+
+**架构图要求**：
+- 使用 Mermaid 格式（语法详见 spec-design.md）
+- 至少包含模块关系图或数据流图
+- 复杂系统需包含时序图
 
 ### 2.4 REVIEW（设计审核）
 
@@ -108,6 +113,6 @@
 
 ---
 
-*Version: v1.1*
+*Version: v1.2*
 *Aligned with: flow-design.md v1.4*
 *Updated: 2025-12-31*

@@ -2,7 +2,7 @@
 
 > AI 执行规范：Bug 修复流程（代码优先，后补文档）
 
-**需求文档**：[flow-workflows.md §5](../../docs/requirements/flows/flow-workflows.md#5-bug-fix-flow----id-flow_bugfix--)
+
 
 ---
 
